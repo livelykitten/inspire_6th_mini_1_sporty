@@ -2,6 +2,7 @@ package com.example.sporty.features.exerciseMatching.domain.dto;
 
 import java.time.LocalDateTime;
 
+import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -33,4 +34,5 @@ public class MatchResponseDto {
 
     private MatchStatus status;
     private SkillLevel skillLevel;
+    private SportType sportType;
 }

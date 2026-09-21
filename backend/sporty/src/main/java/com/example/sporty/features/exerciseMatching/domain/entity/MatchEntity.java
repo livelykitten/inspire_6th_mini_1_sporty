@@ -9,6 +9,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
+import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 
@@ -82,6 +83,11 @@ public class MatchEntity {
     @Column(name = "skill_level", length = 30, nullable = false)
     @ColumnDefault("'BEGINNER'")
     private SkillLevel skillLevel = SkillLevel.BEGINNER;
+
+    @Enumerated (EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "sport_type", length = 15, nullable = false)
+    private SportType sportType;
 
     // TODO: ServiceEntity가 만들어지면, private ServiceEntity로 교체
     @Column(name = "service_id")
