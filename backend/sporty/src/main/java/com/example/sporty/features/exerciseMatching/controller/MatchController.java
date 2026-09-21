@@ -1,4 +1,4 @@
-package com.example.sporty.features.matches.controller;
+package com.example.sporty.features.exerciseMatching.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
