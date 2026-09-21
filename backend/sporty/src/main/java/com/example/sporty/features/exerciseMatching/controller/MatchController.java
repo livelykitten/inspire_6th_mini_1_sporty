@@ -9,15 +9,22 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.sporty.features.exerciseMatching.domain.dto.MatchDetailResponseDto;
+import com.example.sporty.features.exerciseMatching.service.MatchService;
+
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/matches")
+@RequiredArgsConstructor
 public class MatchController {
 
-    // EM-03: 상세 조회. 구현 후 200 + MatchDetailResponse, 매치가 없으면 404.
+    private final MatchService matchService;
+
+    // EM-03: 기본 상세 정보 조회. 장소/참가자/내 상태는 후속 연동이 필요하다.
     @GetMapping("/{matchId}")
-    public ResponseEntity<Void> getMatchDetail(@PathVariable("matchId") Integer matchId) {
-        // TODO: Service 상세 조회 연결 및 MatchDetailResponse 반환.
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    public ResponseEntity<MatchDetailResponseDto> getMatchDetail(@PathVariable("matchId") Integer matchId) {
+        return ResponseEntity.ok(matchService.getMatchDetail(matchId));
     }
 
     // EM-05: 생성자 전용 삭제. 구현 후 204, 인증/권한/매치 확인 실패 시 401/403/404.
