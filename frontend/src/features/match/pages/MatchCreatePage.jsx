@@ -1,8 +1,8 @@
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import MatchForm from './MatchForm';
-import { createMatch, searchMatchFacilities } from './matchApi';
-import logo from './assets/logo.png';
-import './match.css';
+import MatchForm from '../components/MatchForm';
+import { createMatch, searchMatchFacilities } from '../api/matchApi';
+import logo from '../assets/logo.png';
+import '../css/match.css';
 
 export function RequireMatchAuth({ children }) {
   const location = useLocation();

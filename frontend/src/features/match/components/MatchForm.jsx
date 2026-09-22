@@ -1,17 +1,17 @@
 import { useRef, useState } from 'react';
-import { initialMatchValues, SKILL_LEVELS, toMatchPayload, validateMatch } from './matchValidation';
-import futsal from './assets/futsal.svg';
-import tennis from './assets/tennis.svg';
-import badminton from './assets/badminton.svg';
-import basketball from './assets/basketball.svg';
-import running from './assets/running.svg';
-import soccer from './assets/soccer.svg';
-import baseball from './assets/baseball.svg';
-import tableTennis from './assets/table-tennis.svg';
-import volleyball from './assets/volleyball.svg';
-import swimming from './assets/swimming.svg';
-import submitIcon from './assets/submit.svg';
-import './match.css';
+import { initialMatchValues, SKILL_LEVELS, toMatchPayload, validateMatch } from '../utils/matchValidation';
+import futsal from '../assets/futsal.svg';
+import tennis from '../assets/tennis.svg';
+import badminton from '../assets/badminton.svg';
+import basketball from '../assets/basketball.svg';
+import running from '../assets/running.svg';
+import soccer from '../assets/soccer.svg';
+import baseball from '../assets/baseball.svg';
+import tableTennis from '../assets/table-tennis.svg';
+import volleyball from '../assets/volleyball.svg';
+import swimming from '../assets/swimming.svg';
+import submitIcon from '../assets/submit.svg';
+import '../css/match.css';
 
 const SPORTS = [
   ['SOCCER', '축구', '필드/야외', soccer],

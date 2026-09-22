@@ -1,4 +1,4 @@
-import api from '../../api/axios';
+import api from '../../../api/axios';
 
 // Keep the facility response mapping here until the ServiceResponse contract is finalized.
 export function toFacilityOption(service) {

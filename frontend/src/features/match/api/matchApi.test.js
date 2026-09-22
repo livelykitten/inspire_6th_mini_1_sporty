@@ -1,7 +1,7 @@
-import api from '../../api/axios';
+import api from '../../../api/axios';
 import { createMatch, searchMatchFacilities } from './matchApi';
 
-jest.mock('../../api/axios', () => ({ post: jest.fn(), get: jest.fn() }));
+jest.mock('../../../api/axios', () => ({ post: jest.fn(), get: jest.fn() }));
 afterEach(() => jest.clearAllMocks());
 
 test.each([17, { matchId: 17 }])('reads the created match ID from %p', async data => {

@@ -1,11 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MatchForm from './MatchForm';
-import MatchCreatePage, { RequireMatchAuth } from './MatchCreatePage';
-import { createMatch } from './matchApi';
-import { initialMatchValues, toMatchPayload, validateMatch } from './matchValidation';
+import MatchCreatePage, { RequireMatchAuth } from '../pages/MatchCreatePage';
+import { createMatch } from '../api/matchApi';
+import { initialMatchValues, toMatchPayload, validateMatch } from '../utils/matchValidation';
 
-jest.mock('./matchApi', () => ({ createMatch: jest.fn(), searchMatchFacilities: jest.fn() }));
+jest.mock('../api/matchApi', () => ({ createMatch: jest.fn(), searchMatchFacilities: jest.fn() }));
 
 const match = { serviceId: 1, title: '주말 풋살 모집', description: '같이 풋살하실 분', startAt: '2026-09-26T19:00', endAt: '2026-09-26T21:00', maxParticipant: 10, skillLevel: 'BEGINNER', sportType: 'FUTSAL' };
 const facility = { serviceId: 1, name: '서초 풋살장', region: '서초구', locationName: '서초종합체육관', sportType: 'FUTSAL' };

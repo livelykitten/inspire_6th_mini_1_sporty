@@ -1,5 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
-import MatchCreatePage, { RequireMatchAuth } from '../features/match/MatchCreatePage';
+import MatchCreatePage, { RequireMatchAuth } from '../features/match/pages/MatchCreatePage';
 
 export default function AppRoutes() {
   return (
