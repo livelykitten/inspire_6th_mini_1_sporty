@@ -1,5 +1,7 @@
 package com.example.sporty.features.exerciseMatching.service;
 
+import java.util.List;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -8,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.sporty.features.commons.exception.matches.MatchUserNotFoundException;
 import com.example.sporty.features.commons.exception.matches.WithdrawnUserFoundException;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchCreateRequestDto;
+import com.example.sporty.features.exerciseMatching.domain.dto.MatchResponseDto;
+import com.example.sporty.features.exerciseMatching.domain.dto.MatchSearchRequestDto;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchParticipantEntity;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchParticipantRole;
@@ -71,5 +75,33 @@ public class MatchService {
         
         // 5. return matchId
         return savedMatchEntity.getId();
+    }
+
+    public List<MatchResponseDto> searchMatches(MatchSearchRequestDto req) {
+        System.out.println("debug >> MatchService.searchMatches(), req: " + req);
+
+        return matchRepository.searchMatches(
+            req.getServiceId(),
+            escapeSearchKeyword(req.getTitleKeyword()),
+            escapeSearchKeyword(req.getDescriptionKeyword()),
+            req.getStartAt(),
+            req.getEndAt(),
+            req.getMaxParticipant(),
+            req.getSkillLevel(),
+            req.getSportType()        
+        ).stream()
+        .map(MatchResponseDto::toResponseDto)
+        .toList();
+    }
+
+    private String escapeSearchKeyword(String keyword) {
+        if (keyword == null || keyword.isEmpty()) {
+            return null;
+        }
+
+        // Must match the repository's LIKE ESCAPE character; escape it first.
+        return keyword.replace("!", "!!")
+            .replace("%", "!%")
+            .replace("_", "!_");
     }
 }
