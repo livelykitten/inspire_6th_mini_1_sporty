@@ -36,7 +36,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return "OPTIONS".equalsIgnoreCase(request.getMethod())
-                || PublicEndpoints.MATCHER.matches(request);
+                || (PublicEndpoints.MATCHER.matches(request)
+                        && !PublicEndpoints.MATCH_DETAIL.matches(request));
     }
 
     @Override
@@ -67,8 +68,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (JwtException | IllegalArgumentException exception) {
             SecurityContextHolder.clearContext();
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
+            // 공개 상세 조회는 유효하지 않은 토큰을 비로그인 요청으로 처리한다.
+            if (!PublicEndpoints.MATCH_DETAIL.matches(request)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
         }
 
         // Application failures must not be treated as invalid JWTs.
