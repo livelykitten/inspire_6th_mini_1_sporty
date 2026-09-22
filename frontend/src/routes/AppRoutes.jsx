@@ -1,5 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import MatchCreatePage, { RequireMatchAuth } from '../features/match/pages/MatchCreatePage';
+import MatchDetailPage from '../features/match/pages/MatchDetailPage';
+import MatchDetailPreviewPage from '../features/match/pages/MatchDetailPreviewPage';
 
 export default function AppRoutes() {
   return (
@@ -11,7 +13,10 @@ export default function AppRoutes() {
       <Route path="/mypage" element={<div>마이페이지</div>} />
 
       <Route path="/matches/new" element={<RequireMatchAuth><MatchCreatePage /></RequireMatchAuth>} />
-      <Route path="/matches/:matchId" element={<div>매치 상세</div>} />
+      {process.env.NODE_ENV === 'development' && (
+        <Route path="/matches/preview" element={<MatchDetailPreviewPage />} />
+      )}
+      <Route path="/matches/:matchId" element={<MatchDetailPage />} />
       <Route path="/matches/:matchId/edit" element={<div>매치 수정</div>} />
 
       <Route path="/facilities" element={<div>시설 검색</div>} />
