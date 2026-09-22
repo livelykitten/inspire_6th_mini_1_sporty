@@ -6,9 +6,12 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.ServletException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,12 +47,27 @@ class JwtAuthenticationFilterTest {
 
     @Test
     void validTokenSetsPrincipalAndRole() throws Exception {
-        filter.doFilter(request("member@example.com"), new MockHttpServletResponse(), (req, res) -> {
+        var chainCalled = new AtomicBoolean(false);
+        var response = new MockHttpServletResponse();
+        filter.doFilter(request("1"), response, (req, res) -> {
+            chainCalled.set(true);
             var authentication = SecurityContextHolder.getContext().getAuthentication();
+            assertNotNull(authentication);
             assertTrue(authentication.isAuthenticated());
-            assertEquals("member@example.com", authentication.getPrincipal());
+            assertEquals(Integer.valueOf(1), authentication.getPrincipal());
             assertTrue(authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_USER")));
         });
+        assertTrue(chainCalled.get(), "Valid JWT must reach downstream");
+        assertEquals(200, response.getStatus());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"member@example.com", "not-a-number", "0", "-1", "2147483648"})
+    void invalidUserIdMustNotAuthenticate(String subject) throws Exception {
+        var response = new MockHttpServletResponse();
+        filter.doFilter(request(subject), response, (req, res) -> fail("Invalid user ID reached downstream"));
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertEquals(401, response.getStatus());
     }
 
     @Test
@@ -71,7 +89,7 @@ class JwtAuthenticationFilterTest {
     @Test
     void downstreamFailureMustNotBecomeAuthenticationFailure() {
         var response = new MockHttpServletResponse();
-        assertThrows(ServletException.class, () -> filter.doFilter(request("member@example.com"), response,
+        assertThrows(ServletException.class, () -> filter.doFilter(request("1"), response,
                 (req, res) -> { throw new ServletException("downstream failure"); }));
     }
 }
