@@ -87,7 +87,7 @@ class SecurityContractTest {
     }
 
     private String token(String secret, Instant expiration) {
-        return Jwts.builder().setSubject("member@example.com").claim("role", "USER")
+        return Jwts.builder().setSubject("1").claim("role", "USER")
                 .setExpiration(Date.from(expiration))
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8))).compact();
     }

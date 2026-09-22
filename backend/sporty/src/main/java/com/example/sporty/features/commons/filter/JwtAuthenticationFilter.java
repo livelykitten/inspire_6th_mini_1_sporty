@@ -51,12 +51,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             Claims claims = Jwts.parserBuilder().setSigningKey(key).build()
                     .parseClaimsJws(header.substring(7)).getBody();
-            String email = claims.getSubject();
-            if (email == null || email.isBlank()) {
+            String subject = claims.getSubject();
+            if (subject == null || subject.isBlank()) {
                 throw new JwtException("JWT subject is required");
             }
+            Integer userId = Integer.valueOf(subject);
+            if (userId <= 0) {
+                throw new JwtException("Invalid user ID");
+            }
+
             String role = claims.get("role", String.class);
-            var authentication = new UsernamePasswordAuthenticationToken(email, null,
+            var authentication = new UsernamePasswordAuthenticationToken(userId, null,
                     role != null ? List.of(new SimpleGrantedAuthority("ROLE_" + role)) : List.of());
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
