@@ -1,4 +1,4 @@
-package com.example.sporty.features.repository;
+package com.example.sporty.features.exerciseMatching.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

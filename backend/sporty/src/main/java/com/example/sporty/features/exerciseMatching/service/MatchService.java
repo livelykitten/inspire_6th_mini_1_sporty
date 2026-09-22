@@ -11,8 +11,8 @@ import com.example.sporty.features.exerciseMatching.domain.dto.MatchCreateReques
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchParticipantEntity;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchParticipantRole;
-import com.example.sporty.features.repository.MatchParticipantRepository;
-import com.example.sporty.features.repository.MatchRepository;
+import com.example.sporty.features.exerciseMatching.repository.MatchParticipantRepository;
+import com.example.sporty.features.exerciseMatching.repository.MatchRepository;
 import com.example.sporty.features.users.domain.entity.UserEntity;
 import com.example.sporty.features.users.domain.entity.UserStatus;
 import com.example.sporty.features.users.repository.UserRepository;
