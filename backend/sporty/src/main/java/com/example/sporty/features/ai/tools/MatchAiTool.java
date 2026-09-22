@@ -13,7 +13,7 @@ import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 
 @Component 
-public class MatchAITool {
+public class MatchAiTool {
     
     // TODO: MatchService.search()가 완성되면 주입받아 호출
     // private final MatchService matchService;

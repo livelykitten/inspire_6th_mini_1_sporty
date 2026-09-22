@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service 
 @RequiredArgsConstructor 
-public class MatchAIAgent {
+public class MatchAiAgent {
     
     private final ChatClient matchChatClient;
 

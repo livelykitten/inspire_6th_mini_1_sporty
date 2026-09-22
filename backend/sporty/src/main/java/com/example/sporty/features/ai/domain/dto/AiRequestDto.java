@@ -13,7 +13,7 @@ import lombok.ToString;
 @ToString 
 @NoArgsConstructor 
 @AllArgsConstructor 
-public class AIRequestDto {
+public class AiRequestDto {
     
     @NotBlank (message = "요청 내용을 입력해주세요.")
     @Size (max = 500, message = "요청은 500자 이하로 입력해주세요.")
