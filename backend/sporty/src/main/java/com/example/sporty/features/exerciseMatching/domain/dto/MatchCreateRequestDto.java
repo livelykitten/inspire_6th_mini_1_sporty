@@ -3,6 +3,7 @@ package com.example.sporty.features.exerciseMatching.domain.dto;
 import java.time.LocalDateTime;
 
 import com.example.sporty.features.commons.util.SportType;
+import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -56,5 +57,21 @@ public class MatchCreateRequestDto {
     public boolean isTimeRangeValid() {
         // Missing values are reported by the field-level @NotNull constraints.
         return startAt == null || endAt == null || endAt.isAfter(startAt);
+    }
+
+    // TODO: Integer serviceId ServiceEntity serviceEntity로 수정
+    public MatchEntity toEntity(Integer serviceId) {
+        return MatchEntity.builder()
+            .title(this.getTitle())
+            .description(this.getDescription())
+            .startAt(this.getStartAt())
+            .endAt(this.getEndAt())
+            .maxParticipant(this.getMaxParticipant())
+            .skillLevel(this.getSkillLevel())
+            .serviceId(serviceId)
+            // .service(serviceEntity)
+            // TODO: ServiceEntity 구현되면, 위의 주석 해제
+            .sportType(this.getSportType())
+            .build();
     }
 }

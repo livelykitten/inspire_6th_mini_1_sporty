@@ -1,5 +1,7 @@
 package com.example.sporty.features.commons.handler;
 
+import com.example.sporty.features.commons.exception.matches.MatchUserNotFoundException;
+import com.example.sporty.features.commons.exception.matches.WithdrawnUserFoundException;
 import com.example.sporty.features.commons.exception.users.DuplicateEmailException;
 import com.example.sporty.features.commons.exception.users.DuplicateNicknameException;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,28 @@ public class GlobalExceptionHandler {
             DuplicateNicknameException e
     ) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.builder()
+                        .code("DUPLICATE_NICKNAME")
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler (MatchUserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMatchUserNotFoundException(
+        MatchUserNotFoundException e
+    ) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.builder()
+                        .code("DUPLICATE_NICKNAME")
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler (WithdrawnUserFoundException.class)
+    public ResponseEntity<ErrorResponse> handleWithdrawnUserFoundException(
+        WithdrawnUserFoundException e
+    ) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.builder()
                         .code("DUPLICATE_NICKNAME")
                         .message(e.getMessage())
