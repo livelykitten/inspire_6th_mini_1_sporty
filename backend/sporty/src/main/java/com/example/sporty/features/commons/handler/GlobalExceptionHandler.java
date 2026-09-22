@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.builder()
-                        .code("DUPLICATE_NICKNAME")
+                        .code("MATCH_USER_NOT_FOUND")
                         .message(e.getMessage())
                         .build());
     }
@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.builder()
-                        .code("DUPLICATE_NICKNAME")
+                        .code("USER_WITHDRAWN")
                         .message(e.getMessage())
                         .build());
     }
