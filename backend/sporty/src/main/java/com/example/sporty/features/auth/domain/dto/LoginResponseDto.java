@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class LoginResponseDto {
     private Long userId;
     private String accessToken;
+    private String refreshToken;
     private String tokenType;
     // 토큰 유효 시간(초)
     private long expiresIn;
