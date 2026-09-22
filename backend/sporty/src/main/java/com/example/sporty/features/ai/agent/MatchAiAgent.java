@@ -10,6 +10,11 @@ import java.util.Locale;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
+import com.example.sporty.features.commons.exception.ai.AiSearchException;
+import com.example.sporty.features.exerciseMatching.domain.dto.MatchRequestDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.RequiredArgsConstructor;
 
 @Service 
@@ -18,10 +23,13 @@ public class MatchAiAgent {
     
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
     private static final int CALENDAR_DAYS = 14;
+    private static final String NO_CONDITION_MESSAGE =
+            "검색 조건을 찾지 못했습니다. 종목, 지역, 날짜 중 하나 이상을 포함해 주세요. (예: 이번 주말 강남에서 풋살)";
 
     private final ChatClient matchChatClient;
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
-    public String search(String prompt) {
+    public MatchRequestDto search(String prompt) {
         System.out.println("debug >>>> match ai agent search : " + prompt);
 
         LocalDate today = LocalDate.now(SEOUL);
@@ -48,7 +56,34 @@ public class MatchAiAgent {
                 .content();
 
         System.out.println("debug >>>> match ai agent search result : " + result);
-        return result;
+        
+        MatchRequestDto condition = toCondition(result);
+        if (condition == null || hasNoCondition(condition)) {
+            throw new AiSearchException(NO_CONDITION_MESSAGE);
+        }
+        return condition;
+    }
+
+    // tool이 호출되면 조건 JSON, 호출되지 않으면 AI의 안내 문장이 온다.
+    private MatchRequestDto toCondition(String result) {
+        if (result == null || result.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(result, MatchRequestDto.class);
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    // tool은 호출됐지만 추출된 조건이 하나도 없는 경우
+    private boolean hasNoCondition(MatchRequestDto condition) {
+        return condition.getSportType() == null
+                && condition.getRegion() == null
+                && condition.getStartAt() == null
+                && condition.getEndAt() == null
+                && condition.getSkillLevel() == null
+                && condition.getStatus() == null;
     }
 
     // 오늘부터 14일간의 날짜와 요일 목록

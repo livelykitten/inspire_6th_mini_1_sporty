@@ -17,6 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.example.sporty.features.commons.exception.ai.AiSearchException;
+import com.example.sporty.features.commons.exception.users.DuplicateEmailException;
+import com.example.sporty.features.commons.exception.users.DuplicateNicknameException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -133,5 +137,17 @@ public class GlobalExceptionHandler {
                         .code("LOGIN_FAILED")
                         .message(e.getMessage())
                         .build());
+    // AI 검색 조건 없음 → 400
+    @ExceptionHandler(AiSearchException.class)
+    public ResponseEntity<?> handlerAiSearch(AiSearchException e) {
+        System.out.println("debug >>>> GlobalExceptionHandler handlerAiSearch");
+        System.out.println("debug >>>> e.message " + e.getMessage());
+
+        ErrorResponse error = ErrorResponse.builder()
+                .message(e.getMessage())
+                .build();
+
+        // code : BAD_REQUEST(400)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 }
