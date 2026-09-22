@@ -2,6 +2,7 @@ package com.example.sporty.features.exerciseMatching.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,10 +22,12 @@ public class MatchController {
 
     private final MatchService matchService;
 
-    // EM-03: 기본 상세 정보 조회. 장소/참가자/내 상태는 후속 연동이 필요하다.
+    // EM-03: 비로그인 조회도 허용하며, 로그인한 경우 내 생성자/참여 여부를 함께 반환한다.
     @GetMapping("/{matchId}")
-    public ResponseEntity<MatchDetailResponseDto> getMatchDetail(@PathVariable("matchId") Integer matchId) {
-        return ResponseEntity.ok(matchService.getMatchDetail(matchId));
+    public ResponseEntity<MatchDetailResponseDto> getMatchDetail(
+            @PathVariable("matchId") Integer matchId,
+            @AuthenticationPrincipal Integer userId) {
+        return ResponseEntity.ok(matchService.getMatchDetail(matchId, userId));
     }
 
     // EM-05: 생성자 전용 삭제. 구현 후 204, 인증/권한/매치 확인 실패 시 401/403/404.

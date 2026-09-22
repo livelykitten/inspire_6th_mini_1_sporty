@@ -3,7 +3,12 @@ package com.example.sporty.features.profiles.repository;
 import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface ProfileRepository extends JpaRepository<ProfileEntity, Long> {
 
     boolean existsByNickname(String nickname);
+
+    // 참가자별로 반복 조회하지 않고 해당 사용자들의 프로필을 한 번에 조회한다.
+    List<ProfileEntity> findAllByUser_IdIn(List<Long> userIds);
 }

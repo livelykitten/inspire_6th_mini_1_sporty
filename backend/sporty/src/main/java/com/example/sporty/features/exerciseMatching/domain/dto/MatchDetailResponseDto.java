@@ -16,7 +16,7 @@ import lombok.ToString;
 
 /**
  * EM-03 운동 매칭 상세 화면에 필요한 응답 정보.
- * 장소/프로필 조회와 로그인 사용자 상태는 Service 구현 시 연결한다.
+ * 장소 정보는 시설 코드 연동 전까지 null로 반환한다.
  */
 @Builder
 @Getter
@@ -46,7 +46,7 @@ public class MatchDetailResponseDto {
 
     private List<MatchParticipantSummaryDto> participants;
 
-    // 현재 조회 사용자 기준. OWNER도 참가자이므로 두 값이 모두 true일 수 있다.
+    // 현재 조회 사용자 기준. 비로그인은 둘 다 false, OWNER는 둘 다 true다.
     @JsonProperty("isOwner")
     private Boolean isOwner;
 

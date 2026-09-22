@@ -1,0 +1,177 @@
+package com.example.sporty.features.exerciseMatching.controller;
+
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.example.sporty.features.commons.config.SecurityConfig;
+import com.example.sporty.features.commons.filter.JwtAuthenticationFilter;
+import com.example.sporty.features.commons.util.SportType;
+import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
+import com.example.sporty.features.exerciseMatching.domain.entity.MatchParticipantEntity;
+import com.example.sporty.features.exerciseMatching.domain.enums.MatchParticipantRole;
+import com.example.sporty.features.exerciseMatching.repository.MatchParticipantRepository;
+import com.example.sporty.features.exerciseMatching.repository.MatchRepository;
+import com.example.sporty.features.exerciseMatching.service.MatchService;
+import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
+import com.example.sporty.features.profiles.repository.ProfileRepository;
+import com.example.sporty.features.users.domain.entity.UserEntity;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+
+// 실제 JWT 필터 -> Controller -> Service -> JSON 응답을 검증하며 DB 조회만 대체한다.
+@WebMvcTest(MatchController.class)
+@Import({MatchService.class, SecurityConfig.class, JwtAuthenticationFilter.class})
+@TestPropertySource(properties = "jwt.secret=test-only-signing-secret-with-at-least-32-bytes")
+class MatchDetailControllerTest {
+
+    private static final String SECRET = "test-only-signing-secret-with-at-least-32-bytes";
+
+    @Autowired
+    private MockMvc mvc;
+
+    @MockitoBean
+    private MatchRepository matchRepository;
+
+    @MockitoBean
+    private MatchParticipantRepository matchParticipantRepository;
+
+    @MockitoBean
+    private ProfileRepository profileRepository;
+
+    @Test
+    @DisplayName("[TC-EM03-01] 비로그인 상세 조회 200, 기본 정보와 참가자 프로필 반환")
+    void anonymousUserCanReadMatchDetail() throws Exception {
+        givenMatch();
+
+        mvc.perform(get("/api/matches/101"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.matchId").value(101))
+                .andExpect(jsonPath("$.title").value("주말 풋살 모집"))
+                .andExpect(jsonPath("$.description").value("함께 풋살하실 분"))
+                .andExpect(jsonPath("$.startAt").value("2026-09-26T19:00:00"))
+                .andExpect(jsonPath("$.endAt").value("2026-09-26T21:00:00"))
+                .andExpect(jsonPath("$.maxParticipant").value(10))
+                .andExpect(jsonPath("$.currentParticipantCount").value(2))
+                .andExpect(jsonPath("$.status").value("RECRUITING"))
+                .andExpect(jsonPath("$.skillLevel").value("BEGINNER"))
+                .andExpect(jsonPath("$.sportType").value("FUTSAL"))
+                .andExpect(jsonPath("$.serviceId").value(7))
+                .andExpect(jsonPath("$.serviceName").value(nullValue()))
+                .andExpect(jsonPath("$.locationName").value(nullValue()))
+                .andExpect(jsonPath("$.region").value(nullValue()))
+                .andExpect(jsonPath("$.participants.length()").value(2))
+                .andExpect(jsonPath("$.participants[0].profileId").value(401))
+                .andExpect(jsonPath("$.participants[0].nickname").value("생성자"))
+                .andExpect(jsonPath("$.participants[0].imageUrl").value("https://example.com/owner.png"))
+                .andExpect(jsonPath("$.participants[0].role").value("OWNER"))
+                .andExpect(jsonPath("$.participants[1].role").value("PARTICIPANT"))
+                .andExpect(jsonPath("$.participants[0].email").doesNotExist())
+                .andExpect(jsonPath("$.participants[0].password").doesNotExist())
+                .andExpect(jsonPath("$.participants[0].user").doesNotExist())
+                .andExpect(jsonPath("$.isOwner").value(false))
+                .andExpect(jsonPath("$.isParticipant").value(false));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1,true,true", "2,false,true", "3,false,false"})
+    @DisplayName("유효한 JWT의 사용자 ID와 매치 참가 역할로 내 상태를 반환한다")
+    void authenticatedUserGetsOwnState(String userId, boolean owner, boolean participant) throws Exception {
+        givenMatch();
+
+        mvc.perform(get("/api/matches/101").header("Authorization", "Bearer " +
+                        token(userId, SECRET, Instant.now().plusSeconds(300))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isOwner").value(owner))
+                .andExpect(jsonPath("$.isParticipant").value(participant));
+
+        // 같은 처리 스레드의 다음 비로그인 요청에 이전 사용자 상태가 남지 않아야 한다.
+        mvc.perform(get("/api/matches/101"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isOwner").value(false))
+                .andExpect(jsonPath("$.isParticipant").value(false));
+    }
+
+    @Test
+    @DisplayName("잘못된 토큰과 만료 토큰으로도 공개 상세는 조회하되 사용자로 인증하지 않는다")
+    void invalidTokensAreTreatedAsAnonymousForDetail() throws Exception {
+        givenMatch();
+        List<String> headers = List.of("Bearer broken", "Bearer ", "Basic ignored",
+                "Bearer " + token("1", SECRET, Instant.now().minusSeconds(60)),
+                "Bearer " + token("1", "different-test-secret-with-at-least-32-bytes", Instant.now().plusSeconds(300)),
+                "Bearer " + token("invalid-user-id", SECRET, Instant.now().plusSeconds(300)));
+
+        for (String header : headers) {
+            mvc.perform(get("/api/matches/101").header("Authorization", header))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.isOwner").value(false))
+                    .andExpect(jsonPath("$.isParticipant").value(false));
+        }
+    }
+
+    @Test
+    @DisplayName("[TC-EM03-02] 존재하지 않는 매치는 404와 공통 오류 메시지를 반환한다")
+    void missingMatchReturnsNotFoundMessage() throws Exception {
+        when(matchRepository.findById(999999)).thenReturn(Optional.empty());
+
+        mvc.perform(get("/api/matches/999999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("MATCH_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("매치를 찾을 수 없습니다."));
+        verifyNoInteractions(matchParticipantRepository, profileRepository);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"invalid", "2147483648"})
+    @DisplayName("Integer로 해석할 수 없는 matchId는 400을 반환한다")
+    void malformedMatchIdReturnsBadRequest(String matchId) throws Exception {
+        mvc.perform(get("/api/matches/" + matchId)).andExpect(status().isBadRequest());
+        verifyNoInteractions(matchRepository, matchParticipantRepository, profileRepository);
+    }
+
+    private void givenMatch() {
+        when(matchRepository.findById(101)).thenReturn(Optional.of(MatchEntity.builder()
+                .id(101).title("주말 풋살 모집").description("함께 풋살하실 분")
+                .startAt(LocalDateTime.of(2026, 9, 26, 19, 0))
+                .endAt(LocalDateTime.of(2026, 9, 26, 21, 0))
+                .maxParticipant(10).sportType(SportType.FUTSAL).serviceId(7).build()));
+        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101)).thenReturn(List.of(
+                MatchParticipantEntity.builder().id(11).userId(1).role(MatchParticipantRole.OWNER).build(),
+                MatchParticipantEntity.builder().id(12).userId(2).role(MatchParticipantRole.PARTICIPANT).build()));
+        when(profileRepository.findAllByUser_IdIn(List.of(1L, 2L))).thenReturn(List.of(
+                ProfileEntity.builder().id(401L).nickname("생성자").imageUrl("https://example.com/owner.png")
+                        .user(UserEntity.builder().id(1L).email("owner@example.com").password("test-hash").build()).build(),
+                ProfileEntity.builder().id(402L).nickname("참가자")
+                        .user(UserEntity.builder().id(2L).build()).build()));
+    }
+
+    private String token(String userId, String secret, Instant expiration) {
+        // 전역 권한 문자열이 OWNER여도 해당 매치에 참여하지 않았다면 생성자가 아니다.
+        return Jwts.builder().setSubject(userId).claim("role", "OWNER")
+                .setExpiration(Date.from(expiration))
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8))).compact();
+    }
+}

@@ -18,7 +18,7 @@ import lombok.ToString;
 @AllArgsConstructor
 public class MatchParticipantSummaryDto {
 
-    private Integer profileId;
+    private Long profileId;
     private String nickname;
     private String imageUrl;
     private MatchParticipantRole role;
