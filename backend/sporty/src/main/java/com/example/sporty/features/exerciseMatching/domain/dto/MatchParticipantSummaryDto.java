@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * 매칭 상세 화면의 참가자 목록에 표시할 프로필 및 역할 정보.
+ * EM-03 운동 매칭 상세 화면의 참가자 목록에 표시할 프로필 및 역할 정보.
  */
 @Builder
 @Getter
