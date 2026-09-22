@@ -90,6 +90,7 @@ public class MatchEntity {
     private SportType sportType;
 
     // TODO: ServiceEntity가 만들어지면, private ServiceEntity로 교체
+    // LAZY fetch 지정해야 함
     @Column(name = "service_id")
     private Integer serviceId;
 }

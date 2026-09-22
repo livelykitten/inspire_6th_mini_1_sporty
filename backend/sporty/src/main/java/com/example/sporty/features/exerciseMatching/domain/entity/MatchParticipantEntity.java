@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchParticipantRole;
+import com.example.sporty.features.users.domain.entity.UserEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,9 +40,10 @@ public class MatchParticipantEntity {
     @Column(name = "match_participant_id")
     private Integer id;
 
-    // TODO: User 테이블이 생기면, User 객체로 변경하고 not null
-    @Column(name = "user_id")
-    private Integer userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @ToString.Exclude
+    private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id", nullable = false)
