@@ -49,13 +49,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            Claims claims = Jwts.parserBuilder().setSigningKey(key).build()
-                    .parseClaimsJws(header.substring(7)).getBody();
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(header.substring(7))
+                    .getBody();
+
+            // 일반 API 인증에는 액세스 토큰만 허용
+            if (!"ACCESS".equals(claims.get("tokenType", String.class))) {
+                throw new JwtException("Access Token Required");
+            }
+            // 만료 시간이 없는 토큰 거절
+            if (claims.getExpiration() == null) {
+                throw new JwtException("JWT expiration is required");
+            }
+
             String subject = claims.getSubject();
             if (subject == null || subject.isBlank()) {
                 throw new JwtException("JWT subject is required");
             }
-            Integer userId = Integer.valueOf(subject);
+
+            long userId = Long.parseLong(subject);
+
             if (userId <= 0) {
                 throw new JwtException("Invalid user ID");
             }
