@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.sporty.features.commons.config.SecurityConfig;
 import com.example.sporty.features.commons.filter.JwtAuthenticationFilter;
+import com.example.sporty.features.commons.token.JwtProvider;
 import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchParticipantEntity;
@@ -133,6 +134,25 @@ class MatchDetailControllerTest {
     }
 
     @Test
+    @DisplayName("로그인에서 발급하는 Access Token은 사용자를 식별하고 Refresh Token은 비로그인으로 처리한다")
+    void issuedTokensFollowDetailAuthenticationPolicy() throws Exception {
+        givenMatch();
+        JwtProvider jwtProvider = new JwtProvider(SECRET);
+
+        mvc.perform(get("/api/matches/101").header("Authorization", "Bearer " +
+                        jwtProvider.createAccessToken(1L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isOwner").value(true))
+                .andExpect(jsonPath("$.isParticipant").value(true));
+
+        mvc.perform(get("/api/matches/101").header("Authorization", "Bearer " +
+                        jwtProvider.createRefreshToken(1L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isOwner").value(false))
+                .andExpect(jsonPath("$.isParticipant").value(false));
+    }
+
+    @Test
     @DisplayName("[TC-EM03-02] 존재하지 않는 매치는 404와 공통 오류 메시지를 반환한다")
     void missingMatchReturnsNotFoundMessage() throws Exception {
         when(matchRepository.findById(999999L)).thenReturn(Optional.empty());
@@ -198,6 +218,7 @@ class MatchDetailControllerTest {
     private String token(String userId, String secret, Instant expiration) {
         // 전역 권한 문자열이 OWNER여도 해당 매치에 참여하지 않았다면 생성자가 아니다.
         return Jwts.builder().setSubject(userId).claim("role", "OWNER")
+                .claim("tokenType", "ACCESS")
                 .setExpiration(Date.from(expiration))
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8))).compact();
     }

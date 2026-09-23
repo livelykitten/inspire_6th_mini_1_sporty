@@ -1,5 +1,6 @@
 package com.example.sporty.features.commons.handler;
 
+import com.example.sporty.features.commons.exception.auth.LoginFailException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
 import com.example.sporty.features.commons.exception.users.DuplicateEmailException;
 import com.example.sporty.features.commons.exception.users.DuplicateNicknameException;
@@ -38,6 +39,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.builder()
                         .code("DUPLICATE_NICKNAME")
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(LoginFailException.class)
+    public ResponseEntity<ErrorResponse> handleLoginFail(
+            LoginFailException e
+    ) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.builder()
+                        .code("LOGIN_FAILED")
                         .message(e.getMessage())
                         .build());
     }
