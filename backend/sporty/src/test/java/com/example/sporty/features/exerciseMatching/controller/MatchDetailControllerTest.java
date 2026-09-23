@@ -135,7 +135,7 @@ class MatchDetailControllerTest {
     @Test
     @DisplayName("[TC-EM03-02] 존재하지 않는 매치는 404와 공통 오류 메시지를 반환한다")
     void missingMatchReturnsNotFoundMessage() throws Exception {
-        when(matchRepository.findById(999999)).thenReturn(Optional.empty());
+        when(matchRepository.findById(999999L)).thenReturn(Optional.empty());
 
         mvc.perform(get("/api/matches/999999"))
                 .andExpect(status().isNotFound())
@@ -145,22 +145,49 @@ class MatchDetailControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"invalid", "2147483648"})
-    @DisplayName("Integer로 해석할 수 없는 matchId는 400을 반환한다")
+    @ValueSource(strings = {"invalid", "9223372036854775808"})
+    @DisplayName("Long으로 해석할 수 없는 matchId는 400을 반환한다")
     void malformedMatchIdReturnsBadRequest(String matchId) throws Exception {
         mvc.perform(get("/api/matches/" + matchId)).andExpect(status().isBadRequest());
         verifyNoInteractions(matchRepository, matchParticipantRepository, profileRepository);
     }
 
+    @Test
+    @DisplayName("Integer 범위를 넘는 매치와 사용자 ID로 상세 조회 및 생성자 확인이 가능하다")
+    void longIdsRetainMatchDetailsAndOwnerState() throws Exception {
+        Long matchId = 2147483648L;
+        Long userId = 2147483649L;
+        Long serviceId = 2147483650L;
+        when(matchRepository.findById(matchId)).thenReturn(Optional.of(MatchEntity.builder()
+                .id(matchId).serviceId(serviceId).build()));
+        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(matchId)).thenReturn(List.of(
+                MatchParticipantEntity.builder().id(2147483651L).userId(userId)
+                        .role(MatchParticipantRole.OWNER).build()));
+        when(profileRepository.findAllByUser_IdIn(List.of(userId))).thenReturn(List.of(
+                ProfileEntity.builder().id(401L).nickname("생성자")
+                        .user(UserEntity.builder().id(userId).build()).build()));
+
+        mvc.perform(get("/api/matches/{matchId}", matchId)
+                        .header("Authorization", "Bearer " +
+                                token(userId.toString(), SECRET, Instant.now().plusSeconds(300))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.matchId").value(matchId))
+                .andExpect(jsonPath("$.serviceId").value(serviceId))
+                .andExpect(jsonPath("$.participants[0].profileId").value(401))
+                .andExpect(jsonPath("$.participants[0].nickname").value("생성자"))
+                .andExpect(jsonPath("$.isOwner").value(true))
+                .andExpect(jsonPath("$.isParticipant").value(true));
+    }
+
     private void givenMatch() {
-        when(matchRepository.findById(101)).thenReturn(Optional.of(MatchEntity.builder()
-                .id(101).title("주말 풋살 모집").description("함께 풋살하실 분")
+        when(matchRepository.findById(101L)).thenReturn(Optional.of(MatchEntity.builder()
+                .id(101L).title("주말 풋살 모집").description("함께 풋살하실 분")
                 .startAt(LocalDateTime.of(2026, 9, 26, 19, 0))
                 .endAt(LocalDateTime.of(2026, 9, 26, 21, 0))
-                .maxParticipant(10).sportType(SportType.FUTSAL).serviceId(7).build()));
-        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101)).thenReturn(List.of(
-                MatchParticipantEntity.builder().id(11).userId(1).role(MatchParticipantRole.OWNER).build(),
-                MatchParticipantEntity.builder().id(12).userId(2).role(MatchParticipantRole.PARTICIPANT).build()));
+                .maxParticipant(10).sportType(SportType.FUTSAL).serviceId(7L).build()));
+        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L)).thenReturn(List.of(
+                MatchParticipantEntity.builder().id(11L).userId(1L).role(MatchParticipantRole.OWNER).build(),
+                MatchParticipantEntity.builder().id(12L).userId(2L).role(MatchParticipantRole.PARTICIPANT).build()));
         when(profileRepository.findAllByUser_IdIn(List.of(1L, 2L))).thenReturn(List.of(
                 ProfileEntity.builder().id(401L).nickname("생성자").imageUrl("https://example.com/owner.png")
                         .user(UserEntity.builder().id(1L).email("owner@example.com").password("test-hash").build()).build(),

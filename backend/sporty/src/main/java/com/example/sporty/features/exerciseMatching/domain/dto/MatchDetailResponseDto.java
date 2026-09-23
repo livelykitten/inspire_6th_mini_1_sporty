@@ -25,7 +25,7 @@ import lombok.ToString;
 @AllArgsConstructor
 public class MatchDetailResponseDto {
 
-    private Integer matchId;
+    private Long matchId;
     private String title;
     private String description;
 
@@ -39,7 +39,7 @@ public class MatchDetailResponseDto {
     private SkillLevel skillLevel;
     private SportType sportType;
 
-    private Integer serviceId;
+    private Long serviceId;
     private String serviceName;
     private String locationName;
     private String region;

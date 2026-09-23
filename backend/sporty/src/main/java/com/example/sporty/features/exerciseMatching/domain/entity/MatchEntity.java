@@ -38,7 +38,7 @@ public class MatchEntity {
     @Id 
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Integer id;
+    private Long id;
 
     @Column(name = "title", length = 50)
     private String title;
@@ -91,5 +91,5 @@ public class MatchEntity {
 
     // TODO: ServiceEntity가 만들어지면, private ServiceEntity로 교체
     @Column(name = "service_id")
-    private Integer serviceId;
+    private Long serviceId;
 }

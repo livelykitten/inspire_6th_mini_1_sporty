@@ -37,11 +37,11 @@ public class MatchParticipantEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "match_participant_id")
-    private Integer id;
+    private Long id;
 
     // TODO: User 테이블이 생기면, User 객체로 변경하고 not null
     @Column(name = "user_id")
-    private Integer userId;
+    private Long userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id", nullable = false)

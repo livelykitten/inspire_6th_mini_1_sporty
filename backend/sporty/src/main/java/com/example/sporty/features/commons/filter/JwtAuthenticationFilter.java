@@ -56,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (subject == null || subject.isBlank()) {
                 throw new JwtException("JWT subject is required");
             }
-            Integer userId = Integer.valueOf(subject);
+            Long userId = Long.valueOf(subject);
             if (userId <= 0) {
                 throw new JwtException("Invalid user ID");
             }

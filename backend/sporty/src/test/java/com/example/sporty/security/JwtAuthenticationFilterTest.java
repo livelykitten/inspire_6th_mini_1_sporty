@@ -45,16 +45,17 @@ class JwtAuthenticationFilterTest {
         return request;
     }
 
-    @Test
-    void validTokenSetsPrincipalAndRole() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"1", "2147483648", "9223372036854775807"})
+    void validTokenSetsPrincipalAndRole(String subject) throws Exception {
         var chainCalled = new AtomicBoolean(false);
         var response = new MockHttpServletResponse();
-        filter.doFilter(request("1"), response, (req, res) -> {
+        filter.doFilter(request(subject), response, (req, res) -> {
             chainCalled.set(true);
             var authentication = SecurityContextHolder.getContext().getAuthentication();
             assertNotNull(authentication);
             assertTrue(authentication.isAuthenticated());
-            assertEquals(Integer.valueOf(1), authentication.getPrincipal());
+            assertEquals(Long.valueOf(subject), authentication.getPrincipal());
             assertTrue(authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_USER")));
         });
         assertTrue(chainCalled.get(), "Valid JWT must reach downstream");
@@ -62,7 +63,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"member@example.com", "not-a-number", "0", "-1", "2147483648"})
+    @ValueSource(strings = {"member@example.com", "not-a-number", "0", "-1", "9223372036854775808"})
     void invalidUserIdMustNotAuthenticate(String subject) throws Exception {
         var response = new MockHttpServletResponse();
         filter.doFilter(request(subject), response, (req, res) -> fail("Invalid user ID reached downstream"));

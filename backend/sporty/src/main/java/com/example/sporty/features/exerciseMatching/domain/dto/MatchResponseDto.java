@@ -22,7 +22,7 @@ import lombok.ToString;
 @JsonIgnoreProperties (ignoreUnknown = true)
 public class MatchResponseDto {
 
-    private Integer matchId;
+    private Long matchId;
 
     private String title;
     private String description;

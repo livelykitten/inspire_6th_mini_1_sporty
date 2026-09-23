@@ -36,17 +36,15 @@ public class MatchService {
      * EM-03: 기본 정보, 참가자 프로필과 조회 사용자의 참여 상태를 반환한다.
      * OWNER도 참가 인원에 포함하며, 비로그인 요청의 userId는 null이다.
      */
-    public MatchDetailResponseDto getMatchDetail(Integer matchId, Integer userId) {
+    public MatchDetailResponseDto getMatchDetail(Long matchId, Long userId) {
         MatchEntity match = matchRepository.findById(matchId)
                 .orElseThrow(MatchNotFoundException::new);
 
         List<MatchParticipantEntity> participants =
                 matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(matchId);
-        // 기존 참가자의 Integer userId를 회원/프로필 조회용 Long으로 변환한다.
         List<Long> participantUserIds = participants.stream()
                 .map(MatchParticipantEntity::getUserId)
                 .filter(Objects::nonNull)
-                .map(Integer::longValue)
                 .distinct()
                 .toList();
         Map<Long, ProfileEntity> profilesByUserId = participantUserIds.isEmpty()
@@ -59,7 +57,7 @@ public class MatchService {
         boolean isParticipant = false;
         for (MatchParticipantEntity participant : participants) {
             ProfileEntity profile = participant.getUserId() == null
-                    ? null : profilesByUserId.get(participant.getUserId().longValue());
+                    ? null : profilesByUserId.get(participant.getUserId());
 
             // 프로필이 누락되어도 참가 정보와 인원은 유지한다.
             participantSummaries.add(MatchParticipantSummaryDto.builder()

@@ -54,7 +54,7 @@ class MatchServiceTest {
         LocalDateTime startAt = LocalDateTime.of(2026, 9, 26, 19, 0);
         LocalDateTime endAt = startAt.plusHours(2);
         MatchEntity match = MatchEntity.builder()
-                .id(101)
+                .id(101L)
                 .title("주말 풋살 모집")
                 .description("같이 풋살하실 분")
                 .startAt(startAt)
@@ -63,20 +63,20 @@ class MatchServiceTest {
                 .status(MatchStatus.CLOSED)
                 .skillLevel(SkillLevel.INTERMEDIATE)
                 .sportType(SportType.FUTSAL)
-                .serviceId(7)
+                .serviceId(7L)
                 .build();
-        when(matchRepository.findById(101)).thenReturn(Optional.of(match));
-        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101)).thenReturn(List.of(
-                participant(1, MatchParticipantRole.OWNER),
-                participant(2, MatchParticipantRole.PARTICIPANT)));
+        when(matchRepository.findById(101L)).thenReturn(Optional.of(match));
+        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L)).thenReturn(List.of(
+                participant(1L, MatchParticipantRole.OWNER),
+                participant(2L, MatchParticipantRole.PARTICIPANT)));
         // 프로필 조회 순서가 달라도 사용자 ID로 연결해야 한다.
         when(profileRepository.findAllByUser_IdIn(List.of(1L, 2L))).thenReturn(List.of(
-                profile(2, 402L, "참가자", null),
-                profile(1, 401L, "생성자", "https://example.com/owner.png")));
+                profile(2L, 402L, "참가자", null),
+                profile(1L, 401L, "생성자", "https://example.com/owner.png")));
 
-        MatchDetailResponseDto response = matchService.getMatchDetail(101, null);
+        MatchDetailResponseDto response = matchService.getMatchDetail(101L, null);
 
-        assertThat(response.getMatchId()).isEqualTo(101);
+        assertThat(response.getMatchId()).isEqualTo(101L);
         assertThat(response.getTitle()).isEqualTo("주말 풋살 모집");
         assertThat(response.getDescription()).isEqualTo("같이 풋살하실 분");
         assertThat(response.getStartAt()).isEqualTo(startAt);
@@ -86,7 +86,7 @@ class MatchServiceTest {
         assertThat(response.getStatus()).isEqualTo(MatchStatus.CLOSED);
         assertThat(response.getSkillLevel()).isEqualTo(SkillLevel.INTERMEDIATE);
         assertThat(response.getSportType()).isEqualTo(SportType.FUTSAL);
-        assertThat(response.getServiceId()).isEqualTo(7);
+        assertThat(response.getServiceId()).isEqualTo(7L);
 
         assertThat(response.getParticipants()).hasSize(2);
         assertThat(response.getParticipants().get(0).getProfileId()).isEqualTo(401L);
@@ -109,11 +109,11 @@ class MatchServiceTest {
     @Test
     @DisplayName("[추가 검증] 참가 정보가 없으면 현재 인원은 0이며 생성자 수를 임의로 더하지 않는다")
     void getMatchDetailReturnsZeroWhenNoParticipantsAreStored() {
-        MatchEntity match = MatchEntity.builder().id(101).build();
-        when(matchRepository.findById(101)).thenReturn(Optional.of(match));
-        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101)).thenReturn(List.of());
+        MatchEntity match = MatchEntity.builder().id(101L).build();
+        when(matchRepository.findById(101L)).thenReturn(Optional.of(match));
+        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L)).thenReturn(List.of());
 
-        MatchDetailResponseDto response = matchService.getMatchDetail(101, 1);
+        MatchDetailResponseDto response = matchService.getMatchDetail(101L, 1L);
 
         assertThat(response.getCurrentParticipantCount()).isZero();
         assertThat(response.getParticipants()).isEmpty();
@@ -125,10 +125,10 @@ class MatchServiceTest {
     @Test
     @DisplayName("[TC-EM03-02] 존재하지 않는 매칭 상세 조회 - 404 예외가 발생한다")
     void getMatchDetailThrowsNotFoundWhenMatchDoesNotExist() {
-        when(matchRepository.findById(999999)).thenReturn(Optional.empty());
+        when(matchRepository.findById(999999L)).thenReturn(Optional.empty());
 
         MatchNotFoundException exception = assertThrows(MatchNotFoundException.class,
-                () -> matchService.getMatchDetail(999999, null));
+                () -> matchService.getMatchDetail(999999L, null));
 
         assertThat(exception.getMessage()).isEqualTo("매치를 찾을 수 없습니다.");
         verifyNoInteractions(matchParticipantRepository, profileRepository);
@@ -137,14 +137,14 @@ class MatchServiceTest {
     @ParameterizedTest
     @CsvSource({"1,true,true", "2,false,true", "3,false,false"})
     @DisplayName("조회 사용자의 해당 매치 참가 역할로 생성자와 참여 여부를 구분한다")
-    void getMatchDetailReturnsCurrentUserState(Integer userId, boolean owner, boolean joined) {
-        when(matchRepository.findById(101)).thenReturn(Optional.of(MatchEntity.builder().id(101).build()));
-        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101)).thenReturn(List.of(
-                participant(1, MatchParticipantRole.OWNER),
-                participant(2, MatchParticipantRole.PARTICIPANT)));
+    void getMatchDetailReturnsCurrentUserState(Long userId, boolean owner, boolean joined) {
+        when(matchRepository.findById(101L)).thenReturn(Optional.of(MatchEntity.builder().id(101L).build()));
+        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L)).thenReturn(List.of(
+                participant(1L, MatchParticipantRole.OWNER),
+                participant(2L, MatchParticipantRole.PARTICIPANT)));
         when(profileRepository.findAllByUser_IdIn(List.of(1L, 2L))).thenReturn(List.of());
 
-        MatchDetailResponseDto response = matchService.getMatchDetail(101, userId);
+        MatchDetailResponseDto response = matchService.getMatchDetail(101L, userId);
 
         assertThat(response.getIsOwner()).isEqualTo(owner);
         assertThat(response.getIsParticipant()).isEqualTo(joined);
@@ -153,12 +153,12 @@ class MatchServiceTest {
     @Test
     @DisplayName("프로필이 없어도 참가자 수와 역할을 유지하고 개인정보 필드는 null로 반환한다")
     void missingProfileDoesNotRemoveParticipant() {
-        when(matchRepository.findById(101)).thenReturn(Optional.of(MatchEntity.builder().id(101).build()));
-        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101))
-                .thenReturn(List.of(participant(1, MatchParticipantRole.OWNER)));
+        when(matchRepository.findById(101L)).thenReturn(Optional.of(MatchEntity.builder().id(101L).build()));
+        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L))
+                .thenReturn(List.of(participant(1L, MatchParticipantRole.OWNER)));
         when(profileRepository.findAllByUser_IdIn(List.of(1L))).thenReturn(List.of());
 
-        MatchDetailResponseDto response = matchService.getMatchDetail(101, 1);
+        MatchDetailResponseDto response = matchService.getMatchDetail(101L, 1L);
 
         assertThat(response.getCurrentParticipantCount()).isEqualTo(1);
         assertThat(response.getParticipants()).hasSize(1);
@@ -173,24 +173,24 @@ class MatchServiceTest {
     @Test
     @DisplayName("프로필 ID는 Long 값을 잘라내지 않고 반환한다")
     void profileIdRetainsLongValue() {
-        when(matchRepository.findById(101)).thenReturn(Optional.of(MatchEntity.builder().id(101).build()));
-        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101))
-                .thenReturn(List.of(participant(1, MatchParticipantRole.OWNER)));
+        when(matchRepository.findById(101L)).thenReturn(Optional.of(MatchEntity.builder().id(101L).build()));
+        when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L))
+                .thenReturn(List.of(participant(1L, MatchParticipantRole.OWNER)));
         when(profileRepository.findAllByUser_IdIn(List.of(1L)))
-                .thenReturn(List.of(profile(1, 2147483648L, "생성자", null)));
+                .thenReturn(List.of(profile(1L, 2147483648L, "생성자", null)));
 
-        assertThat(matchService.getMatchDetail(101, null).getParticipants().get(0).getProfileId())
+        assertThat(matchService.getMatchDetail(101L, null).getParticipants().get(0).getProfileId())
                 .isEqualTo(2147483648L);
     }
 
-    private MatchParticipantEntity participant(Integer userId, MatchParticipantRole role) {
+    private MatchParticipantEntity participant(Long userId, MatchParticipantRole role) {
         return MatchParticipantEntity.builder().userId(userId).role(role).build();
     }
 
-    private ProfileEntity profile(Integer userId, Long profileId, String nickname, String imageUrl) {
+    private ProfileEntity profile(Long userId, Long profileId, String nickname, String imageUrl) {
         return ProfileEntity.builder()
                 .id(profileId)
-                .user(UserEntity.builder().id(userId.longValue()).build())
+                .user(UserEntity.builder().id(userId).build())
                 .nickname(nickname)
                 .imageUrl(imageUrl)
                 .build();

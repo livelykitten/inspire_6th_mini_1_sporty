@@ -18,8 +18,8 @@ import lombok.ToString;
 @AllArgsConstructor
 public class MatchParticipantResponseDto {
 
-    private Integer matchParticipantId;
-    private Integer matchId;
-    private Integer userId;
+    private Long matchParticipantId;
+    private Long matchId;
+    private Long userId;
     private MatchParticipantRole role;
 }
