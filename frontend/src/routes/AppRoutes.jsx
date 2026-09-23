@@ -1,19 +1,26 @@
 import { Route, Routes } from 'react-router-dom';
 import MatchCreatePage, { RequireMatchAuth } from '../features/match/pages/MatchCreatePage';
+import MainPage from '../features/main/pages/MainPage';
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<div>메인 페이지</div>} />
+      {/* [AI-03] AI 매치 생성
+          생성 해석 API 준비 후 main/api의 함수를 import해 <MainPage onGenerate={해석함수} />로 연결한다.
+          함수 반환 형식은 features/match/utils/aiMatchDraft.js 참고. 현재는 원문만 생성 페이지로 전달한다. */}
+      <Route path="/" element={<MainPage/>} />
 
       <Route path="/login" element={<div>로그인</div>} />
       <Route path="/signup" element={<div>회원가입</div>} />
       <Route path="/mypage" element={<div>마이페이지</div>} />
 
       <Route path="/matches/new" element={<RequireMatchAuth><MatchCreatePage /></RequireMatchAuth>} />
+      {/* [EM-02] 전체 운동 매칭 목록 조회 — 실제 목록 페이지로 교체하고 해당 페이지에서 조회 API를 호출한다. */}
+      <Route path="/matches/search" element={<div>매치 검색</div>} />
       <Route path="/matches/:matchId" element={<div>매치 상세</div>} />
       <Route path="/matches/:matchId/edit" element={<div>매치 수정</div>} />
 
+      {/* [FC-01] 시설 검색 — 실제 시설 검색 페이지로 교체하고 URL의 query를 초기 검색어로 사용한다. */}
       <Route path="/facilities" element={<div>시설 검색</div>} />
       <Route path="/facilities/:serviceId" element={<div>시설 상세</div>} />
 

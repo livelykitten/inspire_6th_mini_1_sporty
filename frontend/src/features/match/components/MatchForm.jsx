@@ -36,18 +36,34 @@ function Section({ number, title, description, children }) {
 }
 
 export default function MatchForm({ initialValues, selectedFacility, searchFacilities, onSubmit, submitLabel = '매치 개설 완료하기' }) {
+  // AI 초안/수정 대상 값을 최초 마운트 때만 폼 상태로 복사한다. 이후 props를 동기화하면 사용자 수정값이 덮인다.
+  // 새 초안을 적용해야 할 때는 부모에서 key를 변경한다(MatchCreatePage의 location.key 참고).
+  // startAt/endAt → 날짜/시간 입력 분리는 utils/matchValidation.js의 initialMatchValues에서 처리한다.
+  // [AI-03] object: 자동 입력된 초안 및 사용자가 수정한 폼 값. 최종 등록에도 쓰며 등록 기능 ID는 별도 확정 필요.
   const [values, setValues] = useState(() => initialMatchValues({ ...initialValues, ...(selectedFacility ? { serviceId: selectedFacility.serviceId } : {}) }));
+  // [FC-01][AI-03] object | null: 선택/추천 시설(serviceId, name, region, locationName). 시설 표시와 등록 ID에 사용한다.
   const [facility, setFacility] = useState(selectedFacility || null);
+  // [FC-01] string: 생성 폼 내부의 시설명 검색어. 메인 상단 검색어와 독립적이다.
   const [query, setQuery] = useState('');
+  // [FC-01] string: 시설 검색의 지역 필터(예: 성동구). search()에서 query와 함께 전달한다.
   const [region, setRegion] = useState('');
+  // [FC-01] array: 검색된 시설 목록. 시설을 선택하면 facility/values.serviceId를 갱신하고 목록을 비운다.
   const [results, setResults] = useState([]);
+  // [FC-01] string: 시설 검색 결과 없음/요청 실패/미연결 안내 문구.
   const [searchMessage, setSearchMessage] = useState('');
+  // [FC-01] boolean: 시설 검색 중 여부. 검색 버튼의 문구와 비활성화를 제어한다.
   const [searching, setSearching] = useState(false);
+  // [AI-03 후속 폼 / 등록 ID 미확정] object: { 필드명: 오류 문구 }. 자동 입력값도 수동 입력과 동일하게 검증한다.
   const [errors, setErrors] = useState({});
+  // [AI-03 후속 폼 / 등록 ID 미확정] string: 실제 매치 등록 요청 실패 문구. AI 해석 오류와 별개다.
   const [submitError, setSubmitError] = useState('');
+  // [AI-03 후속 폼 / 등록 ID 미확정] boolean: 최종 등록 중 여부. 폼과 제출 버튼을 잠근다.
   const [pending, setPending] = useState(false);
+  // [AI-03 후속 폼 / 등록 ID 미확정] ref<boolean>: 최종 등록의 연속 제출 방지 잠금.
   const submitting = useRef(false);
+  // [FC-01] ref<number>: 최신 검색 번호. 늦게 도착한 과거 시설 검색 응답을 무시한다.
   const searchVersion = useRef(0);
+  // [AI-03 후속 폼 / 등록 ID 미확정] ref<HTMLFormElement>: 검증 실패 시 첫 오류 입력칸으로 포커스를 이동한다.
   const formRef = useRef(null);
 
   function update(name, value) {
