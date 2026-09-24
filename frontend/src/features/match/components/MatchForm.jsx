@@ -36,10 +36,10 @@ function Section({ number, title, description, children }) {
 }
 
 export default function MatchForm({ initialValues, selectedFacility, searchFacilities, onSubmit, submitLabel = '매치 개설 완료하기' }) {
-  // AI 초안/수정 대상 값을 최초 마운트 때만 폼 상태로 복사한다. 이후 props를 동기화하면 사용자 수정값이 덮인다.
-  // 새 초안을 적용해야 할 때는 부모에서 key를 변경한다(MatchCreatePage의 location.key 참고).
+  // 전달받은 initialValues를 최초 마운트 때만 폼 상태로 복사한다. 현재 생성 페이지의 AI 초안 전달은 미연결이다.
+  // [AI-03] 생성 담당자는 부모에서 초안 props를 연결하고, 새 초안 적용 시 location.key 등을 key로 사용해 폼을 다시 마운트해야 한다.
   // startAt/endAt → 날짜/시간 입력 분리는 utils/matchValidation.js의 initialMatchValues에서 처리한다.
-  // [AI-03] object: 자동 입력된 초안 및 사용자가 수정한 폼 값. 최종 등록에도 쓰며 등록 기능 ID는 별도 확정 필요.
+  // [AI-03 연결 예정 / 등록 ID 미확정] object: 기본값 및 사용자가 수정한 폼 값. 초안 props 연결 후 자동 입력값도 저장한다.
   const [values, setValues] = useState(() => initialMatchValues({ ...initialValues, ...(selectedFacility ? { serviceId: selectedFacility.serviceId } : {}) }));
   // [FC-01][AI-03] object | null: 선택/추천 시설(serviceId, name, region, locationName). 시설 표시와 등록 ID에 사용한다.
   const [facility, setFacility] = useState(selectedFacility || null);

@@ -61,12 +61,12 @@
 | facility.region, facility.locationName | 선택 문자열 | 시설 지역/장소 표시 |
 
 4. **초안 정리**: `features/match/utils/aiMatchDraft.js`의 `prepareAiMatchDraft`가 허용 필드만 추려 `{ prompt, initialValues, facility, interpreted }`로 만듭니다. 실제 시설 ID/name이 없으면 시설을 자동 선택하지 않습니다. 성별/지역구는 현재 생성 폼의 독립 입력 항목이 아니므로 자동 입력 대상에 없습니다. 필요하면 초안 허용 목록·폼·등록 DTO를 함께 확장합니다.
-5. **페이지 전달**: generateHandler가 `moveUrl('/matches/new', { state: { aiDraft } })`로 이동합니다. `features/match/pages/MatchCreatePage.jsx`에서 `location.state.aiDraft`를 읽어 MatchForm의 initialValues/selectedFacility props로 넘깁니다. URL에 데이터를 넣는 방식은 아닙니다.
-6. **자동 입력**: `MatchForm.jsx`에서 `initialMatchValues`로 초기 values state를 만듭니다. 날짜·시간 분리는 `features/match/utils/matchValidation.js`가 처리합니다. 사용자는 모든 값을 수정할 수 있습니다. 새 라우트 진입 시 key를 바꾸어 새 초안을 반영하며 일반 재렌더는 사용자 수정값을 덮지 않습니다.
+5. **페이지 전달 — 현재 구현**: generateHandler가 `moveUrl('/matches/new', { state: { aiDraft } })`로 이동하는 부분까지 구현되어 있습니다. 현재 `features/match/pages/MatchCreatePage.jsx`는 aiDraft를 읽지 않으므로 생성 폼에 조건이 자동 입력되지 않습니다. 생성 담당자가 `location.state?.aiDraft`를 읽어 MatchForm의 initialValues/selectedFacility props로 전달해야 합니다. 기존 `location.state?.facility` 처리도 함께 고려해야 합니다.
+6. **자동 입력 — 담당자 연결 필요**: `MatchForm.jsx`는 전달받은 initialValues를 `initialMatchValues`로 변환해 최초 마운트 때 values state에 저장할 수 있습니다. 날짜·시간 분리는 `features/match/utils/matchValidation.js`가 처리합니다. 담당자는 초안 props를 연결하고, 같은 생성 화면에서 새 초안을 적용할 때 `location.key` 등을 폼의 key로 사용해 다시 마운트하도록 구현해야 합니다. 일반 재렌더마다 초기화해 사용자의 수정값을 덮지 않도록 합니다.
 7. **미연결/실패**: onGenerate 미연결 시 자연어 원문만 가져가며 조건을 추측하지 않습니다. 값이 없으면 기존 폼 기본값을 사용합니다. 해석 실패는 입력창 error에 표시하고 생성 페이지로 이동하지 않습니다. generating state는 처리 중 버튼/입력 잠금에 사용합니다.
-8. **인증**: 토큰이 없으면 RequireMatchAuth가 로그인으로 이동합니다. 로그인 담당자는 전달받은 from/fromState를 확인하고 내부 경로로 `navigate(from, { state: fromState, replace: true })`하여 초안을 복원해야 합니다. 로그인 화면은 현재 안내 문구 상태입니다.
-9. **최종 등록과 구분**: AI-03은 해석 및 초안 전달입니다. 실제 등록은 사용자가 생성 폼의 완료 버튼을 눌러야 `MatchForm.submit` → `MatchCreatePage.submitHandler` → `createMatch` → `POST /api/matches`가 실행됩니다. 실제 등록 기능 ID는 아직 지정하지 않았습니다. 요청 필드와 검증은 [매치 생성 안내](../match/README.md)에 정리했습니다.
-10. **담당자가 수정할 순서**: 해석 API 함수 작성 → AppRoutes의 onGenerate 연결 → prepareAiMatchDraft 필드 맞추기 → 폼 자동 입력/수정/실패 확인 → 로그인 후 초안 복원 확인. AI 해석 성공만으로 실제 매치를 등록하지 않습니다.
+8. **인증 — 담당자 연결 필요**: 토큰이 없으면 RequireMatchAuth가 로그인으로 이동하며 현재는 from 경로만 전달합니다. fromState 보존은 구현되어 있지 않아 로그인 경유 시 AI 초안이 유지되지 않습니다. 생성·로그인 담당자는 인증 이동 지점에서 기존 location.state를 fromState 등으로 보존하고, 로그인 성공 후 검증된 내부 경로로 `navigate(from, { state: fromState, replace: true })`하여 복원하도록 연결해야 합니다. 로그인 화면은 현재 안내 문구 상태입니다.
+9. **최종 등록과 구분**: AI-03은 해석 및 초안 전달입니다. 실제 등록은 사용자가 생성 폼의 완료 버튼을 눌러야 `MatchForm.submit` → `MatchCreatePage.handleSubmit` → `createMatch` → `POST /api/matches`가 실행됩니다. 실제 등록 기능 ID는 아직 지정하지 않았습니다. 요청 필드와 검증은 [매치 생성 안내](../match/README.md)에 정리했습니다.
+10. **담당자가 수정할 순서**: 해석 API 함수 작성 → AppRoutes의 onGenerate 연결 → prepareAiMatchDraft 필드 맞추기 → MatchCreatePage에서 aiDraft 읽기 및 MatchForm props/key 연결 → 인증 이동 시 초안 보존 및 로그인 후 복원 연결 → 자동 입력/수정/실패 확인. AI 해석 성공만으로 실제 매치를 등록하지 않습니다.
 
 ## [EM-02] 전체 운동 매칭 목록 조회
 
@@ -79,6 +79,6 @@
 
 ## state가 없는 컴포넌트
 
-AIConditionSummary와 MatchCard는 받은 props로 표시값을 계산합니다. MatchCreatePage는 라우터 state의 aiDraft를 읽습니다. 별도 useState가 없으며 API 응답 저장은 MainPage, 편집 중 폼 값은 MatchForm에서 담당합니다. 각 useState/useRef 바로 위의 기능 ID 주석으로 소유 기능을 찾을 수 있습니다.
+AIConditionSummary와 MatchCard는 받은 props로 표시값을 계산합니다. MatchCreatePage는 현재 라우터 state의 facility만 폼에 전달하며, aiDraft 읽기와 자동 입력 연결은 담당자의 후속 작업입니다. 별도 useState가 없으며 API 응답 저장은 MainPage, 편집 중 폼 값은 MatchForm에서 담당합니다. 각 useState/useRef 바로 위의 기능 ID 주석으로 소유 기능을 찾을 수 있습니다.
 
 카드 날짜는 utils/matchDisplay.js에서 한국 날짜 기준의 XX월 XX일 X요일로 표시합니다. 시간대가 포함된 ISO 값은 한국 시간으로 변환합니다. 장소는 region + facilityName을 사용하며 실제 백엔드 필드명이 다르면 toMatchCard의 매핑을 수정합니다. 역세권 설명은 표시하지 않습니다.

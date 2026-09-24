@@ -7,7 +7,8 @@ export default function AppRoutes() {
     <Routes>
       {/* [AI-03] AI 매치 생성
           생성 해석 API 준비 후 main/api의 함수를 import해 <MainPage onGenerate={해석함수} />로 연결한다.
-          함수 반환 형식은 features/match/utils/aiMatchDraft.js 참고. 현재는 원문만 생성 페이지로 전달한다. */}
+          함수 반환 형식은 features/match/utils/aiMatchDraft.js 참고. 현재는 원문을 담은 state.aiDraft 전달까지만 구현되어 있다.
+          생성 담당자는 MatchCreatePage의 초안 읽기/폼 props 연결과 로그인 경유 시 초안 보존을 추가해야 한다. */}
       <Route path="/" element={<MainPage/>} />
 
       <Route path="/login" element={<div>로그인</div>} />
