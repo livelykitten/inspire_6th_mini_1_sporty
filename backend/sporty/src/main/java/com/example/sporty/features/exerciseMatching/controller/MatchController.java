@@ -30,12 +30,13 @@ public class MatchController {
         return ResponseEntity.ok(matchService.getMatchDetail(matchId, userId));
     }
 
-    // EM-05: 생성자 전용 삭제. 구현 후 204, 인증/권한/매치 확인 실패 시 401/403/404.
+    // EM-05: 생성자 전용 삭제. 인증/권한/매치 확인 실패 시 401/403/404.
     @DeleteMapping("/{matchId}")
-    public ResponseEntity<Void> deleteMatch(@PathVariable("matchId") Long matchId) {
-        // TODO: 인증된 사용자 정보 전달 및 Service의 OWNER 권한 확인 연결.
-        // TODO: 매치와 연결된 참가자 삭제 후 204 반환.
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    public ResponseEntity<Void> deleteMatch(
+            @PathVariable("matchId") Long matchId,
+            @AuthenticationPrincipal Long userId) {
+        matchService.deleteMatch(matchId, userId);
+        return ResponseEntity.noContent().build();
     }
 
     // EM-06: 매치 참여. 구현 후 201 + MatchParticipantResponse.

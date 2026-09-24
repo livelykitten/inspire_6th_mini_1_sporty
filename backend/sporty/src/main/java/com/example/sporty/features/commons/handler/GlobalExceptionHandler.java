@@ -1,6 +1,7 @@
 package com.example.sporty.features.commons.handler;
 
 import com.example.sporty.features.commons.exception.auth.LoginFailException;
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchDeleteForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
 import com.example.sporty.features.commons.exception.users.DuplicateEmailException;
 import com.example.sporty.features.commons.exception.users.DuplicateNicknameException;
@@ -11,6 +12,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MatchDeleteForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleMatchDeleteForbidden(MatchDeleteForbiddenException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.builder()
+                        .code("MATCH_DELETE_FORBIDDEN")
+                        .message(e.getMessage())
+                        .build());
+    }
 
     @ExceptionHandler(MatchNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleMatchNotFound(MatchNotFoundException e) {

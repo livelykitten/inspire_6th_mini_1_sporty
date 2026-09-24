@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchDeleteForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchDetailResponseDto;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchParticipantSummaryDto;
@@ -31,6 +32,21 @@ public class MatchService {
     private final MatchRepository matchRepository;
     private final MatchParticipantRepository matchParticipantRepository;
     private final ProfileRepository profileRepository;
+
+    // EM-05: 참가 기록과 매치를 한 트랜잭션에서 삭제한다.
+    @Transactional
+    public void deleteMatch(Long matchId, Long userId) {
+        MatchEntity match = matchRepository.findById(matchId)
+                .orElseThrow(MatchNotFoundException::new);
+
+        matchParticipantRepository.findByMatch_IdAndUserId(matchId, userId)
+                .filter(participant -> participant.getRole() == MatchParticipantRole.OWNER)
+                .orElseThrow(MatchDeleteForbiddenException::new);
+
+        // 외래 키로 연결된 참가 기록을 먼저 삭제한 뒤 매치를 삭제한다.
+        matchParticipantRepository.deleteAllByMatch_Id(matchId);
+        matchRepository.delete(match);
+    }
 
     /**
      * EM-03: 기본 정보, 참가자 프로필과 조회 사용자의 참여 상태를 반환한다.
