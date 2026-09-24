@@ -16,11 +16,11 @@ const SPORT_LABELS = { SOCCER: '축구', FUTSAL: '풋살', BASKETBALL: '농구',
 // [AI-02] AI 매치 검색 — 맞춤 조건 응답 변환
 // 프론트에서 자연어를 재해석하지 않고 백엔드가 정제한 조건만 표시한다.
 // conditions 항목 계약: { label, value }. 최종 DTO가 달라지면 이 변환부를 수정한다.
-// 표시 순서는 종목 → 성별 → 날짜 → 지역구 → 실력 수준이며, 그 외 조건과 detail은 표시하지 않는다.
-// 지역구 값은 성동구/중구 등의 구 이름으로 내려받는다. 주소 문자열에서 프론트가 임의 추출하지 않는다.
+// 표시 순서는 종목 → 성별 → 날짜 → 자치구 → 실력 수준이며, 그 외 조건과 detail은 표시하지 않는다.
+// 자치구 값은 성동구/중구 등의 구 이름으로 내려받는다. 주소 문자열에서 프론트가 임의 추출하지 않는다.
 // 응답 자체가 비었으면 요약을 숨기고, 일부 조건만 왔다면 나머지는 '미지정'으로 표시한다.
-const CONDITION_LABELS = ['종목', '성별', '날짜', '지역구', '실력 수준'];
-const CONDITION_ALIASES = { 일정: '날짜', 지역: '지역구', 실력: '실력 수준' };
+const CONDITION_LABELS = ['종목', '성별', '날짜', '자치구', '실력 수준'];
+const CONDITION_ALIASES = { 일정: '날짜', 지역: '자치구', 실력: '실력 수준' };
 
 export function toConditionSummary(conditions = []) {
   if (!Array.isArray(conditions) || conditions.some(item => !item || typeof item.label !== 'string' || typeof item.value !== 'string')) {

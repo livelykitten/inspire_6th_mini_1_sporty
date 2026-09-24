@@ -7,7 +7,7 @@
 1. **사용자 입력 → 이동**: `features/main/pages/MainPage.jsx`의 `facilityQuery`(문자열)에 상단 검색어를 저장합니다. 검색 버튼/Enter를 누르면 `facilitySearchHandler`가 `/facilities?query=검색어`로 이동합니다. 이 핸들러는 API를 호출하지 않습니다.
 2. **시설 검색 페이지 담당자 작업**: `routes/AppRoutes.jsx`의 `/facilities` 안내 문구를 실제 페이지로 교체합니다. 페이지에서 `useSearchParams`로 `query`를 읽고 시설 조회 API를 호출한 후 결과 state에 담아 목록을 표시합니다. 시설 페이지 자체의 조회 state/핸들러는 아직 없습니다.
 3. **현재 재사용 가능한 API**: `features/match/api/matchApi.js`의 `searchMatchFacilities({ query, region })`가 `GET /api/services`로 요청합니다. query는 `serviceName` 쿼리 파라미터, region은 `region` 파라미터로 전달합니다. 둘 다 문자열이며 빈 값은 생략합니다. FC-01 최종 명세가 다르면 이 함수의 URL/파라미터를 맞춥니다.
-4. **받아올 데이터**: 현재 코드는 배열 `[{ serviceId, serviceName, region, locationName }]`을 가정합니다. serviceId는 정수, serviceName은 문자열 필수입니다. region(지역구), locationName(장소명)은 선택 문자열입니다. `toFacilityOption`이 serviceName을 화면의 name으로 바꿉니다.
+4. **받아올 데이터**: 현재 코드는 배열 `[{ serviceId, serviceName, region, locationName }]`을 가정합니다. serviceId는 정수, serviceName은 문자열 필수입니다. region(자치구), locationName(장소명)은 선택 문자열입니다. `toFacilityOption`이 serviceName을 화면의 name으로 바꿉니다.
 5. **생성 폼 내부 검색**: `features/match/components/MatchForm.jsx`의 `search()`가 같은 API를 사용합니다. query/region 입력 → results에 시설 배열 저장 → 클릭한 시설을 facility에 저장 → values.serviceId에 실제 시설 ID를 저장합니다. 시설 선택은 종목을 자동 변경하지 않습니다.
 6. **시설 선택 후 생성 이동**: 시설 페이지에서 `navigate('/matches/new', { state: { facility: { serviceId, name, region, locationName } } })`로 넘길 수 있습니다. MatchCreatePage가 MatchForm의 selectedFacility props로 전달합니다.
 7. **담당자가 확인할 것**: 시설 응답 DTO와 `toFacilityOption` 필드 매핑, 정상 결과/빈 결과/실패 안내, URL 검색어 반영, 시설 선택 후 실제 ID 전달을 확인합니다.
@@ -17,7 +17,7 @@
 1. **입력창**: `features/main/components/AISearchBox.jsx`의 query(문자열)가 자연어 원문입니다. AI 매치 검색 버튼 또는 Enter로 `actionHandler(onSearch)`를 실행하면 MainPage의 `searchHandler(query)`로 전달됩니다. error(문자열)는 실패 안내를 표시합니다.
 2. **서버 요청**: `features/main/pages/MainPage.jsx`의 `searchHandler`에서 `POST /api/ai/matches/search`를 직접 호출합니다. 현재 본문은 `{ "query": "성동구에서 초보 풋살 찾아줘" }`를 가정합니다. 백엔드 요청 필드명이 다르면 이 지점을 수정합니다. OpenAI 호출/응답 정제는 백엔드에서 담당하며 프론트에서 호출하지 않습니다.
 3. **서버에서 받아올 구조**: HTTP 200의 응답 본문은 `{ conditions: 배열, matches: 배열 }`로 준비했습니다. conditions의 내부 형식과 아래 확장 필드는 아직 최종 DTO 확인이 필요합니다. Axios 응답 전체가 아닌 `response.data`를 읽습니다.
-4. **맞춤 조건 데이터**: conditions는 `[{ label: 문자열, value: 문자열 }]`입니다. label은 종목/성별/날짜/지역구/실력 수준 중 하나이고 value에는 풋살/성별 무관/2026-10-01/성동구/초급 등을 전달합니다. `features/main/api/aiMatchApi.js`의 `toConditionSummary`가 5개 순서를 고정하고 추가 조건을 제외합니다. 일부 항목 누락은 미지정, 전체 조건 누락은 요약 숨김입니다. 날짜/지역을 프론트에서 자연어로 재해석하지 않습니다.
+4. **맞춤 조건 데이터**: conditions는 `[{ label: 문자열, value: 문자열 }]`입니다. label은 종목/성별/날짜/자치구/실력 수준 중 하나이고 value에는 풋살/성별 무관/2026-10-01/성동구/초급 등을 전달합니다. `features/main/api/aiMatchApi.js`의 `toConditionSummary`가 5개 순서를 고정하고 추가 조건을 제외합니다. 일부 항목 누락은 미지정, 전체 조건 누락은 요약 숨김입니다. 날짜/지역을 프론트에서 자연어로 재해석하지 않습니다.
 5. **매치 카드 데이터**: matches의 각 객체를 같은 파일의 `toMatchCard`에 넣습니다. 아래 표대로 서버 필드를 화면 모델로 바꿉니다. 실제 서버 이름이 다르면 이 함수만 수정합니다.
 
 | 서버 필드 | 타입 | 화면에서 쓰는 곳 / 누락 처리 |
@@ -28,7 +28,7 @@
 | sportType | enum 문자열 | 종목 태그, 예: FUTSAL, TENNIS |
 | skillLevel | enum 문자열 | 실력 태그, BEGINNER/INTERMEDIATE/ADVANCED |
 | startAt, endAt | ISO 날짜·시간 문자열 | 일정 표시, startAt은 시간순 정렬에도 사용 |
-| region, facilityName | 문자열, 확장 필드 가정 | 지역구 + 시설명 표시(예: 성동구 예시 풋살장), 누락 값은 미정 표시 |
+| region, facilityName | 문자열, 확장 필드 가정 | 자치구 + 시설명 표시(예: 성동구 예시 풋살장), 누락 값은 미정 표시 |
 | currentParticipant | 0 이상 정수, 확장 필드 가정 | 현재 참여 인원 |
 | maxParticipant | 1 이상 정수 | 최대 참여 인원 |
 | isFree | boolean, 확장 필드 가정 | true=무료, false=유료, 없으면 요금 정보 없음 |
@@ -60,7 +60,7 @@
 | facility.name | 문자열 | 선택한 시설 이름 |
 | facility.region, facility.locationName | 선택 문자열 | 시설 지역/장소 표시 |
 
-4. **초안 정리**: `features/match/utils/aiMatchDraft.js`의 `prepareAiMatchDraft`가 허용 필드만 추려 `{ prompt, initialValues, facility, interpreted }`로 만듭니다. 실제 시설 ID/name이 없으면 시설을 자동 선택하지 않습니다. 성별/지역구는 현재 생성 폼의 독립 입력 항목이 아니므로 자동 입력 대상에 없습니다. 필요하면 초안 허용 목록·폼·등록 DTO를 함께 확장합니다.
+4. **초안 정리**: `features/match/utils/aiMatchDraft.js`의 `prepareAiMatchDraft`가 허용 필드만 추려 `{ prompt, initialValues, facility, interpreted }`로 만듭니다. 실제 시설 ID/name이 없으면 시설을 자동 선택하지 않습니다. 성별/자치구는 현재 생성 폼의 독립 입력 항목이 아니므로 자동 입력 대상에 없습니다. 필요하면 초안 허용 목록·폼·등록 DTO를 함께 확장합니다.
 5. **페이지 전달 — 현재 구현**: generateHandler가 `moveUrl('/matches/new', { state: { aiDraft } })`로 이동하는 부분까지 구현되어 있습니다. 현재 `features/match/pages/MatchCreatePage.jsx`는 aiDraft를 읽지 않으므로 생성 폼에 조건이 자동 입력되지 않습니다. 생성 담당자가 `location.state?.aiDraft`를 읽어 MatchForm의 initialValues/selectedFacility props로 전달해야 합니다. 기존 `location.state?.facility` 처리도 함께 고려해야 합니다.
 6. **자동 입력 — 담당자 연결 필요**: `MatchForm.jsx`는 전달받은 initialValues를 `initialMatchValues`로 변환해 최초 마운트 때 values state에 저장할 수 있습니다. 날짜·시간 분리는 `features/match/utils/matchValidation.js`가 처리합니다. 담당자는 초안 props를 연결하고, 같은 생성 화면에서 새 초안을 적용할 때 `location.key` 등을 폼의 key로 사용해 다시 마운트하도록 구현해야 합니다. 일반 재렌더마다 초기화해 사용자의 수정값을 덮지 않도록 합니다.
 7. **미연결/실패**: onGenerate 미연결 시 자연어 원문만 가져가며 조건을 추측하지 않습니다. 값이 없으면 기존 폼 기본값을 사용합니다. 해석 실패는 입력창 error에 표시하고 생성 페이지로 이동하지 않습니다. generating state는 처리 중 버튼/입력 잠금에 사용합니다.

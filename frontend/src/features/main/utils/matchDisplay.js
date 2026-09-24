@@ -18,10 +18,10 @@ export const formatMatchDate = (startAt) => {
   return `${value('month')}월 ${value('day')}일 ${value('weekday')}`;
 };
 
-// [AI-02] region(지역구) + facilityName(시설명)을 받는 계약을 가정한다.
+// [AI-02] region(자치구) + facilityName(시설명)을 받는 계약을 가정한다.
 // 시설명이 serviceName 등으로 내려오면 toMatchCard의 매핑만 수정한다. 역세권 문구는 사용하지 않는다.
 export const formatMatchLocation = (region, facilityName) => {
   const district = typeof region === 'string' ? region.trim() : '';
   const facility = typeof facilityName === 'string' ? facilityName.trim() : '';
-  return [district || '지역구 미정', facility || '시설 미정'].join(' ');
+  return [district || '자치구 미정', facility || '시설 미정'].join(' ');
 };

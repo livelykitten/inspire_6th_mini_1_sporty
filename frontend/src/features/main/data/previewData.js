@@ -5,7 +5,7 @@ export const previewConditions = [
   { label: '종목', value: '풋살' },
   { label: '성별', value: '성별 무관' },
   { label: '날짜', value: '2026-10-01' },
-  { label: '지역구', value: '성동구' },
+  { label: '자치구', value: '성동구' },
   { label: '실력 수준', value: '초급' },
 ];
 
