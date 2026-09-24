@@ -59,7 +59,7 @@ public class MatchCreateRequestDto {
         return startAt == null || endAt == null || endAt.isAfter(startAt);
     }
 
-    // TODO: Long serviceId ServiceEntity serviceEntity로 수정
+    // MatchService validates this catalog ID before persistence.
     public MatchEntity toEntity(Long serviceId) {
         return MatchEntity.builder()
             .title(this.getTitle())
@@ -69,8 +69,6 @@ public class MatchCreateRequestDto {
             .maxParticipant(this.getMaxParticipant())
             .skillLevel(this.getSkillLevel())
             .serviceId(serviceId)
-            // .service(serviceEntity)
-            // TODO: ServiceEntity 구현되면, 위의 주석 해제
             .sportType(this.getSportType())
             .build();
     }

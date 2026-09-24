@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.sporty.features.commons.exception.matches.MatchUserNotFoundException;
 import com.example.sporty.features.commons.exception.matches.WithdrawnUserFoundException;
+import com.example.sporty.features.commons.exception.matches.ServiceNotFoundException;
+import com.example.sporty.features.facilities.repository.ServiceRepository;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchCreateRequestDto;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchResponseDto;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchSearchRequestDto;
@@ -43,6 +45,7 @@ public class MatchService {
     private final MatchParticipantRepository matchParticipantRepository;
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final ServiceRepository serviceRepository;
 
 
     @Transactional 
@@ -63,13 +66,13 @@ public class MatchService {
             throw new WithdrawnUserFoundException();
         }
 
-        // 2. verify that the serviceId actually exists
-        // TODO: ServiceRepository가 구현되면, 실제 조회하여
-        // ServiceEntity 객체 불러오기
+        // Validate the catalog before creating either match or participant records.
         Long serviceId = req.getServiceId();
+        if (!serviceRepository.existsById(serviceId)) {
+            throw new ServiceNotFoundException();
+        }
 
         // 3. create MatchEntity and save
-        // TODO: 2번에서 불러온 ServiceEntity를 인자로 주기
         MatchEntity match = req.toEntity(serviceId);
         MatchEntity savedMatchEntity =
             matchRepository.save(match);

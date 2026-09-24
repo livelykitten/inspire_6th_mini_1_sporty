@@ -33,6 +33,7 @@ import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
 import com.example.sporty.features.profiles.repository.ProfileRepository;
 import com.example.sporty.features.users.domain.entity.UserEntity;
 import com.example.sporty.features.users.repository.UserRepository;
+import com.example.sporty.features.facilities.repository.ServiceRepository;
 
 @ExtendWith(MockitoExtension.class)
 class MatchServiceTest {
@@ -48,6 +49,9 @@ class MatchServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private ServiceRepository serviceRepository;
 
     @InjectMocks
     private MatchService matchService;

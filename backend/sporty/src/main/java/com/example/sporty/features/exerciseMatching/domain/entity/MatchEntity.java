@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -21,6 +22,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ForeignKey;
+import com.example.sporty.features.facilities.domain.entity.ServiceEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,6 +35,7 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "`match`")
+@Check(name = "ck_match_valid_fields", constraints = "CHAR_LENGTH(TRIM(title)) > 0 AND max_participant >= 1 AND end_at > start_at AND service_id > 0")
 @Builder 
 @Getter 
 @ToString 
@@ -40,17 +47,17 @@ public class MatchEntity {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "title", length = 50)
+    @Column(name = "title", length = 50, nullable = false)
     private String title;
     @Column(name = "description", length = 500)
     private String description;
 
-    @Column(name = "start_at", columnDefinition = "DATETIME")
+    @Column(name = "start_at", columnDefinition = "DATETIME", nullable = false)
     private LocalDateTime startAt;
-    @Column(name = "end_at", columnDefinition = "DATETIME")
+    @Column(name = "end_at", columnDefinition = "DATETIME", nullable = false)
     private LocalDateTime endAt;
 
-    @Column(name = "max_participant")
+    @Column(name = "max_participant", nullable = false)
     private Integer maxParticipant;
 
     @Builder.Default
@@ -89,8 +96,13 @@ public class MatchEntity {
     @Column(name = "sport_type", length = 15, nullable = false)
     private SportType sportType;
 
-    // TODO: ServiceEntity가 만들어지면, private ServiceEntity로 교체
-    // LAZY fetch 지정해야 함
-    @Column(name = "service_id")
+    @Column(name = "service_id", nullable = false)
     private Long serviceId;
+
+    // serviceId remains the write path for the existing DTO/builder contract.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_id", insertable = false, updatable = false,
+            foreignKey = @ForeignKey(name = "fk_match_service"))
+    @ToString.Exclude
+    private ServiceEntity service;
 }
