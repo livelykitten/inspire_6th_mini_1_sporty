@@ -9,12 +9,16 @@ import org.springframework.http.HttpMethod;
 public final class PublicEndpoints {
     private PublicEndpoints() {}
 
+    // 상세 조회는 공개하되 유효한 토큰이 있으면 조회 사용자를 식별한다.
+    public static final RequestMatcher MATCH_DETAIL =
+            PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/matches/{matchId}");
+
     public static final RequestMatcher MATCHER = new OrRequestMatcher(
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/users"),
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/auth/login"),
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/ai/matches/search"),
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/matches"),
-            PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/matches/{matchId}"),
+            MATCH_DETAIL,
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/services"),
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/services/{serviceId}"));
 }
