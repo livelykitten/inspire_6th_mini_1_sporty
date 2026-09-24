@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import MatchCreatePage, { RequireMatchAuth } from '../features/match/pages/MatchCreatePage';
+import SignUpPage from '../features/auth/pages/SignUpPage';
 
 export default function AppRoutes() {
   return (
@@ -7,7 +8,8 @@ export default function AppRoutes() {
       <Route path="/" element={<div>메인 페이지</div>} />
 
       <Route path="/login" element={<div>로그인</div>} />
-      <Route path="/signup" element={<div>회원가입</div>} />
+      {/* [USR-01] 회원가입 화면. 가입 성공 시 기존 /login 경로로 이동한다. */}
+      <Route path="/signup" element={<SignUpPage />} />
       <Route path="/mypage" element={<div>마이페이지</div>} />
 
       <Route path="/matches/new" element={<RequireMatchAuth><MatchCreatePage /></RequireMatchAuth>} />
