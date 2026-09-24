@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 public class MatchCreateRequestDto {
     @NotNull(message = "체육서비스 ID는 필수입니다.")
     @Positive(message = "체육서비스 ID는 양수여야 합니다.")
-    private Integer serviceId;
+    private Long serviceId;
 
     @NotBlank(message = "제목은 필수입니다.")
     @Size(max = 50, message = "제목은 50자 이하여야 합니다.")
@@ -59,8 +59,8 @@ public class MatchCreateRequestDto {
         return startAt == null || endAt == null || endAt.isAfter(startAt);
     }
 
-    // TODO: Integer serviceId ServiceEntity serviceEntity로 수정
-    public MatchEntity toEntity(Integer serviceId) {
+    // TODO: Long serviceId ServiceEntity serviceEntity로 수정
+    public MatchEntity toEntity(Long serviceId) {
         return MatchEntity.builder()
             .title(this.getTitle())
             .description(this.getDescription())

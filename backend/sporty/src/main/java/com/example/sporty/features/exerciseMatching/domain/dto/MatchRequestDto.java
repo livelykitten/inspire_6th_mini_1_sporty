@@ -21,8 +21,8 @@ import lombok.ToString;
 @JsonIgnoreProperties (ignoreUnknown = true)
 public class MatchRequestDto {
     
-    private Integer matchId;
-    private Integer serviceId;
+    private Long matchId;
+    private Long serviceId;
     private String title, description;
     
     private LocalDateTime startAt, endAt;

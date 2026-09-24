@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -35,8 +36,13 @@ class JwtAuthenticationFilterTest {
     void cleanup() { SecurityContextHolder.clearContext(); }
 
     private MockHttpServletRequest request(String subject) {
+        return request(subject, "ACCESS", new Date(System.currentTimeMillis() + 300000));
+    }
+
+    private MockHttpServletRequest request(String subject, String tokenType, Date expiration) {
         var builder = Jwts.builder().claim("role", "USER")
-                .setExpiration(new Date(System.currentTimeMillis() + 300000));
+                .claim("tokenType", tokenType)
+                .setExpiration(expiration);
         if (subject != null) builder.setSubject(subject);
         String token = builder.signWith(Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8))).compact();
         var request = new MockHttpServletRequest("POST", "/api/matches");
@@ -45,16 +51,17 @@ class JwtAuthenticationFilterTest {
         return request;
     }
 
-    @Test
-    void validTokenSetsPrincipalAndRole() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"1", "2147483648", "9223372036854775807"})
+    void validTokenSetsPrincipalAndRole(String subject) throws Exception {
         var chainCalled = new AtomicBoolean(false);
         var response = new MockHttpServletResponse();
-        filter.doFilter(request("1"), response, (req, res) -> {
+        filter.doFilter(request(subject), response, (req, res) -> {
             chainCalled.set(true);
             var authentication = SecurityContextHolder.getContext().getAuthentication();
             assertNotNull(authentication);
             assertTrue(authentication.isAuthenticated());
-            assertEquals(Integer.valueOf(1), authentication.getPrincipal());
+            assertEquals(Long.valueOf(subject), authentication.getPrincipal());
             assertTrue(authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_USER")));
         });
         assertTrue(chainCalled.get(), "Valid JWT must reach downstream");
@@ -62,7 +69,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"member@example.com", "not-a-number", "0", "-1", "2147483648"})
+    @ValueSource(strings = {"member@example.com", "not-a-number", "0", "-1", "9223372036854775808"})
     void invalidUserIdMustNotAuthenticate(String subject) throws Exception {
         var response = new MockHttpServletResponse();
         filter.doFilter(request(subject), response, (req, res) -> fail("Invalid user ID reached downstream"));
@@ -82,6 +89,26 @@ class JwtAuthenticationFilterTest {
     void blankSubjectMustNotAuthenticate() throws Exception {
         var response = new MockHttpServletResponse();
         filter.doFilter(request("   "), response, (req, res) -> fail("Invalid JWT reached downstream"));
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertEquals(401, response.getStatus());
+    }
+
+    @Test
+    void tokenWithoutExpirationMustNotAuthenticate() throws Exception {
+        var response = new MockHttpServletResponse();
+        filter.doFilter(request("1", "ACCESS", null), response,
+                (req, res) -> fail("JWT without expiration reached downstream"));
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertEquals(401, response.getStatus());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"REFRESH", "UNKNOWN"})
+    void nonAccessTokenMustNotAuthenticate(String tokenType) throws Exception {
+        var response = new MockHttpServletResponse();
+        filter.doFilter(request("1", tokenType, new Date(System.currentTimeMillis() + 300000)), response,
+                (req, res) -> fail("Non-access token reached downstream"));
         assertNull(SecurityContextHolder.getContext().getAuthentication());
         assertEquals(401, response.getStatus());
     }

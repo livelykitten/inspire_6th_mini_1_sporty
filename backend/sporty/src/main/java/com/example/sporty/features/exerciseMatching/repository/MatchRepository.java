@@ -11,7 +11,7 @@ import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 
-public interface MatchRepository extends JpaRepository<MatchEntity, Integer> {
+public interface MatchRepository extends JpaRepository<MatchEntity, Long> {
 
     @Query ("""
             SELECT m
@@ -26,7 +26,7 @@ public interface MatchRepository extends JpaRepository<MatchEntity, Integer> {
             AND (:sportType IS NULL OR m.sportType = :sportType)
             """)
     List<MatchEntity> searchMatches(
-        @Param ("serviceId") Integer serviceId,
+        @Param ("serviceId") Long serviceId,
         @Param("titleKeyword") String titleKeyword,
         @Param("descriptionKeyword") String descriptionKeyword,
         @Param("startAt") LocalDateTime startAt,
@@ -35,5 +35,4 @@ public interface MatchRepository extends JpaRepository<MatchEntity, Integer> {
         @Param("skillLevel") SkillLevel skillLevel,
         @Param("sportType") SportType sportType
     );
-    
 }

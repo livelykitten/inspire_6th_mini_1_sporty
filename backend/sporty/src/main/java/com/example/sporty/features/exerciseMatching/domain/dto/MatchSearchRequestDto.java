@@ -29,7 +29,7 @@ import lombok.ToString;
 @JsonIgnoreProperties (ignoreUnknown = true)
 public class MatchSearchRequestDto {
     @Positive(message = "체육서비스 ID는 양수여야 합니다.")
-    private Integer serviceId;
+    private Long serviceId;
 
     @Size(max = 50, message = "제목 검색어는 50자 이하여야 합니다.")
     private String titleKeyword;

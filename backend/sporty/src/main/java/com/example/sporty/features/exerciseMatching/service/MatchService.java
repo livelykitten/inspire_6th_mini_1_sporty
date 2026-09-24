@@ -23,26 +23,40 @@ import com.example.sporty.features.users.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
+import com.example.sporty.features.exerciseMatching.domain.dto.MatchDetailResponseDto;
+import com.example.sporty.features.exerciseMatching.domain.dto.MatchParticipantSummaryDto;
+import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
+import com.example.sporty.features.profiles.repository.ProfileRepository;
+
 @Service 
 @RequiredArgsConstructor 
+@Transactional(readOnly = true)
 public class MatchService {
     private final MatchRepository matchRepository;
     private final MatchParticipantRepository matchParticipantRepository;
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
 
 
     @Transactional 
-    public Integer createMatch(MatchCreateRequestDto req) {
+    public Long createMatch(MatchCreateRequestDto req) {
 
         System.out.println("debug >> MatchService.createMatch(), req: " + req);
 
         // 1. get user id from the authentication context
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Integer userId = Integer.valueOf(auth.getName());
+        Long userId = Long.valueOf(auth.getName());
 
 
         UserEntity userEntity = 
-            userRepository.findById((long)userId)
+            userRepository.findById(userId)
             .orElseThrow(() -> new MatchUserNotFoundException());
 
         if (userEntity.getStatus() != UserStatus.ACTIVE) {
@@ -52,7 +66,7 @@ public class MatchService {
         // 2. verify that the serviceId actually exists
         // TODO: ServiceRepository가 구현되면, 실제 조회하여
         // ServiceEntity 객체 불러오기
-        Integer serviceId = req.getServiceId();
+        Long serviceId = req.getServiceId();
 
         // 3. create MatchEntity and save
         // TODO: 2번에서 불러온 ServiceEntity를 인자로 주기
@@ -103,5 +117,75 @@ public class MatchService {
         return keyword.replace("!", "!!")
             .replace("%", "!%")
             .replace("_", "!_");
+    }
+    /**
+     * EM-03: 기본 정보, 참가자 프로필과 조회 사용자의 참여 상태를 반환한다.
+     * OWNER도 참가 인원에 포함하며, 비로그인 요청의 userId는 null이다.
+     */
+    public MatchDetailResponseDto getMatchDetail(Long matchId, Long userId) {
+        MatchEntity match = matchRepository.findById(matchId)
+                .orElseThrow(MatchNotFoundException::new);
+
+        List<MatchParticipantEntity> participants =
+                matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(matchId);
+        
+        
+        List<Long> participantUserIds = participants.stream()
+                .map(MatchParticipantEntity::getUser)
+                .filter(Objects::nonNull)
+                .map(UserEntity::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        
+        
+        Map<Long, ProfileEntity> profilesByUserId = participantUserIds.isEmpty()
+                ? Map.of()
+                : profileRepository.findAllByUser_IdIn(participantUserIds).stream()
+                        .collect(Collectors.toMap(profile -> profile.getUser().getId(), Function.identity()));
+
+        List<MatchParticipantSummaryDto> participantSummaries = new ArrayList<>();
+        boolean isOwner = false;
+        boolean isParticipant = false;
+
+
+        for (MatchParticipantEntity participant : participants) {
+            ProfileEntity profile = participant.getUser().getId() == null
+                    ? null : profilesByUserId.get(participant.getUser().getId());
+
+            // 프로필이 누락되어도 참가 정보와 인원은 유지한다.
+            participantSummaries.add(MatchParticipantSummaryDto.builder()
+                    .profileId(profile == null ? null : profile.getId())
+                    .nickname(profile == null ? null : profile.getNickname())
+                    .imageUrl(profile == null ? null : profile.getImageUrl())
+                    .role(participant.getRole())
+                    .build());
+
+            if (userId != null && userId.equals(participant.getUser().getId())) {
+                isParticipant = true;
+                if (participant.getRole() == MatchParticipantRole.OWNER) {
+                    isOwner = true;
+                }
+            }
+        }
+
+        // TODO: Service/Location Entity 연동 후 장소 정보를 조회한다.
+        // 시설 코드가 들어오기 전까지 serviceName/locationName/region은 null로 유지한다.
+        return MatchDetailResponseDto.builder()
+                .matchId(match.getId())
+                .title(match.getTitle())
+                .description(match.getDescription())
+                .startAt(match.getStartAt())
+                .endAt(match.getEndAt())
+                .maxParticipant(match.getMaxParticipant())
+                .currentParticipantCount(participants.size())
+                .status(match.getStatus())
+                .skillLevel(match.getSkillLevel())
+                .sportType(match.getSportType())
+                .serviceId(match.getServiceId())
+                .participants(participantSummaries)
+                .isOwner(isOwner)
+                .isParticipant(isParticipant)
+                .build();
     }
 }
