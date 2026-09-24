@@ -13,8 +13,12 @@ public class RefreshTokenService {
     public void save(Long userId, String refreshToken, long expirationSeconds) {
         // 회원당 하나의 RT를 유지하며 재로그인 시 기존 값을 교체
         redisTemplate.opsForValue().set(
-                "auth:refresh:" + userId,
+                "refresh:" + userId,
                 refreshToken,
                 Duration.ofSeconds(expirationSeconds));
+    }
+
+    public void delete(Long userId) {
+        redisTemplate.delete("refresh:" + userId);
     }
 }
