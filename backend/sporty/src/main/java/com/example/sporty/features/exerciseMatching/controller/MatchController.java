@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchDetailResponseDto;
+import com.example.sporty.features.exerciseMatching.domain.dto.MatchParticipantResponseDto;
 import com.example.sporty.features.exerciseMatching.service.MatchService;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class MatchController {
     public ResponseEntity<MatchDetailResponseDto> getMatchDetail(
             @PathVariable("matchId") Long matchId,
             @AuthenticationPrincipal Long userId) {
+
         return ResponseEntity.ok(matchService.getMatchDetail(matchId, userId));
     }
 
@@ -35,16 +37,17 @@ public class MatchController {
     public ResponseEntity<Void> deleteMatch(@PathVariable("matchId") Long matchId) {
         // TODO: 인증된 사용자 정보 전달 및 Service의 OWNER 권한 확인 연결.
         // TODO: 매치와 연결된 참가자 삭제 후 204 반환.
+
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
-    // EM-06: 매치 참여. 구현 후 201 + MatchParticipantResponse.
-    // 모집 마감, 정원 초과/인증 실패/매치 없음/이미 참가 중 일 때 400/401/404/409.
+    // EM-06: 로그인 사용자를 일반 참가자로 등록하고 201을 반환한다.
     @PostMapping("/{matchId}/participants")
-    public ResponseEntity<Void> joinMatch(@PathVariable("matchId") Long matchId) {
-        // TODO: 인증된 사용자 정보 전달 및 Service 참여 처리 연결.
-        // TODO: 모집 마감/정원 초과 400, 인증 실패 401, 매치 없음 404, 중복 참여 409 처리.
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    public ResponseEntity<MatchParticipantResponseDto> joinMatch(
+            @PathVariable("matchId") Long matchId,
+            @AuthenticationPrincipal Long userId) {
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(matchService.joinMatch(matchId, userId));
     }
 
     // EM-07: 운동 매치 탈퇴. 구현 후 204,
@@ -53,6 +56,7 @@ public class MatchController {
     public ResponseEntity<Void> leaveMatch(@PathVariable("matchId") Long matchId) {
         // TODO: 인증된 사용자 정보 전달 및 Service 탈퇴 처리 연결.
         // TODO: 인증 실패 401, 매치/참가 정보 없음 404 처리. 일반 참가자는 경기 시작 후에도 탈퇴 가능.
+
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 }
