@@ -8,6 +8,8 @@ import com.example.sporty.features.users.domain.entity.UserStatus;
 import com.example.sporty.features.users.repository.UserRepository;
 import com.example.sporty.features.commons.token.JwtProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,5 +56,12 @@ public class AuthService {
                 .tokenType("Bearer")
                 .expiresIn(jwtProvider.getAccessTokenExpirationSeconds())
                 .build();
+    }
+
+    public void logout() {
+        // 스프링 시큐리티의 컨텍스트홀더에서 유저ID를 꺼내 Refresh Token 삭제
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Long id = Long.parseLong(auth.getName());
+        refreshTokenService.delete(id);
     }
 }

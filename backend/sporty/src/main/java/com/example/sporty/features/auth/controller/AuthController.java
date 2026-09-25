@@ -5,8 +5,11 @@ import com.example.sporty.features.auth.domain.dto.LoginResponseDto;
 import com.example.sporty.features.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,5 +31,12 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "no-store")
                 .body(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+         authService.logout();
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
