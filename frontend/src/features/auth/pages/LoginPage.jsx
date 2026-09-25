@@ -105,7 +105,7 @@ const LoginPage = () => {
     <div className="login-page">
       <header className="login-header"><div className="login-shell">
         <Link to="/" className="login-home"><img src={home} alt="" />홈으로 가기</Link>
-        <Link to="/" className="login-brand"><span aria-hidden="true" />SPORTY</Link>
+        <Link to="/" className="login-brand">SPORTY</Link>
       </div></header>
       <main className="login-main">
         {/* Figma 카드 구조를 유지하고 DB 컬럼/해시 설명은 사용자 화면에서 제외한다. */}
