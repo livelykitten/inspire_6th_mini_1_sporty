@@ -32,6 +32,8 @@ import com.example.sporty.features.exerciseMatching.repository.MatchRepository;
 import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
 import com.example.sporty.features.profiles.repository.ProfileRepository;
 import com.example.sporty.features.users.domain.entity.UserEntity;
+import com.example.sporty.features.users.repository.UserRepository;
+import com.example.sporty.features.facilities.repository.ServiceRepository;
 
 @ExtendWith(MockitoExtension.class)
 class MatchServiceTest {
@@ -44,6 +46,12 @@ class MatchServiceTest {
 
     @Mock
     private ProfileRepository profileRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private ServiceRepository serviceRepository;
 
     @InjectMocks
     private MatchService matchService;
@@ -184,7 +192,10 @@ class MatchServiceTest {
     }
 
     private MatchParticipantEntity participant(Long userId, MatchParticipantRole role) {
-        return MatchParticipantEntity.builder().userId(userId).role(role).build();
+        return MatchParticipantEntity.builder()
+                .user(UserEntity.builder().id(userId).build())
+                .role(role)
+                .build();
     }
 
     private ProfileEntity profile(Long userId, Long profileId, String nickname, String imageUrl) {

@@ -38,7 +38,8 @@ public class UserSignUpRequestDto {
         @NotNull
         private District district;
 
-        private List<SportType> sportTypes;
+        @NotNull(message = "선호 종목 목록은 필수입니다. 선택하지 않으면 빈 목록을 보내주세요.")
+        private List<@NotNull(message = "선호 종목은 null일 수 없습니다.") SportType> sportTypes;
 
         public static UserEntity toUserEntity(UserSignUpRequestDto request, String encodedPassword) {
             return UserEntity.builder()
