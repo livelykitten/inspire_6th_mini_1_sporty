@@ -39,6 +39,8 @@ import com.example.sporty.features.exerciseMatching.service.MatchService;
 import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
 import com.example.sporty.features.profiles.repository.ProfileRepository;
 import com.example.sporty.features.users.domain.entity.UserEntity;
+import com.example.sporty.features.users.repository.UserRepository;
+import com.example.sporty.features.facilities.repository.ServiceRepository;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -62,6 +64,12 @@ class MatchDetailControllerTest {
 
     @MockitoBean
     private ProfileRepository profileRepository;
+
+    @MockitoBean
+    private UserRepository userRepository;
+
+    @MockitoBean
+    private ServiceRepository serviceRepository;
 
     @Test
     @DisplayName("[TC-EM03-01] 비로그인 상세 조회 200, 기본 정보와 참가자 프로필 반환")
@@ -181,7 +189,8 @@ class MatchDetailControllerTest {
         when(matchRepository.findById(matchId)).thenReturn(Optional.of(MatchEntity.builder()
                 .id(matchId).serviceId(serviceId).build()));
         when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(matchId)).thenReturn(List.of(
-                MatchParticipantEntity.builder().id(2147483651L).userId(userId)
+                MatchParticipantEntity.builder().id(2147483651L)
+                        .user(UserEntity.builder().id(userId).build())
                         .role(MatchParticipantRole.OWNER).build()));
         when(profileRepository.findAllByUser_IdIn(List.of(userId))).thenReturn(List.of(
                 ProfileEntity.builder().id(401L).nickname("생성자")
@@ -206,8 +215,10 @@ class MatchDetailControllerTest {
                 .endAt(LocalDateTime.of(2026, 9, 26, 21, 0))
                 .maxParticipant(10).sportType(SportType.FUTSAL).serviceId(7L).build()));
         when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L)).thenReturn(List.of(
-                MatchParticipantEntity.builder().id(11L).userId(1L).role(MatchParticipantRole.OWNER).build(),
-                MatchParticipantEntity.builder().id(12L).userId(2L).role(MatchParticipantRole.PARTICIPANT).build()));
+                MatchParticipantEntity.builder().id(11L).user(UserEntity.builder().id(1L).build())
+                        .role(MatchParticipantRole.OWNER).build(),
+                MatchParticipantEntity.builder().id(12L).user(UserEntity.builder().id(2L).build())
+                        .role(MatchParticipantRole.PARTICIPANT).build()));
         when(profileRepository.findAllByUser_IdIn(List.of(1L, 2L))).thenReturn(List.of(
                 ProfileEntity.builder().id(401L).nickname("생성자").imageUrl("https://example.com/owner.png")
                         .user(UserEntity.builder().id(1L).email("owner@example.com").password("test-hash").build()).build(),
