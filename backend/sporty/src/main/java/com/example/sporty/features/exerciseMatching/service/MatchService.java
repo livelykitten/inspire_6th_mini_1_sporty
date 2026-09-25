@@ -49,7 +49,7 @@ public class MatchService {
 
         // 1. get user id from the authentication context
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Integer userId = Integer.valueOf(auth.getName());
+        Long userId = Long.valueOf(auth.getName());
 
 
         UserEntity userEntity = 
