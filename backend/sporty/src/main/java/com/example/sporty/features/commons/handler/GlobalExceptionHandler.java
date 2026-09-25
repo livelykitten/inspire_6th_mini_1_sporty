@@ -4,6 +4,8 @@ import com.example.sporty.features.commons.exception.auth.LoginFailException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
 import com.example.sporty.features.commons.exception.users.DuplicateEmailException;
 import com.example.sporty.features.commons.exception.users.DuplicateNicknameException;
+import com.example.sporty.features.commons.exception.users.PasswordMismatchException;
+import com.example.sporty.features.commons.exception.users.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -50,6 +52,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.builder()
                         .code("LOGIN_FAILED")
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(
+            UserNotFoundException e
+    ) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.builder()
+                        .code("USER_NOT_FOUND")
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(PasswordMismatchException.class)
+    public ResponseEntity<ErrorResponse> handlePasswordMismatch(
+            PasswordMismatchException e
+    ) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.builder()
+                        .code("PASSWORD_MISMATCH")
                         .message(e.getMessage())
                         .build());
     }
