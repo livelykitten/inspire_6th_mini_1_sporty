@@ -92,4 +92,9 @@ public class MatchEntity {
     // TODO: ServiceEntity가 만들어지면, private ServiceEntity로 교체
     @Column(name = "service_id")
     private Long serviceId;
+
+    // Match의 Status를 CLOSED 로 변경하는 메서드
+    public void closeRecruitment() {
+        this.status = MatchStatus.CLOSED;
+    }
 }
