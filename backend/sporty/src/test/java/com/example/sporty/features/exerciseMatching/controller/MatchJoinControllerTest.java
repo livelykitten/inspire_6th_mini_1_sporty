@@ -2,6 +2,7 @@ package com.example.sporty.features.exerciseMatching.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -43,6 +44,9 @@ import com.example.sporty.features.exerciseMatching.repository.MatchParticipantR
 import com.example.sporty.features.exerciseMatching.repository.MatchRepository;
 import com.example.sporty.features.exerciseMatching.service.MatchService;
 import com.example.sporty.features.profiles.repository.ProfileRepository;
+import com.example.sporty.features.users.domain.entity.UserEntity;
+import com.example.sporty.features.users.repository.UserRepository;
+import com.example.sporty.features.facilities.repository.ServiceRepository;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -68,6 +72,12 @@ class MatchJoinControllerTest {
     @MockitoBean
     private ProfileRepository profileRepository;
 
+    @MockitoBean
+    private UserRepository userRepository;
+
+    @MockitoBean
+    private ServiceRepository serviceRepository;
+
     @Test
     @DisplayName("[EM06-001] 로그인 사용자를 PARTICIPANT로 저장하고 201과 참가 정보를 반환한다")
     void joinsWithAuthenticatedUserId() throws Exception {
@@ -88,7 +98,8 @@ class MatchJoinControllerTest {
         ArgumentCaptor<MatchParticipantEntity> captor = ArgumentCaptor.forClass(MatchParticipantEntity.class);
         verify(matchParticipantRepository).save(captor.capture());
         assertThat(captor.getValue().getMatch()).isSameAs(match);
-        assertThat(captor.getValue().getUserId()).isEqualTo(2L);
+        assertThat(captor.getValue().getUser().getId()).isEqualTo(2L);
+        assertThat(captor.getValue().getUser()).isSameAs(userRepository.findById(2L).orElseThrow());
         assertThat(captor.getValue().getRole()).isEqualTo(MatchParticipantRole.PARTICIPANT);
         assertThat(match.getStatus()).isEqualTo(MatchStatus.RECRUITING);
         verifyNoInteractions(profileRepository);
@@ -221,7 +232,27 @@ class MatchJoinControllerTest {
         verifyNoInteractions(matchRepository, matchParticipantRepository, profileRepository);
     }
 
+    @Test
+    @DisplayName("인증 토큰의 사용자가 DB에 없으면 401이며 참가 정보와 모집 상태를 변경하지 않는다")
+    void missingUserDoesNotJoinOrCloseRecruitment() throws Exception {
+        MatchEntity match = givenMatch(MatchStatus.RECRUITING, LocalDateTime.now().plusDays(1));
+        when(userRepository.findById(2L)).thenReturn(Optional.empty());
+
+        mvc.perform(post("/api/matches/201/participants").header("Authorization", bearer(2L)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("MATCH_USER_NOT_FOUND"));
+
+        verifyNoInteractions(matchParticipantRepository);
+        assertThat(match.getStatus()).isEqualTo(MatchStatus.RECRUITING);
+    }
+
     private MatchEntity givenMatch(MatchStatus status, LocalDateTime startAt) {
+        // 동일 ID 조회 시 같은 사용자 엔티티를 반환하여 저장된 연관관계도 검증한다.
+        java.util.Map<Long, UserEntity> users = new java.util.HashMap<>();
+        when(userRepository.findById(anyLong())).thenAnswer(invocation -> {
+            Long userId = invocation.getArgument(0);
+            return Optional.of(users.computeIfAbsent(userId, id -> UserEntity.builder().id(id).build()));
+        });
         MatchEntity match = MatchEntity.builder().id(201L).maxParticipant(5)
                 .startAt(startAt).status(status).build();
         when(matchRepository.findByIdForUpdate(201L)).thenReturn(Optional.of(match));
@@ -232,7 +263,7 @@ class MatchJoinControllerTest {
         when(matchParticipantRepository.save(any(MatchParticipantEntity.class))).thenAnswer(invocation -> {
             MatchParticipantEntity participant = invocation.getArgument(0);
             return MatchParticipantEntity.builder().id(31L).match(participant.getMatch())
-                    .userId(participant.getUserId()).role(participant.getRole()).build();
+                    .user(participant.getUser()).role(participant.getRole()).build();
         });
     }
 

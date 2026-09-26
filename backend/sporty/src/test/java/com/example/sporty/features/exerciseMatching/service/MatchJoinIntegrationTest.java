@@ -5,6 +5,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import jakarta.persistence.EntityManager;
+import com.example.sporty.features.users.domain.entity.UserEntity;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
+import com.example.sporty.support.MatchUserFixtures;
+import com.example.sporty.support.FacilityFixtures;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,6 +36,7 @@ import com.example.sporty.features.commons.exception.exerciseMatching.MatchAlrea
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchFullException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchRecruitmentClosedException;
+import com.example.sporty.features.commons.exception.matches.MatchUserNotFoundException;
 import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchParticipantResponseDto;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
@@ -62,11 +69,23 @@ class MatchJoinIntegrationTest {
     @Autowired
     private PlatformTransactionManager transactionManager;
 
+    @Autowired
+    private EntityManager entityManager;
+
+    private Map<Long, UserEntity> users;
+    private Long serviceId;
+
+    private Long userId(long label) {
+        return users.get(label).getId();
+    }
+
     @BeforeEach
     void setUp() {
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
             matchParticipantRepository.deleteAllInBatch();
             matchRepository.deleteAllInBatch();
+            users = MatchUserFixtures.create(entityManager, 11);
+            serviceId = FacilityFixtures.create(entityManager, FacilityFixtures.newServiceId()).getId();
         });
     }
 
@@ -76,17 +95,17 @@ class MatchJoinIntegrationTest {
         Long matchId = createMatch(5, MatchStatus.RECRUITING, LocalDateTime.now().plusDays(1));
         Long otherMatchId = createMatch(5, MatchStatus.RECRUITING, LocalDateTime.now().plusDays(1));
 
-        MatchParticipantResponseDto result = matchService.joinMatch(matchId, 2L);
+        MatchParticipantResponseDto result = matchService.joinMatch(matchId, userId(2L));
 
         MatchParticipantEntity saved = matchParticipantRepository.findById(result.getMatchParticipantId()).orElseThrow();
-        assertThat(saved.getUserId()).isEqualTo(2L);
+        assertThat(saved.getUser().getId()).isEqualTo(userId(2L));
         assertThat(saved.getRole()).isEqualTo(MatchParticipantRole.PARTICIPANT);
         assertThat(result.getMatchId()).isEqualTo(matchId);
         assertThat(saved.getCreatedAt()).isNotNull();
         assertThat(saved.getUpdatedAt()).isNotNull();
         assertState(matchId, 2, MatchStatus.RECRUITING);
         assertState(otherMatchId, 1, MatchStatus.RECRUITING);
-        var detail = matchService.getMatchDetail(matchId, 2L);
+        var detail = matchService.getMatchDetail(matchId, userId(2L));
         assertThat(detail.getCurrentParticipantCount()).isEqualTo(2);
         assertThat(detail.getIsParticipant()).isTrue();
         assertThat(detail.getIsOwner()).isFalse();
@@ -97,14 +116,14 @@ class MatchJoinIntegrationTest {
     void tenthParticipantClosesRecruitment() {
         Long matchId = createMatch(10, MatchStatus.RECRUITING, LocalDateTime.now().plusDays(1));
         for (long userId = 2; userId <= 9; userId++) {
-            matchService.joinMatch(matchId, userId);
+            matchService.joinMatch(matchId, userId(userId));
         }
         assertState(matchId, 9, MatchStatus.RECRUITING);
 
-        matchService.joinMatch(matchId, 10L);
+        matchService.joinMatch(matchId, userId(10L));
 
         assertState(matchId, 10, MatchStatus.CLOSED);
-        assertThatThrownBy(() -> matchService.joinMatch(matchId, 11L))
+        assertThatThrownBy(() -> matchService.joinMatch(matchId, userId(11L)))
                 .isInstanceOf(MatchRecruitmentClosedException.class);
         assertState(matchId, 10, MatchStatus.CLOSED);
     }
@@ -114,10 +133,10 @@ class MatchJoinIntegrationTest {
     @DisplayName("[EM06-002/003] OWNER와 일반 참가자의 재신청은 기존 참가 기록과 상태를 유지한다")
     void duplicateParticipationPreservesData(Long userId) {
         Long matchId = createMatch(2, MatchStatus.RECRUITING, LocalDateTime.now().plusDays(1));
-        matchService.joinMatch(matchId, 2L);
+        matchService.joinMatch(matchId, userId(2L));
         List<Long> ids = participantIds(matchId);
 
-        assertThatThrownBy(() -> matchService.joinMatch(matchId, userId))
+        assertThatThrownBy(() -> matchService.joinMatch(matchId, userId(userId)))
                 .isInstanceOf(MatchAlreadyJoinedException.class);
 
         assertThat(participantIds(matchId)).containsExactlyElementsOf(ids);
@@ -129,7 +148,7 @@ class MatchJoinIntegrationTest {
     void fullMatchPreservesData() {
         Long matchId = createMatch(1, MatchStatus.RECRUITING, LocalDateTime.now().plusDays(1));
 
-        assertThatThrownBy(() -> matchService.joinMatch(matchId, 2L)).isInstanceOf(MatchFullException.class);
+        assertThatThrownBy(() -> matchService.joinMatch(matchId, userId(2L))).isInstanceOf(MatchFullException.class);
 
         assertState(matchId, 1, MatchStatus.RECRUITING);
     }
@@ -139,7 +158,7 @@ class MatchJoinIntegrationTest {
     void closedMatchPreservesData() {
         Long matchId = createMatch(5, MatchStatus.CLOSED, LocalDateTime.now().plusDays(1));
 
-        assertThatThrownBy(() -> matchService.joinMatch(matchId, 2L))
+        assertThatThrownBy(() -> matchService.joinMatch(matchId, userId(2L)))
                 .isInstanceOf(MatchRecruitmentClosedException.class);
 
         assertState(matchId, 1, MatchStatus.CLOSED);
@@ -150,7 +169,7 @@ class MatchJoinIntegrationTest {
     void startedMatchPreservesData() {
         Long matchId = createMatch(5, MatchStatus.RECRUITING, LocalDateTime.now().minusMinutes(1));
 
-        assertThatThrownBy(() -> matchService.joinMatch(matchId, 2L))
+        assertThatThrownBy(() -> matchService.joinMatch(matchId, userId(2L)))
                 .isInstanceOf(MatchAlreadyStartedException.class);
 
         assertState(matchId, 1, MatchStatus.RECRUITING);
@@ -161,7 +180,7 @@ class MatchJoinIntegrationTest {
     void missingMatchPreservesData() {
         Long matchId = createMatch(5, MatchStatus.RECRUITING, LocalDateTime.now().plusDays(1));
 
-        assertThatThrownBy(() -> matchService.joinMatch(Long.MAX_VALUE, 2L))
+        assertThatThrownBy(() -> matchService.joinMatch(Long.MAX_VALUE, userId(2L)))
                 .isInstanceOf(MatchNotFoundException.class);
 
         assertState(matchId, 1, MatchStatus.RECRUITING);
@@ -174,14 +193,14 @@ class MatchJoinIntegrationTest {
         Long matchId = createMatch(2, MatchStatus.RECRUITING, LocalDateTime.now().plusDays(1));
 
         assertThatThrownBy(() -> new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
-            matchService.joinMatch(matchId, 2L);
+            matchService.joinMatch(matchId, userId(2L));
             matchRepository.flush();
             assertState(matchId, 2, MatchStatus.CLOSED);
             throw new IllegalStateException("test-only transaction failure");
         })).isInstanceOf(IllegalStateException.class).hasMessage("test-only transaction failure");
 
         assertState(matchId, 1, MatchStatus.RECRUITING);
-        assertThat(matchParticipantRepository.existsByMatch_IdAndUserId(matchId, 2L)).isFalse();
+        assertThat(matchParticipantRepository.existsByMatch_IdAndUserId(matchId, userId(2L))).isFalse();
     }
 
     @Test
@@ -207,7 +226,20 @@ class MatchJoinIntegrationTest {
         assertThat(results.stream().filter(MatchAlreadyJoinedException.class::isInstance).count()).isEqualTo(1);
         assertState(matchId, 2, MatchStatus.RECRUITING);
         assertThat(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(matchId))
-                .filteredOn(participant -> participant.getUserId().equals(2L)).hasSize(1);
+                .filteredOn(participant -> participant.getUser().getId().equals(userId(2L))).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 사용자의 신청은 참가 기록과 모집 상태를 변경하지 않는다")
+    void missingUserPreservesData() {
+        Long matchId = createMatch(2, MatchStatus.RECRUITING, LocalDateTime.now().plusDays(1));
+        List<Long> before = participantIds(matchId);
+
+        assertThatThrownBy(() -> matchService.joinMatch(matchId, Long.MAX_VALUE))
+                .isInstanceOf(MatchUserNotFoundException.class);
+
+        assertThat(participantIds(matchId)).containsExactlyElementsOf(before);
+        assertState(matchId, 1, MatchStatus.RECRUITING);
     }
 
     private List<Object> joinConcurrently(Long matchId, Long firstUserId, Long secondUserId) throws Exception {
@@ -234,7 +266,7 @@ class MatchJoinIntegrationTest {
             throw new IllegalStateException("동시 요청 시작 신호 대기 시간 초과");
         }
         try {
-            return matchService.joinMatch(matchId, userId);
+            return matchService.joinMatch(matchId, userId(userId));
         } catch (RuntimeException exception) {
             return exception;
         }
@@ -244,9 +276,10 @@ class MatchJoinIntegrationTest {
         return new TransactionTemplate(transactionManager).execute(status -> {
             MatchEntity match = matchRepository.save(MatchEntity.builder()
                     .title("참여 테스트").sportType(SportType.FUTSAL).maxParticipant(maxParticipant)
+                    .serviceId(serviceId).genderGroup(GenderGroup.MIXED)
                     .status(matchStatus).startAt(startAt).endAt(startAt.plusHours(2)).build());
             matchParticipantRepository.save(MatchParticipantEntity.builder()
-                    .match(match).userId(1L).role(MatchParticipantRole.OWNER).build());
+                    .match(match).user(users.get(1L)).role(MatchParticipantRole.OWNER).build());
             return match.getId();
         });
     }

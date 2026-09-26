@@ -1,0 +1,28 @@
+package com.example.sporty.support;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import jakarta.persistence.EntityManager;
+import com.example.sporty.features.facilities.domain.entity.LocationEntity;
+import com.example.sporty.features.facilities.domain.entity.ServiceEntity;
+
+public final class FacilityFixtures {
+    private FacilityFixtures() {}
+
+    public static long newServiceId() {
+        return ThreadLocalRandom.current().nextLong(3_000_000_000L, 4_000_000_000L);
+    }
+
+    public static ServiceEntity create(EntityManager em, long serviceId) {
+        LocationEntity location = LocationEntity.builder().name("Test location")
+                .region("강남구").latitude(new BigDecimal("37.50000000"))
+                .longitude(new BigDecimal("127.05000000")).build();
+        em.persist(location);
+        // Explicit ID also exercises values beyond Integer.MAX_VALUE.
+        em.createNativeQuery("INSERT INTO service (id,location_id,name,created_at,updated_at) VALUES (:id,:location,:name,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")
+                .setParameter("id", serviceId).setParameter("location", location.getId())
+                .setParameter("name", "Test service " + UUID.randomUUID()).executeUpdate();
+        return em.find(ServiceEntity.class, serviceId);
+    }
+}
