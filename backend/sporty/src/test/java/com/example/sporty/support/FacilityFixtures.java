@@ -20,8 +20,12 @@ public final class FacilityFixtures {
                 .longitude(new BigDecimal("127.05000000")).build();
         em.persist(location);
         // Explicit ID also exercises values beyond Integer.MAX_VALUE.
-        em.createNativeQuery("INSERT INTO service (id,location_id,name,created_at,updated_at) VALUES (:id,:location,:name,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")
+        em.createNativeQuery("""
+                INSERT INTO service (id,location_id,service_id,name,active,created_at,updated_at)
+                VALUES (:id,:location,:serviceId,:name,true,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
+                """)
                 .setParameter("id", serviceId).setParameter("location", location.getId())
+                .setParameter("serviceId", "test-" + UUID.randomUUID())
                 .setParameter("name", "Test service " + UUID.randomUUID()).executeUpdate();
         return em.find(ServiceEntity.class, serviceId);
     }
