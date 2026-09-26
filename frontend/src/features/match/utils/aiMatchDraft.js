@@ -1,6 +1,6 @@
 // [AI-03] AI 매치 생성 — 해석 결과를 생성 폼 초안으로 변환
 // 라우트 간 전달용 초안이다. 실제 매치 등록은 생성 화면에서 사용자가 제출할 때만 실행한다.
-// [AI-03] 현재 생성 페이지는 이 초안을 읽지 않는다. 담당자가 state.aiDraft를 MatchForm props로 연결해야 자동 입력된다.
+// 생성 페이지는 state.aiDraft를 읽어 MatchForm 초기값으로 전달한다.
 // 생성 해석 API 계약(예정): { initialValues: { sportType, startAt, endAt, ... }, facility? }.
 /**
  * [생성 API 담당자 수정 지점]

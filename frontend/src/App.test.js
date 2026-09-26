@@ -1,8 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
+import { fetchMatchList } from './features/match/api/matchListApi';
+
+jest.mock('./features/match/api/matchListApi', () => ({ fetchMatchList: jest.fn(), fetchRecommendedMatches: jest.fn() }));
 
 beforeEach(() => {
+  fetchMatchList.mockResolvedValue([]);
   window.history.replaceState({}, '', '/');
 });
 
@@ -28,9 +32,10 @@ test('opens facility search without a query when submitted with Enter', () => {
   expect(window.location.search).toBe('');
 });
 
-test('opens the match search page from the floating link', () => {
+test('opens the match search page from the floating link', async () => {
   render(<App />);
   userEvent.click(screen.getByRole('link', { name: '전체 3건 매치 목록 보러가기' }));
-  expect(screen.getByText('매치 검색')).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: '회원 맞춤 추천 매치' })).toBeInTheDocument();
   expect(window.location.pathname).toBe('/matches/search');
+  expect(await screen.findByText(/조건에 맞는 매치가 없습니다/)).toBeInTheDocument();
 });
