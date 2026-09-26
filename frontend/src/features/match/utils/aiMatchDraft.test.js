@@ -1,6 +1,6 @@
 import { prepareAiMatchDraft } from './aiMatchDraft';
 
-test.each(['male', 'female', 'mixed'])('preserves gender %s in the AI draft', genderGroup => {
+test.each(['MALE', 'FEMALE', 'MIXED'])('preserves gender %s in the AI draft', genderGroup => {
   const draft = prepareAiMatchDraft('매치 만들어줘', { initialValues: { genderGroup, title: '풋살', serviceId: 99, extra: true } });
   expect(draft.initialValues).toEqual({ genderGroup, title: '풋살' });
   expect(draft.interpreted).toBe(true);

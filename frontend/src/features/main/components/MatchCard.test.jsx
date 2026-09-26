@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import MatchCard from './MatchCard';
 import { toMatchCard } from '../api/aiMatchApi';
 
-test.each([['male', '남성'], ['female', '여성'], ['mixed', '혼성']])('displays gender %s from the API', (genderGroup, label) => {
+test.each([['MALE', '남성'], ['FEMALE', '여성'], ['MIXED', '혼성']])('displays gender %s from the API', (genderGroup, label) => {
   const match = toMatchCard({ matchId: 1, title: '풋살', genderGroup });
   expect(match.genderGroup).toBe(genderGroup);
   render(<MatchCard match={match} />);

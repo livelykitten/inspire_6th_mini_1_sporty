@@ -148,9 +148,9 @@ export default function MatchForm({ initialValues, selectedFacility, searchFacil
             {/* TODO: fieldProps('genderGroup')와 errorText('genderGroup')를 연결하세요. */}
             <select id="genderGroup" name="genderGroup" {...fieldProps('genderGroup')}>
               <option value="" disabled>성별 구성을 선택해주세요</option>
-              <option value="male">남성</option>
-              <option value="female">여성</option>
-              <option value="mixed">혼성</option>
+              <option value="MALE">남성</option>
+              <option value="FEMALE">여성</option>
+              <option value="MIXED">혼성</option>
             </select>
             {errorText('genderGroup')}
           </div>
