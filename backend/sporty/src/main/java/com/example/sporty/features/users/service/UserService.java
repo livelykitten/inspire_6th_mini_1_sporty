@@ -54,7 +54,7 @@ public class UserService {
         ProfileEntity savedProfile = profileRepository.save(profileEntity);
 
         // 4. 선호 종목 생성
-        for (SportType sportType : request.getSportTypes()) {
+        for (SportType sportType : request.getSportTypes().stream().distinct().toList()) {
             SportPreferenceEntity preference =
                     SportPreferenceEntity.builder()
                             .sportType(sportType)

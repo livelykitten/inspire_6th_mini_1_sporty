@@ -48,7 +48,13 @@ export default function MatchCreatePage({ searchFacilities = searchMatchFaciliti
         </nav>
         <h1>새로운 매치 개설하기</h1>
         <p className="match-intro">원하는 종목과 장소, 일정을 등록하고 함께 경기할 신뢰성 높은 스포츠 메이트를 매칭하세요.</p>
-        <MatchForm onSubmit={handleSubmit} selectedFacility={location.state?.facility} searchFacilities={searchFacilities} />
+        <MatchForm
+          key={location.key}        
+          onSubmit={handleSubmit}
+          selectedFacility={location.state?.facility ?? location.state?.aiDraft?.facility}
+          searchFacilities={searchFacilities} 
+          initialValues={location.state?.aiDraft?.initialValues}
+        />
       </main>
       <footer className="match-footer"><img src={logo} alt="SPORTY" width="80" height="24" /><strong>SPORTY</strong><span>© {new Date().getFullYear()} SPORTY. All rights reserved.</span></footer>
     </div>
