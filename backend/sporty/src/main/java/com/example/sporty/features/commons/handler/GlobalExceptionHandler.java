@@ -137,6 +137,8 @@ public class GlobalExceptionHandler {
                         .code("LOGIN_FAILED")
                         .message(e.getMessage())
                         .build());
+    }
+
     // AI 검색 조건 없음 → 400
     @ExceptionHandler(AiSearchException.class)
     public ResponseEntity<?> handlerAiSearch(AiSearchException e) {
