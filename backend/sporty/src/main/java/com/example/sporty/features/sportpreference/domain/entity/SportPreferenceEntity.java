@@ -11,7 +11,8 @@ import java.util.Date;
 
 @Entity
 @Builder
-@Table(name = "sport_preference")
+@Table(name = "sport_preference", uniqueConstraints =
+    @UniqueConstraint(name = "uk_sport_preference_profile_sport", columnNames = {"profile_id", "sport_type"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -23,7 +24,7 @@ public class SportPreferenceEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "sport_type", nullable = false)
     private SportType sportType;
 
     @CreationTimestamp

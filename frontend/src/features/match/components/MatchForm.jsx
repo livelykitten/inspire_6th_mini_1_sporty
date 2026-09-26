@@ -36,18 +36,34 @@ function Section({ number, title, description, children }) {
 }
 
 export default function MatchForm({ initialValues, selectedFacility, searchFacilities, onSubmit, submitLabel = '매치 개설 완료하기' }) {
+  // 전달받은 initialValues를 최초 마운트 때만 폼 상태로 복사한다. 현재 생성 페이지의 AI 초안 전달은 미연결이다.
+  // [AI-03] 생성 담당자는 부모에서 초안 props를 연결하고, 새 초안 적용 시 location.key 등을 key로 사용해 폼을 다시 마운트해야 한다.
+  // startAt/endAt → 날짜/시간 입력 분리는 utils/matchValidation.js의 initialMatchValues에서 처리한다.
+  // [AI-03 연결 예정 / 등록 ID 미확정] object: 기본값 및 사용자가 수정한 폼 값. 초안 props 연결 후 자동 입력값도 저장한다.
   const [values, setValues] = useState(() => initialMatchValues({ ...initialValues, ...(selectedFacility ? { serviceId: selectedFacility.serviceId } : {}) }));
+  // [FC-01][AI-03] object | null: 선택/추천 시설(serviceId, name, region, locationName). 시설 표시와 등록 ID에 사용한다.
   const [facility, setFacility] = useState(selectedFacility || null);
+  // [FC-01] string: 생성 폼 내부의 시설명 검색어. 메인 상단 검색어와 독립적이다.
   const [query, setQuery] = useState('');
+  // [FC-01] string: 시설 검색의 지역 필터(예: 성동구). search()에서 query와 함께 전달한다.
   const [region, setRegion] = useState('');
+  // [FC-01] array: 검색된 시설 목록. 시설을 선택하면 facility/values.serviceId를 갱신하고 목록을 비운다.
   const [results, setResults] = useState([]);
+  // [FC-01] string: 시설 검색 결과 없음/요청 실패/미연결 안내 문구.
   const [searchMessage, setSearchMessage] = useState('');
+  // [FC-01] boolean: 시설 검색 중 여부. 검색 버튼의 문구와 비활성화를 제어한다.
   const [searching, setSearching] = useState(false);
+  // [AI-03 후속 폼 / 등록 ID 미확정] object: { 필드명: 오류 문구 }. 자동 입력값도 수동 입력과 동일하게 검증한다.
   const [errors, setErrors] = useState({});
+  // [AI-03 후속 폼 / 등록 ID 미확정] string: 실제 매치 등록 요청 실패 문구. AI 해석 오류와 별개다.
   const [submitError, setSubmitError] = useState('');
+  // [AI-03 후속 폼 / 등록 ID 미확정] boolean: 최종 등록 중 여부. 폼과 제출 버튼을 잠근다.
   const [pending, setPending] = useState(false);
+  // [AI-03 후속 폼 / 등록 ID 미확정] ref<boolean>: 최종 등록의 연속 제출 방지 잠금.
   const submitting = useRef(false);
+  // [FC-01] ref<number>: 최신 검색 번호. 늦게 도착한 과거 시설 검색 응답을 무시한다.
   const searchVersion = useRef(0);
+  // [AI-03 후속 폼 / 등록 ID 미확정] ref<HTMLFormElement>: 검증 실패 시 첫 오류 입력칸으로 포커스를 이동한다.
   const formRef = useRef(null);
 
   function update(name, value) {
@@ -94,7 +110,14 @@ export default function MatchForm({ initialValues, selectedFacility, searchFacil
   }
 
   const errorText = name => errors[name] && <p className="match-error" id={`error-${name}`}>{errors[name]}</p>;
-  const fieldProps = (name, errorName = name) => ({ id: name, name, value: values[name], onChange: event => update(name, event.target.value), 'aria-invalid': !!errors[errorName], 'aria-describedby': errors[errorName] ? `error-${errorName}` : undefined });
+  const fieldProps = (name, errorName = name) => ({
+    id: name,
+    name,
+    value: values[name],
+    onChange: event => update(name, event.target.value),
+    'aria-invalid': !!errors[errorName],
+    'aria-describedby': errors[errorName] ? `error-${errorName}` : undefined }
+  );
 
   return <form className="match-form" ref={formRef} onSubmit={submit} noValidate>
     <fieldset className="match-fields" disabled={pending}>
@@ -117,8 +140,20 @@ export default function MatchForm({ initialValues, selectedFacility, searchFacil
         {facility ? <div className="match-facility"><div><strong>{facility.name}</strong><span className="match-facility-tag">선택한 시설</span><p>{[facility.region, facility.locationName].filter(Boolean).join(' · ')}</p></div><button type="button" onClick={() => { setFacility(null); update('serviceId', ''); }}>선택 해제</button></div> : <p className="match-empty">운동할 체육시설을 선택해주세요.</p>}
         {errorText('serviceId')}
       </Section>
-      <Section number="3" title="일정 및 모집 인원 설정" description="경기 일정과 함께할 인원, 실력 레벨을 정해주세요.">
-        <div className="match-schedule-grid"><div className="match-control"><label htmlFor="date">경기 날짜</label><input type="date" {...fieldProps('date', 'startAt')} />{errorText('startAt')}</div>
+      <Section number="3" title="일정 및 모집 인원 설정" description="경기 일정과 함께할 인원, 성별 구성, 실력 레벨을 정해주세요.">
+        <div className="match-schedule-grid"><div className="match-control"><label htmlFor="date">경기 날짜</label>
+        <input type="date" {...fieldProps('date', 'startAt')} />{errorText('startAt')}</div>
+          <div className="match-control">
+            <label htmlFor="genderGroup">성별 구성</label>
+            {/* TODO: fieldProps('genderGroup')와 errorText('genderGroup')를 연결하세요. */}
+            <select id="genderGroup" name="genderGroup" {...fieldProps('genderGroup')}>
+              <option value="" disabled>성별 구성을 선택해주세요</option>
+              <option value="MALE">남성</option>
+              <option value="FEMALE">여성</option>
+              <option value="MIXED">혼성</option>
+            </select>
+            {errorText('genderGroup')}
+          </div>
           <div className="match-control"><label htmlFor="maxParticipant">모집 최대 인원 (방장 포함)</label><div className="match-stepper"><button type="button" aria-label="모집 인원 줄이기" disabled={Number(values.maxParticipant) <= 1} onClick={() => update('maxParticipant', Math.max(1, Number(values.maxParticipant) - 1))}>−</button><input type="number" min="1" step="1" {...fieldProps('maxParticipant')} /><span>명</span><button type="button" aria-label="모집 인원 늘리기" onClick={() => update('maxParticipant', Number(values.maxParticipant) + 1)}>+</button></div>{errorText('maxParticipant')}</div>
           <div className="match-time-grid"><div className="match-control"><label htmlFor="startTime">시작 시간</label><input type="time" {...fieldProps('startTime', 'startAt')} /></div><div className="match-control"><label htmlFor="endTime">종료 시간</label><input type="time" {...fieldProps('endTime', 'endAt')} /></div><div className="match-control match-end-date"><label htmlFor="endDate">종료 날짜 (미선택 시 경기 당일)</label><input type="date" {...fieldProps('endDate', 'endAt')} />{errorText('endAt')}</div></div>
           <div className="match-control"><span id="match-level-label">경기 실력 레벨</span><div className="match-levels" role="group" aria-labelledby="match-level-label">{SKILL_LEVELS.map(level => <button type="button" key={level.value} aria-pressed={values.skillLevel === level.value} className={values.skillLevel === level.value ? 'is-selected' : ''} onClick={() => update('skillLevel', level.value)}>{level.label}</button>)}</div>{errorText('skillLevel')}</div>

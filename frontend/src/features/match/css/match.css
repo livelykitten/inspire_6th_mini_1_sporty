@@ -35,7 +35,8 @@
 .match-sport small { font-size: 9px; color: var(--match-muted); }
 .match-sport.is-selected small { color: var(--match-blue); }
 .match-form input, .match-form textarea { width: 100%; min-width: 0; background: var(--match-field); color: var(--match-ink); border: 1px solid transparent; border-radius: 12px; padding: 14px 16px; line-height: 1.5; font-size: 14px; }
-.match-form input[aria-invalid=true], .match-form textarea[aria-invalid=true] { border-color: #ba1a1a; }
+.match-form select { width: 100%; min-width: 0; background: var(--match-field); color: var(--match-ink); border: 1px solid transparent; border-radius: 12px; padding: 14px 16px; font: inherit; line-height: 1.5; font-size: 14px; }
+.match-form input[aria-invalid=true], .match-form textarea[aria-invalid=true], .match-form select[aria-invalid=true] { border-color: #ba1a1a; }
 .match-form input::placeholder, .match-form textarea::placeholder { color: #737688; }
 .match-form textarea { resize: vertical; min-height: 150px; }
 .match-search { display: flex; align-items: center; background: var(--match-field); border-radius: 12px; padding-right: 8px; gap: 4px; }
@@ -81,3 +82,4 @@
 @media (max-width: 1100px) { .match-main { padding: 24px 32px 64px; } .match-header-inner { padding: 20px 32px; } .match-section { padding: 24px; } .match-sports { gap: 8px; } .match-form { gap: 24px; grid-template-columns: minmax(0, 1fr) 240px; } .match-schedule-grid { grid-template-columns: 1fr; } }
 @media (max-width: 800px) { .match-form { grid-template-columns: minmax(0, 1fr); } .match-actions { position: static; } .match-schedule-grid { grid-template-columns: 1fr 1fr; } .match-main h1 { font-size: 28px; } }
 @media (max-width: 540px) { .match-header-inner { min-height: 80px; padding: 20px; align-items: center; } .match-brand > span { display: none; } .match-main { padding: 24px 16px 48px; } .match-main h1 { font-size: 25px; } .match-intro { font-size: 13px; } .match-section { padding: 20px; } .match-section h2 { font-size: 16px; } .match-required { padding: 4px 6px; font-size: 9px; } .match-section-heading { gap: 8px; } .match-sports { grid-template-columns: repeat(3, 1fr); gap: 12px; } .match-schedule-grid { grid-template-columns: 1fr; } .match-footer { padding: 28px 20px; font-size: 11px; } }
+.match-ai-draft { margin-bottom: 24px; padding: 16px; border: 1px solid #dbeafe; border-radius: 12px; background: #eff6ff; overflow-wrap: anywhere; } .match-ai-draft p { margin: 8px 0 0; white-space: pre-wrap; }
