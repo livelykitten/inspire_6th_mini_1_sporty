@@ -22,6 +22,11 @@ test('deletes the match and requires HTTP 204', async () => {
   await expect(deleteMatch(101)).rejects.toThrow('삭제 결과');
 });
 
+import { createMatch, searchMatchFacilities, getMatchDetail, modifyMatch } from './matchApi';
+
+jest.mock('../../../api/axios', () => ({ post: jest.fn(), get: jest.fn(), put: jest.fn() }));
+afterEach(() => jest.clearAllMocks());
+
 test('updates through the shared authenticated client with only DTO fields', async () => {
   const payload = { title: '수정', description: '', startAt: '2026-10-01T19:00', endAt: '2026-10-01T21:00', maxParticipant: 4, skillLevel: 'BEGINNER', genderGroup: 'MIXED' };
   api.put.mockResolvedValue({ data: { matchId: 42, ...payload } });
