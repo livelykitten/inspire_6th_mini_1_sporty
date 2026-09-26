@@ -18,4 +18,6 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
 
     // 참가 정보를 조회한 뒤 getRole()로 OWNER/PARTICIPANT를 확인한다.
     Optional<MatchParticipantEntity> findByMatch_IdAndUserId(Long matchId, Long userId);
+
+    void deleteAllByMatch_Id(Long matchId);
 }

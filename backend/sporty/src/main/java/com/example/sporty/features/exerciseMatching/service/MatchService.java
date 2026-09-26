@@ -7,6 +7,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchDeleteForbiddenException;
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
+import com.example.sporty.features.exerciseMatching.domain.dto.MatchDetailResponseDto;
+import com.example.sporty.features.exerciseMatching.domain.dto.MatchParticipantSummaryDto;
 import com.example.sporty.features.commons.exception.matches.MatchUserNotFoundException;
 import com.example.sporty.features.commons.exception.matches.WithdrawnUserFoundException;
 import com.example.sporty.features.commons.exception.matches.ServiceNotFoundException;
@@ -31,9 +35,6 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
-import com.example.sporty.features.exerciseMatching.domain.dto.MatchDetailResponseDto;
-import com.example.sporty.features.exerciseMatching.domain.dto.MatchParticipantSummaryDto;
 import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
 import com.example.sporty.features.profiles.repository.ProfileRepository;
 
@@ -47,6 +48,21 @@ public class MatchService {
     private final ProfileRepository profileRepository;
     private final ServiceRepository serviceRepository;
 
+
+    // EM-05: 참가 기록과 매치를 한 트랜잭션에서 삭제한다.
+    @Transactional
+    public void deleteMatch(Long matchId, Long userId) {
+        MatchEntity match = matchRepository.findById(matchId)
+                .orElseThrow(MatchNotFoundException::new);
+
+        matchParticipantRepository.findByMatch_IdAndUserId(matchId, userId)
+                .filter(participant -> participant.getRole() == MatchParticipantRole.OWNER)
+                .orElseThrow(MatchDeleteForbiddenException::new);
+
+        // 외래 키로 연결된 참가 기록을 먼저 삭제한 뒤 매치를 삭제한다.
+        matchParticipantRepository.deleteAllByMatch_Id(matchId);
+        matchRepository.delete(match);
+    }
 
     @Transactional 
     public Long createMatch(MatchCreateRequestDto req) {
