@@ -61,6 +61,6 @@ export function toMatchCard(match) {
     currentParticipant: match.currentParticipant,
     maxParticipant: match.maxParticipant,
     genderGroup: match.genderGroup,
-    genderGroupLabel: GENDER_LABELS[match.genderGroup] || '성별 구성 정보 없음 ',
+    genderGroupLabel: GENDER_LABELS[match.genderGroup] || '성별 정보 없음 ',
   };
 }
