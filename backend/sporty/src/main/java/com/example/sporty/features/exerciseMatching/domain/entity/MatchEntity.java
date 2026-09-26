@@ -111,4 +111,9 @@ public class MatchEntity {
             foreignKey = @ForeignKey(name = "fk_match_service"))
     @ToString.Exclude
     private ServiceEntity service;
+
+    // Match의 Status를 CLOSED 로 변경하는 메서드
+    public void closeRecruitment() {
+        this.status = MatchStatus.CLOSED;
+    }
 }

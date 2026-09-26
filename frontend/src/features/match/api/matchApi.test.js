@@ -1,8 +1,21 @@
 import api from '../../../api/axios';
-import { createMatch, searchMatchFacilities } from './matchApi';
+import { createMatch, searchMatchFacilities, getMatchDetail } from './matchApi';
 
 jest.mock('../../../api/axios', () => ({ post: jest.fn(), get: jest.fn() }));
 afterEach(() => jest.clearAllMocks());
+
+test('loads the detail endpoint and forwards cancellation', async () => {
+  const signal = new AbortController().signal;
+  const match = { matchId: 101, title: '풋살', isOwner: true };
+  api.get.mockResolvedValue({ data: match });
+  await expect(getMatchDetail('101', signal)).resolves.toEqual(match);
+  expect(api.get).toHaveBeenCalledWith('/api/matches/101', { signal });
+});
+
+test.each(['<html>frontend fallback</html>', { matchId: 2 }, null])('rejects unexpected detail responses', async data => {
+  api.get.mockResolvedValue({ data });
+  await expect(getMatchDetail('101')).rejects.toThrow('응답 형식');
+});
 
 test.each([17, { matchId: 17 }])('reads the created match ID from %p', async data => {
   api.post.mockResolvedValue({ data });
