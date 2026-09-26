@@ -1,5 +1,13 @@
 import api from '../../../api/axios';
 
+export async function getMatchDetail(matchId, signal) {
+  const { data } = await api.get(`/api/matches/${matchId}`, { signal });
+  if (!data || data.matchId !== Number(matchId)) {
+    throw new Error('매치 상세 응답 형식을 확인할 수 없습니다.');
+  }
+  return data;
+}
+
 // [FC-01] 시설 검색 — 생성 폼에서 사용할 시설 응답 변환
 // Keep the facility response mapping here until the ServiceResponse contract is finalized.
 export function toFacilityOption(service) {

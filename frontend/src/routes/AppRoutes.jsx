@@ -1,5 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import MatchCreatePage, { RequireMatchAuth } from '../features/match/pages/MatchCreatePage';
+import MatchDetailPage from '../features/match/pages/MatchDetailPage';
+import MatchDetailPreviewPage from '../features/match/pages/MatchDetailPreviewPage';
 import SignUpPage from '../features/auth/pages/SignUpPage';
 import MainPage from '../features/main/pages/MainPage';
 
@@ -18,9 +20,12 @@ export default function AppRoutes() {
       <Route path="/mypage" element={<div>마이페이지</div>} />
 
       <Route path="/matches/new" element={<RequireMatchAuth><MatchCreatePage /></RequireMatchAuth>} />
+      {process.env.NODE_ENV === 'development' && (
+        <Route path="/matches/preview" element={<MatchDetailPreviewPage />} />
+      )}
+      <Route path="/matches/:matchId" element={<MatchDetailPage />} />
       {/* [EM-02] 전체 운동 매칭 목록 조회 — 실제 목록 페이지로 교체하고 해당 페이지에서 조회 API를 호출한다. */}
       <Route path="/matches/search" element={<div>매치 검색</div>} />
-      <Route path="/matches/:matchId" element={<div>매치 상세</div>} />
       <Route path="/matches/:matchId/edit" element={<div>매치 수정</div>} />
 
       {/* [FC-01] 시설 검색 — 실제 시설 검색 페이지로 교체하고 URL의 query를 초기 검색어로 사용한다. */}
