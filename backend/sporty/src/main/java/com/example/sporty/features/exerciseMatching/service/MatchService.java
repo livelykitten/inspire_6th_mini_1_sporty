@@ -35,9 +35,6 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
-import com.example.sporty.features.exerciseMatching.domain.dto.MatchDetailResponseDto;
-import com.example.sporty.features.exerciseMatching.domain.dto.MatchParticipantSummaryDto;
 import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
 import com.example.sporty.features.profiles.repository.ProfileRepository;
 

@@ -23,6 +23,8 @@ public class GlobalExceptionHandler {
                         .code("MATCH_DELETE_FORBIDDEN")
                         .message(e.getMessage())
                         .build());
+
+    }
     @ExceptionHandler(ServiceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleServiceNotFound(ServiceNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
