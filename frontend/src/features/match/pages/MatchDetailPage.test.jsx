@@ -110,7 +110,11 @@ test('ignores a late response after navigation to another match', async () => {
 test.each([['MALE', '남성'], ['FEMALE', '여성'], ['MIXED', '혼성'], [null, '성별 정보 없음']])('renders gender %s and null facility placeholders', async (genderGroup, label) => {
   getMatchDetail.mockResolvedValue({ ...match, genderGroup });
   showPage();
-  expect(await screen.findByText(label)).toBeInTheDocument();
+  await screen.findByRole('heading', { name: match.title });
+  const summary = screen.getByRole('region', { name: /경기 주요 정보 요약/ });
+  expect(within(summary).getByText('인원 구성')).toBeInTheDocument();
+  expect(within(summary).getByText('2 / 10명 참여')).toBeInTheDocument();
+  expect(within(summary).getByText(label)).toBeInTheDocument();
   const place = screen.getByRole('region', { name: /장소 및 시설 안내/ });
   expect(within(place).getByText('시설명 정보 없음')).toBeInTheDocument();
   expect(within(place).getByText('장소 정보 없음')).toBeInTheDocument();
