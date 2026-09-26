@@ -107,7 +107,7 @@ test('ignores a late response after navigation to another match', async () => {
   expect(getMatchDetail.mock.calls[0][1].aborted).toBe(true);
 });
 
-test.each([['MALE', '남성'], ['FEMALE', '여성'], ['MIXED', '혼성'], [null, '성별 정보 없음']])('renders gender %s and null facility placeholders', async (genderGroup, label) => {
+test.each([['MALE', '남성'], ['FEMALE', '여성'], ['MIXED', '혼성'], [null, '성별 구성 정보 없음']])('renders gender %s and null facility placeholders', async (genderGroup, label) => {
   getMatchDetail.mockResolvedValue({ ...match, genderGroup });
   showPage();
   await screen.findByRole('heading', { name: match.title });

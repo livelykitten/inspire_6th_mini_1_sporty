@@ -11,7 +11,7 @@ test.each([['MALE', '남성'], ['FEMALE', '여성'], ['MIXED', '혼성']])('disp
 
 test.each([undefined, null, '', 'unknown'])('does not invent a gender for %p', genderGroup => {
   render(<MatchCard match={toMatchCard({ matchId: 1, title: '풋살', genderGroup })} />);
-  expect(screen.getByText('성별 정보 없음')).toBeInTheDocument();
+  expect(screen.getByText('성별 구성 정보 없음')).toBeInTheDocument();
 });
 
 test.each([

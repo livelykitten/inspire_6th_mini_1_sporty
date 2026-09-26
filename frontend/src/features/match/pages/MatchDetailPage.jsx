@@ -196,7 +196,7 @@ function MatchDetailContent({ match, preview, onRefresh }) {
         <div className="detail-tags">
           <span className="detail-tag">{SPORTS[match.sportType] || '종목 정보 없음'}</span>
           <span className="detail-tag detail-tag-neutral">{LEVELS[match.skillLevel] || '실력 정보 없음'}</span>
-          <span className="detail-tag detail-tag-neutral">{GENDERS[match.genderGroup] ?? '성별 정보 없음'}</span>
+          <span className="detail-tag detail-tag-neutral">{GENDERS[match.genderGroup] ?? '성별 구성 정보 없음'}</span>
           <span className={`detail-tag ${match.status === 'RECRUITING' ? 'detail-tag-open' : 'detail-tag-neutral'}`}>{status}</span>
         </div>
         <h1>{match.title || '제목 정보 없음'}</h1>
@@ -210,7 +210,7 @@ function MatchDetailContent({ match, preview, onRefresh }) {
               <div><dt>일시 & 시간</dt><dd>{dateLabel(match.startAt)}</dd><dd>{timeLabel(match.startAt)} — {timeLabel(match.endAt)}</dd><dd className="detail-fact-caption">{durationLabel(match.startAt, match.endAt)}</dd></div>
               <div><dt>운동 종목</dt><dd>{SPORTS[match.sportType] || '정보 없음'}</dd><dd className="detail-fact-caption">함께 즐기는 운동</dd></div>
               <div><dt>참가 레벨</dt><dd>{LEVELS[match.skillLevel] || '정보 없음'}</dd><dd className="detail-fact-caption">매치 실력 수준</dd></div>
-              <div><dt>인원 구성</dt><dd>{current ?? '—'} / {maximum ?? '—'}명 참여</dd><dd>{GENDERS[match.genderGroup] ?? '성별 정보 없음'}</dd><dd className="detail-fact-caption">현재 / 최대 인원 · 생성자 포함</dd></div>
+              <div><dt>인원 구성</dt><dd>{current ?? '—'} / {maximum ?? '—'}명 참여</dd><dd>{GENDERS[match.genderGroup] ?? '성별 구성 정보 없음'}</dd><dd className="detail-fact-caption">현재 / 최대 인원 · 생성자 포함</dd></div>
             </dl>
           </section>
           <section className="match-section detail-section" aria-labelledby="detail-description-title">
