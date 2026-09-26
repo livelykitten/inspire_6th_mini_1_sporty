@@ -5,6 +5,7 @@ import com.example.sporty.features.commons.exception.matches.WithdrawnUserFoundE
 import com.example.sporty.features.commons.exception.matches.ServiceNotFoundException;
 import com.example.sporty.features.commons.exception.auth.LoginFailException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchDeleteForbiddenException;
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchModifyForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
 import com.example.sporty.features.commons.exception.profiles.ProfileNotFoundException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchAlreadyJoinedException;
@@ -22,6 +23,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MatchModifyForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleMatchModifyForbiddenException(MatchModifyForbiddenException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.builder()
+                        .code("MATCH_MODIFY_FORBIDDEN")
+                        .message(e.getMessage())
+                        .build());
+    }
 
     @ExceptionHandler(MatchAlreadyJoinedException.class)
     public ResponseEntity<ErrorResponse> handleMatchAlreadyJoined(MatchAlreadyJoinedException e) {

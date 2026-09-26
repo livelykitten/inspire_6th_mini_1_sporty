@@ -112,4 +112,22 @@ public class MatchEntity {
     public void closeRecruitment() {
         this.status = MatchStatus.CLOSED;
     }
+
+    public void update(
+            String title,
+            String description,
+            LocalDateTime startAt,
+            LocalDateTime endAt,
+            Integer maxParticipant,
+            SkillLevel skillLevel,
+            GenderGroup genderGroup
+    ) {
+        this.title = title;
+        this.description = description;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.maxParticipant = maxParticipant;
+        this.skillLevel = skillLevel;
+        this.genderGroup = genderGroup;
+    }
 }
