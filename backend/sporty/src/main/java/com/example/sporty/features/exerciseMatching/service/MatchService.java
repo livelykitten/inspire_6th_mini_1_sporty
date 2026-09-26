@@ -177,7 +177,10 @@ public class MatchService {
             req.getMaxParticipant(),
             req.getSkillLevel(),
             req.getSportType(),
-            req.getGenderGroup()
+            req.getGenderGroup(),
+            req.getStatus(),
+            req.getRegion(),
+            req.getIsFree()
         ).stream()
         .map(MatchResponseDto::toResponseDto)
         .toList();
