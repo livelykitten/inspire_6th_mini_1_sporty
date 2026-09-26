@@ -12,6 +12,7 @@ import { formatMatchDate, formatMatchLocation } from '../utils/matchDisplay';
 
 const SKILL_LABELS = { BEGINNER: '초급', INTERMEDIATE: '중급', ADVANCED: '고급' };
 const SPORT_LABELS = { SOCCER: '축구', FUTSAL: '풋살', BASKETBALL: '농구', BASEBALL: '야구', TENNIS: '테니스', BADMINTON: '배드민턴', TABLE_TENNIS: '탁구', VOLLEYBALL: '배구', SWIMMING: '수영', RUNNING: '러닝' };
+const GENDER_LABELS = { male: '남성', female: '여성', mixed: '혼성'};
 
 // [AI-02] AI 매치 검색 — 맞춤 조건 응답 변환
 // 프론트에서 자연어를 재해석하지 않고 백엔드가 정제한 조건만 표시한다.
@@ -59,5 +60,7 @@ export function toMatchCard(match) {
     // 숫자 표시와 진행률 계산은 MatchCard에서 함께 처리한다.
     currentParticipant: match.currentParticipant,
     maxParticipant: match.maxParticipant,
+    genderGroup: match.genderGroup,
+    genderGroupLabel: GENDER_LABELS[match.genderGroup] || '성별 구성 정보 없음 ',
   };
 }
