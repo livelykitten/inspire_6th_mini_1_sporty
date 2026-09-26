@@ -27,6 +27,7 @@ import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchParticipantEntity;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchParticipantRole;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.repository.MatchParticipantRepository;
 import com.example.sporty.features.exerciseMatching.service.MatchService;
 import com.example.sporty.features.profiles.domain.entity.District;
@@ -101,7 +102,7 @@ class MatchIntegrationTest {
         MatchEntity match = match(UUID.randomUUID().toString(), "constraints", serviceId, START, 10, SkillLevel.BEGINNER);
         reload();
         for (String assignment : List.of("title=NULL", "title=' '", "start_at=NULL", "end_at=NULL",
-                "max_participant=NULL", "max_participant=0", "end_at=start_at", "service_id=NULL", "service_id=0")) {
+                "max_participant=NULL", "max_participant=0", "end_at=start_at", "service_id=NULL", "service_id=0", "gender_group=NULL")) {
             assertThatThrownBy(() -> jdbc.update("UPDATE `match` SET " + assignment + " WHERE id=?", match.getId()))
                     .as(assignment).isInstanceOf(DataIntegrityViolationException.class);
         }
@@ -165,6 +166,7 @@ class MatchIntegrationTest {
 
         reload();
         var detail = service.getMatchDetail(match.getId(), owner.getId());
+        assertThat(detail.getGenderGroup()).isEqualTo(GenderGroup.MIXED);
         assertThat(detail.getCurrentParticipantCount()).isEqualTo(2);
         assertThat(detail.getIsOwner()).isTrue();
         assertThat(detail.getIsParticipant()).isTrue();
@@ -175,9 +177,33 @@ class MatchIntegrationTest {
 
     private MatchEntity match(String title, String description, Long serviceId,
             LocalDateTime start, int capacity, SkillLevel skill) {
+        return match(title, description, serviceId, start, capacity, skill, GenderGroup.MIXED);
+    }
+
+    private MatchEntity match(String title, String description, Long serviceId,
+            LocalDateTime start, int capacity, SkillLevel skill, GenderGroup genderGroup) {
         return em.persist(MatchEntity.builder().title(title).description(description)
                 .serviceId(serviceId).startAt(start).endAt(start.plusHours(2))
-                .maxParticipant(capacity).skillLevel(skill).sportType(SportType.FUTSAL).build());
+                .maxParticipant(capacity).skillLevel(skill).sportType(SportType.FUTSAL)
+                .genderGroup(genderGroup).build());
+    }
+
+    @Test
+    void searchFiltersEachGenderGroupAndReturnsAllWhenOmitted() {
+        String marker = UUID.randomUUID().toString();
+        for (GenderGroup genderGroup : GenderGroup.values()) {
+            match(marker, "Gender filter", serviceId, START, 10, SkillLevel.BEGINNER, genderGroup);
+        }
+        reload();
+
+        for (GenderGroup genderGroup : GenderGroup.values()) {
+            var result = service.searchMatches(MatchSearchRequestDto.builder()
+                    .titleKeyword(marker).genderGroup(genderGroup).build());
+            assertThat(result).extracting(MatchResponseDto::getGenderGroup).containsExactly(genderGroup);
+        }
+        assertThat(service.searchMatches(MatchSearchRequestDto.builder().titleKeyword(marker).build()))
+                .extracting(MatchResponseDto::getGenderGroup)
+                .containsExactlyInAnyOrder(GenderGroup.values());
     }
 
     private UserEntity user() {

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -37,6 +38,8 @@ public class MatchResponseDto {
     private SkillLevel skillLevel;
     private SportType sportType;
 
+    private GenderGroup genderGroup;
+
     public static MatchResponseDto toResponseDto(MatchEntity entity) {
         return MatchResponseDto.builder()
             .matchId(entity.getId())
@@ -48,6 +51,7 @@ public class MatchResponseDto {
             .status(entity.getStatus())
             .skillLevel(entity.getSkillLevel())
             .sportType(entity.getSportType())
+            .genderGroup(entity.getGenderGroup())
             .build();
     }
 }
