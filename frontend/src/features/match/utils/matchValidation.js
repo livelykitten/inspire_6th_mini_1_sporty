@@ -16,6 +16,7 @@ export function initialMatchValues(match = {}) {
     skillLevel: match.skillLevel || 'BEGINNER',
     title: match.title || '',
     description: match.description || '',
+    genderGroup: match.genderGroup || 'MIXED'
   };
 }
 
@@ -34,6 +35,8 @@ export function validateMatch(values) {
   if (!values.title.trim() || values.title.trim().length > 50) errors.title = '매치 제목을 1~50자로 입력해주세요.';
   if (!values.description.trim() || values.description.length > 500) errors.description = '상세 안내를 1~500자로 입력해주세요.';
   if (!SKILL_LEVELS.some(level => level.value === values.skillLevel)) errors.skillLevel = '경기 실력 레벨을 선택해주세요.';
+  const genderGroups = ['MALE', 'FEMALE', 'MIXED']
+  if (!values.genderGroup || !genderGroups.includes(values.genderGroup)) errors.genderGroup = '성별 구성을 선택해주세요.';
   return errors;
 }
 
@@ -47,5 +50,6 @@ export function toMatchPayload(values) {
     maxParticipant: Number(values.maxParticipant),
     skillLevel: values.skillLevel,
     sportType: values.sportType,
+    genderGroup: values.genderGroup,
   };
 }

@@ -1,5 +1,8 @@
 package com.example.sporty.features.commons.handler;
 
+import com.example.sporty.features.commons.exception.matches.MatchUserNotFoundException;
+import com.example.sporty.features.commons.exception.matches.WithdrawnUserFoundException;
+import com.example.sporty.features.commons.exception.matches.ServiceNotFoundException;
 import com.example.sporty.features.commons.exception.auth.LoginFailException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchDeleteForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
@@ -20,6 +23,10 @@ public class GlobalExceptionHandler {
                         .code("MATCH_DELETE_FORBIDDEN")
                         .message(e.getMessage())
                         .build());
+    @ExceptionHandler(ServiceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleServiceNotFound(ServiceNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.builder().code("SERVICE_NOT_FOUND").message(e.getMessage()).build());
     }
 
     @ExceptionHandler(MatchNotFoundException.class)
@@ -53,6 +60,28 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
+    @ExceptionHandler (MatchUserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMatchUserNotFoundException(
+        MatchUserNotFoundException e
+    ) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.builder()
+                        .code("MATCH_USER_NOT_FOUND")
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler (WithdrawnUserFoundException.class)
+    public ResponseEntity<ErrorResponse> handleWithdrawnUserFoundException(
+        WithdrawnUserFoundException e
+    ) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.builder()
+                        .code("USER_WITHDRAWN")
+                        .message(e.getMessage())
+                        .build());
+    }
+                
     @ExceptionHandler(LoginFailException.class)
     public ResponseEntity<ErrorResponse> handleLoginFail(
             LoginFailException e

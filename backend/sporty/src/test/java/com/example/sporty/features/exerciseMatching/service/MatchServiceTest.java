@@ -27,11 +27,14 @@ import com.example.sporty.features.exerciseMatching.domain.entity.MatchParticipa
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchParticipantRole;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.repository.MatchParticipantRepository;
 import com.example.sporty.features.exerciseMatching.repository.MatchRepository;
 import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
 import com.example.sporty.features.profiles.repository.ProfileRepository;
 import com.example.sporty.features.users.domain.entity.UserEntity;
+import com.example.sporty.features.users.repository.UserRepository;
+import com.example.sporty.features.facilities.repository.ServiceRepository;
 
 @ExtendWith(MockitoExtension.class)
 class MatchServiceTest {
@@ -44,6 +47,12 @@ class MatchServiceTest {
 
     @Mock
     private ProfileRepository profileRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private ServiceRepository serviceRepository;
 
     @InjectMocks
     private MatchService matchService;
@@ -63,6 +72,7 @@ class MatchServiceTest {
                 .status(MatchStatus.CLOSED)
                 .skillLevel(SkillLevel.INTERMEDIATE)
                 .sportType(SportType.FUTSAL)
+                .genderGroup(GenderGroup.FEMALE)
                 .serviceId(7L)
                 .build();
         when(matchRepository.findById(101L)).thenReturn(Optional.of(match));
@@ -86,6 +96,7 @@ class MatchServiceTest {
         assertThat(response.getStatus()).isEqualTo(MatchStatus.CLOSED);
         assertThat(response.getSkillLevel()).isEqualTo(SkillLevel.INTERMEDIATE);
         assertThat(response.getSportType()).isEqualTo(SportType.FUTSAL);
+        assertThat(response.getGenderGroup()).isEqualTo(GenderGroup.FEMALE);
         assertThat(response.getServiceId()).isEqualTo(7L);
 
         assertThat(response.getParticipants()).hasSize(2);
@@ -184,7 +195,10 @@ class MatchServiceTest {
     }
 
     private MatchParticipantEntity participant(Long userId, MatchParticipantRole role) {
-        return MatchParticipantEntity.builder().userId(userId).role(role).build();
+        return MatchParticipantEntity.builder()
+                .user(UserEntity.builder().id(userId).build())
+                .role(role)
+                .build();
     }
 
     private ProfileEntity profile(Long userId, Long profileId, String nickname, String imageUrl) {
