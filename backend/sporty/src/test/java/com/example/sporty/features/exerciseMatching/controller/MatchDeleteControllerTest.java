@@ -40,6 +40,9 @@ import com.example.sporty.features.exerciseMatching.repository.MatchParticipantR
 import com.example.sporty.features.exerciseMatching.repository.MatchRepository;
 import com.example.sporty.features.exerciseMatching.service.MatchService;
 import com.example.sporty.features.profiles.repository.ProfileRepository;
+import com.example.sporty.features.users.domain.entity.UserEntity;
+import com.example.sporty.features.users.repository.UserRepository;
+import com.example.sporty.features.facilities.repository.ServiceRepository;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -64,6 +67,12 @@ class MatchDeleteControllerTest {
 
     @MockitoBean
     private ProfileRepository profileRepository;
+
+    @MockitoBean
+    private UserRepository userRepository;
+
+    @MockitoBean
+    private ServiceRepository serviceRepository;
 
     @Test
     @DisplayName("[EM05-001] 생성자는 참가 기록과 매치를 삭제하고 본문 없는 204를 받는다")
@@ -180,6 +189,7 @@ class MatchDeleteControllerTest {
 
     private void givenParticipant(Long matchId, Long userId, MatchParticipantRole role) {
         when(matchParticipantRepository.findByMatch_IdAndUserId(matchId, userId))
-                .thenReturn(Optional.of(MatchParticipantEntity.builder().userId(userId).role(role).build()));
+                .thenReturn(Optional.of(MatchParticipantEntity.builder()
+                        .user(UserEntity.builder().id(userId).build()).role(role).build()));
     }
 }

@@ -5,7 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import jakarta.persistence.EntityManager;
+import com.example.sporty.features.users.domain.entity.UserEntity;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
+import com.example.sporty.support.MatchUserFixtures;
+import com.example.sporty.support.FacilityFixtures;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,6 +61,16 @@ class MatchDeleteIntegrationTest {
     @Autowired
     private PlatformTransactionManager transactionManager;
 
+    @Autowired
+    private EntityManager entityManager;
+
+    private Map<Long, UserEntity> users;
+    private Long serviceId;
+
+    private Long userId(long label) {
+        return users.get(label).getId();
+    }
+
     private Long matchId;
     private Long otherMatchId;
     private List<Long> participantIds;
@@ -63,10 +80,18 @@ class MatchDeleteIntegrationTest {
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
             matchParticipantRepository.deleteAllInBatch();
             matchRepository.deleteAllInBatch();
+            users = MatchUserFixtures.create(entityManager, 11);
+            serviceId = FacilityFixtures.create(entityManager, FacilityFixtures.newServiceId()).getId();
             MatchEntity match = matchRepository.save(MatchEntity.builder()
-                    .title("삭제 대상").sportType(SportType.FUTSAL).build());
+                    .title("삭제 대상").sportType(SportType.FUTSAL)
+                    .maxParticipant(5).genderGroup(GenderGroup.MIXED).serviceId(serviceId)
+                    .startAt(LocalDateTime.now().plusDays(1)).endAt(LocalDateTime.now().plusDays(1).plusHours(2))
+                    .build());
             MatchEntity otherMatch = matchRepository.save(MatchEntity.builder()
-                    .title("유지 대상").sportType(SportType.FUTSAL).build());
+                    .title("유지 대상").sportType(SportType.FUTSAL)
+                    .maxParticipant(5).genderGroup(GenderGroup.MIXED).serviceId(serviceId)
+                    .startAt(LocalDateTime.now().plusDays(1)).endAt(LocalDateTime.now().plusDays(1).plusHours(2))
+                    .build());
             matchId = match.getId();
             otherMatchId = otherMatch.getId();
             participantIds = matchParticipantRepository.saveAll(List.of(
@@ -81,7 +106,7 @@ class MatchDeleteIntegrationTest {
     @Test
     @DisplayName("[EM05-001/005] 매치와 모든 참가 기록을 DB에서 삭제하고 다른 매치는 유지한다")
     void deletesOnlyTargetMatchAndItsParticipants() {
-        matchService.deleteMatch(matchId, 1L);
+        matchService.deleteMatch(matchId, userId(1L));
 
         assertThat(matchRepository.existsById(matchId)).isFalse();
         assertThat(matchParticipantRepository.countByMatch_Id(matchId)).isZero();
@@ -93,7 +118,7 @@ class MatchDeleteIntegrationTest {
     @ValueSource(longs = {2L, 4L})
     @DisplayName("[EM05-003] 일반 참가자와 미참가자의 삭제 시도 후 DB가 유지된다")
     void forbiddenDeletePreservesData(Long userId) {
-        assertThatThrownBy(() -> matchService.deleteMatch(matchId, userId))
+        assertThatThrownBy(() -> matchService.deleteMatch(matchId, userId(userId)))
                 .isInstanceOf(MatchDeleteForbiddenException.class);
 
         assertTargetMatchIsUnchanged();
@@ -103,7 +128,7 @@ class MatchDeleteIntegrationTest {
     @Test
     @DisplayName("[EM05-002] 없는 매치를 삭제해도 기존 데이터가 유지된다")
     void missingMatchPreservesData() {
-        assertThatThrownBy(() -> matchService.deleteMatch(Long.MAX_VALUE, 1L))
+        assertThatThrownBy(() -> matchService.deleteMatch(Long.MAX_VALUE, userId(1L)))
                 .isInstanceOf(MatchNotFoundException.class);
 
         assertTargetMatchIsUnchanged();
@@ -120,7 +145,7 @@ class MatchDeleteIntegrationTest {
             throw new IllegalStateException("test-only delete failure");
         }).when(matchRepository).delete(any(MatchEntity.class));
 
-        assertThatThrownBy(() -> matchService.deleteMatch(matchId, 1L))
+        assertThatThrownBy(() -> matchService.deleteMatch(matchId, userId(1L)))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("test-only delete failure");
 
@@ -141,6 +166,6 @@ class MatchDeleteIntegrationTest {
     }
 
     private MatchParticipantEntity participant(MatchEntity match, Long userId, MatchParticipantRole role) {
-        return MatchParticipantEntity.builder().match(match).userId(userId).role(role).build();
+        return MatchParticipantEntity.builder().match(match).user(users.get(userId)).role(role).build();
     }
 }
