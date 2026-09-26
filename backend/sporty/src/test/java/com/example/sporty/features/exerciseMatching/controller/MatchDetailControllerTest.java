@@ -263,18 +263,26 @@ class MatchDetailControllerTest {
     @ParameterizedTest
     @EnumSource(GenderGroup.class)
     void searchBindsGenderGroupAndReturnsIt(GenderGroup genderGroup) throws Exception {
-        when(matchRepository.searchMatches(null, null, null, null, null, null, null, null, genderGroup))
+        // TODO: status 조건 검증 및 시설 연동 후 region/isFree 필터 검증 추가.
+        when(matchRepository.searchMatches(
+                null, null, null, null, null, null, null, null, genderGroup,
+                null, null, null)) // status, region, isFree 미지정
                 .thenReturn(List.of(MatchEntity.builder().id(101L).genderGroup(genderGroup).build()));
         mvc.perform(get("/api/matches").param("genderGroup", genderGroup.name()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].genderGroup").value(genderGroup.name()));
-        verify(matchRepository).searchMatches(null, null, null, null, null, null, null, null, genderGroup);
+        verify(matchRepository).searchMatches(
+                null, null, null, null, null, null, null, null, genderGroup,
+                null, null, null); // status, region, isFree 미지정
     }
 
     @Test
     void searchAllowsOmittedGenderGroup() throws Exception {
         mvc.perform(get("/api/matches")).andExpect(status().isOk());
-        verify(matchRepository).searchMatches(null, null, null, null, null, null, null, null, null);
+        // TODO: 시설 연동 후 region/isFree 조건 생략 시 전체 조회되는지 통합 테스트 추가.
+        verify(matchRepository).searchMatches(
+                null, null, null, null, null, null, null, null, null,
+                null, null, null); // status, region, isFree 미지정
     }
 
     @Test
