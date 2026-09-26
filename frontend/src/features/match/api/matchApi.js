@@ -1,5 +1,13 @@
 import api from '../../../api/axios';
 
+// MatchModifyRequestDto에서 지원하는 필드만 전송한다.
+export async function modifyMatch(matchId, { title, description, startAt, endAt, maxParticipant, skillLevel, genderGroup }) {
+  const { data } = await api.put(`/api/matches/${matchId}`, {
+    title, description, startAt, endAt, maxParticipant, skillLevel, genderGroup,
+  });
+  return data;
+}
+
 export async function getMatchDetail(matchId, signal) {
   const { data } = await api.get(`/api/matches/${matchId}`, { signal });
   if (!data || data.matchId !== Number(matchId)) {

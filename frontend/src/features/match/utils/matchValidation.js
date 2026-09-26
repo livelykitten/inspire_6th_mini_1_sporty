@@ -20,9 +20,9 @@ export function initialMatchValues(match = {}) {
   };
 }
 
-export function validateMatch(values) {
+export function validateMatch(values, { isEdit = false } = {}) {
   const errors = {};
-  if (!Number.isInteger(Number(values.serviceId)) || Number(values.serviceId) < 1) errors.serviceId = '체육시설을 선택해주세요.';
+  if (!isEdit && (!Number.isInteger(Number(values.serviceId)) || Number(values.serviceId) < 1)) errors.serviceId = '체육시설을 선택해주세요.';
   if (!values.date || !values.startTime) errors.startAt = '경기 날짜와 시작 시간을 입력해주세요.';
   if (!values.endTime) errors.endAt = '종료 시간을 입력해주세요.';
   if (values.date && values.startTime && values.endTime) {
@@ -33,7 +33,7 @@ export function validateMatch(values) {
   }
   if (!Number.isInteger(Number(values.maxParticipant)) || Number(values.maxParticipant) < 1) errors.maxParticipant = '모집 인원은 1명 이상의 정수로 입력해주세요.';
   if (!values.title.trim() || values.title.trim().length > 50) errors.title = '매치 제목을 1~50자로 입력해주세요.';
-  if (!values.description.trim() || values.description.length > 500) errors.description = '상세 안내를 1~500자로 입력해주세요.';
+  if ((!isEdit && !values.description.trim()) || values.description.length > 500) errors.description = isEdit ? '상세 안내는 500자 이하로 입력해주세요.' : '상세 안내를 1~500자로 입력해주세요.';
   if (!SKILL_LEVELS.some(level => level.value === values.skillLevel)) errors.skillLevel = '경기 실력 레벨을 선택해주세요.';
   const genderGroups = ['MALE', 'FEMALE', 'MIXED']
   if (!values.genderGroup || !genderGroups.includes(values.genderGroup)) errors.genderGroup = '성별 구성을 선택해주세요.';

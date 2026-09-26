@@ -35,7 +35,7 @@ function Section({ number, title, description, children }) {
   </section>;
 }
 
-export default function MatchForm({ initialValues, selectedFacility, searchFacilities, onSubmit, submitLabel = '매치 개설 완료하기' }) {
+export default function MatchForm({ initialValues, selectedFacility, searchFacilities, onSubmit, isEdit = false, submitLabel = '매치 개설 완료하기' }) {
   // 전달받은 initialValues를 최초 마운트 때만 폼 상태로 복사한다. 현재 생성 페이지의 AI 초안 전달은 미연결이다.
   // [AI-03] 생성 담당자는 부모에서 초안 props를 연결하고, 새 초안 적용 시 location.key 등을 key로 사용해 폼을 다시 마운트해야 한다.
   // startAt/endAt → 날짜/시간 입력 분리는 utils/matchValidation.js의 initialMatchValues에서 처리한다.
@@ -95,7 +95,7 @@ export default function MatchForm({ initialValues, selectedFacility, searchFacil
   async function submit(event) {
     event.preventDefault();
     if (submitting.current) return;
-    const nextErrors = validateMatch(values);
+    const nextErrors = validateMatch(values, { isEdit });
     setErrors(nextErrors); setSubmitError('');
     if (Object.keys(nextErrors).length) {
       requestAnimationFrame(() => formRef.current?.querySelector('[aria-invalid="true"]')?.focus());
@@ -105,6 +105,12 @@ export default function MatchForm({ initialValues, selectedFacility, searchFacil
     try { await onSubmit(toMatchPayload(values)); }
     catch (error) {
       const messages = { 400: '매치 정보를 확인해주세요. 입력한 정보가 올바르지 않습니다.', 401: '로그인이 만료되었습니다. 다시 로그인해주세요.', 404: '선택한 시설을 찾을 수 없습니다. 시설을 다시 선택해주세요.' };
+      if (isEdit) {
+        messages[403] = '이 매치를 수정할 권한이 없습니다.';
+        messages[404] = '매치를 찾을 수 없습니다. 삭제되었을 수 있습니다.';
+        setSubmitError(messages[error.response?.status] || '매치를 수정하지 못했습니다. 연결 상태를 확인하고 다시 시도해주세요.');
+        return;
+      }
       setSubmitError(messages[error.response?.status] || (error.response || error.request ? '매치를 개설하지 못했습니다. 연결 상태를 확인하고 다시 시도해주세요.' : error.message || '매치를 개설하지 못했습니다. 다시 시도해주세요.'));
     } finally { submitting.current = false; setPending(false); }
   }
@@ -121,15 +127,16 @@ export default function MatchForm({ initialValues, selectedFacility, searchFacil
 
   return <form className="match-form" ref={formRef} onSubmit={submit} noValidate>
     <fieldset className="match-fields" disabled={pending}>
-      <legend className="match-sr-only">매치 개설 정보</legend>
-      <Section number="1" title="운동 종목 선택" description="함께 즐기고 싶은 스포츠를 선택해주세요.">
+      <legend className="match-sr-only">{isEdit ? '매치 수정 정보' : '매치 개설 정보'}</legend>
+      <Section number="1" title="운동 종목 선택" description={isEdit ? '운동 종목은 변경할 수 없습니다.' : '함께 즐기고 싶은 스포츠를 선택해주세요.'}>
         <div className="match-sports" role="group" aria-label="운동 종목">
-          {SPORTS.map(([value, label, hint, icon]) => <button key={value} type="button" className={`match-sport ${values.sportType === value ? 'is-selected' : ''}`} aria-pressed={values.sportType === value} onClick={() => changeSport(value)}>
+          {SPORTS.map(([value, label, hint, icon]) => <button key={value} type="button" disabled={isEdit} className={`match-sport ${values.sportType === value ? 'is-selected' : ''}`} aria-pressed={values.sportType === value} onClick={() => changeSport(value)}>
             <span className="match-sport-icon" aria-hidden="true"><img src={icon} width="22" height="22" alt="" /></span><strong>{label}</strong><small>{hint}</small>
           </button>)}
         </div>
       </Section>
-      <Section number="2" title="체육시설 및 구장 선택">
+      <Section number="2" title="체육시설 및 구장 선택" description={isEdit ? '시설은 변경할 수 없습니다.' : undefined}>
+        {isEdit ? <div className="match-facility"><div><strong>{facility?.name || '시설명 정보 없음'}</strong><span className="match-facility-tag">기존 시설</span><p>{[facility?.region, facility?.locationName].filter(Boolean).join(' · ') || '등록된 장소 정보가 아직 없습니다.'}</p></div></div> : <>
         <label className="match-sr-only" htmlFor="facility-region">지역</label>
         <input id="facility-region" className="match-region" value={region} onChange={event => setRegion(event.target.value)} placeholder="지역 (선택, 예: 서초구)" onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); search(); } }} />
         <label className="match-sr-only" htmlFor="facility-search">시설명</label>
@@ -139,6 +146,7 @@ export default function MatchForm({ initialValues, selectedFacility, searchFacil
         {results.length > 0 && <ul className="match-results">{results.map(item => <li key={item.serviceId}><button type="button" onClick={() => { setFacility(item); update('serviceId', item.serviceId); setResults([]); setSearchMessage(''); }}><strong>{item.name}</strong><span>{[item.region, item.locationName].filter(Boolean).join(' · ')}</span><span>선택</span></button></li>)}</ul>}
         {facility ? <div className="match-facility"><div><strong>{facility.name}</strong><span className="match-facility-tag">선택한 시설</span><p>{[facility.region, facility.locationName].filter(Boolean).join(' · ')}</p></div><button type="button" onClick={() => { setFacility(null); update('serviceId', ''); }}>선택 해제</button></div> : <p className="match-empty">운동할 체육시설을 선택해주세요.</p>}
         {errorText('serviceId')}
+        </>}
       </Section>
       <Section number="3" title="일정 및 모집 인원 설정" description="경기 일정과 함께할 인원, 성별 구성, 실력 레벨을 정해주세요.">
         <div className="match-schedule-grid"><div className="match-control"><label htmlFor="date">경기 날짜</label>
@@ -164,6 +172,6 @@ export default function MatchForm({ initialValues, selectedFacility, searchFacil
         <div className="match-control match-description"><div className="match-label-row"><label htmlFor="description">상세 안내 및 매너 수칙</label><span>{values.description.length} / 500</span></div><textarea {...fieldProps('description')} maxLength="500" rows="6" placeholder={'함께할 분들에게 매치를 소개해주세요.\n준비물, 모임 장소, 경기 수칙 등을 안내하면 좋아요.'} />{errorText('description')}</div>
       </Section>
     </fieldset>
-    <aside className="match-actions"><button className="match-submit" type="submit" disabled={pending}><img src={submitIcon} alt="" width="18" height="18" />{pending ? '매치 개설 중…' : submitLabel}</button><div role="alert">{submitError && <p className="match-error match-submit-error">{submitError}</p>}{Object.values(errors).some(Boolean) && <p className="match-error">입력 항목을 확인해주세요.</p>}</div></aside>
+    <aside className="match-actions"><button className="match-submit" type="submit" disabled={pending}><img src={submitIcon} alt="" width="18" height="18" />{pending ? (isEdit ? '매치 저장 중…' : '매치 개설 중…') : submitLabel}</button><div role="alert">{submitError && <p className="match-error match-submit-error">{submitError}</p>}{Object.values(errors).some(Boolean) && <p className="match-error">입력 항목을 확인해주세요.</p>}</div></aside>
   </form>;
 }

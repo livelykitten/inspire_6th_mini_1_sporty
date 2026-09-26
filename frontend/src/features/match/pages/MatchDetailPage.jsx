@@ -209,6 +209,7 @@ function MatchDetailContent({ match, preview }) {
             {current !== null && maximum !== null && <progress value={progress} max="100" aria-label="모집 인원 비율" />}
             <p className="detail-recruitment-note">{match.status === 'CLOSED' ? '모집이 마감된 매치입니다.' : remaining === null ? '모집 인원을 확인할 수 없습니다.' : remaining === 0 ? '모집 정원이 찼습니다.' : `${remaining}명이 더 함께할 수 있어요.`}</p>
             <button className="detail-primary-button" disabled>{actionLabel}</button>
+            {match.isOwner === true && <Link className="match-edit-link" to={`/matches/${match.matchId}/edit`}>매치 수정하기</Link>}
             <p className="detail-action-note">{match.isOwner === true ? '이 매치의 생성자입니다.' : match.isParticipant === true ? '현재 이 매치에 참여 중입니다. 참가 취소 기능은 준비 중입니다.' : '참가 신청 기능은 준비 중입니다.'}</p>
           </section>
           <section className="match-section detail-guide"><h2><span aria-hidden="true">✓</span> 참여 전 확인해 주세요</h2><p>매치 일정과 실력 수준을 확인해 주세요.</p><p>준비물과 모임 안내는 매치 상세 내용을 참고해 주세요.</p><p>서로를 배려하며 즐겁게 운동해요.</p></section>
