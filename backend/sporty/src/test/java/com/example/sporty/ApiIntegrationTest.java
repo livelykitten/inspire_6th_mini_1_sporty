@@ -203,15 +203,18 @@ class ApiIntegrationTest {
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         Long matchId = json.readValue(response, Long.class);
         reload();
+        assertThat(matches.findById(matchId).orElseThrow().getGenderGroup().name()).isEqualTo("MIXED");
         assertThat(participants.findByMatch_IdAndUserId(matchId, owner.getId()))
                 .hasValueSatisfying(p -> assertThat(p.getRole()).isEqualTo(MatchParticipantRole.OWNER));
         mvc.perform(get("/api/matches").param("titleKeyword", title).param("serviceId", Long.toString(serviceId)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].matchId").value(matchId));
+                .andExpect(jsonPath("$[0].matchId").value(matchId))
+                .andExpect(jsonPath("$[0].genderGroup").value("MIXED"));
         mvc.perform(get("/api/matches/{id}", matchId).header("Authorization", bearer(owner)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.isOwner").value(true))
                 .andExpect(jsonPath("$.isParticipant").value(true))
-                .andExpect(jsonPath("$.currentParticipantCount").value(1));
+                .andExpect(jsonPath("$.currentParticipantCount").value(1))
+                .andExpect(jsonPath("$.genderGroup").value("MIXED"));
         for (String authorization : new String[]{"", bearer(outsider), "Bearer invalid"}) {
             mvc.perform(get("/api/matches/{id}", matchId).header("Authorization", authorization))
                     .andExpect(status().isOk()).andExpect(jsonPath("$.isOwner").value(false))
@@ -276,6 +279,6 @@ class ApiIntegrationTest {
     Map<String, Object> matchRequest(String title) {
         return Map.of("serviceId", serviceId, "title", title, "description", "integration test",
                 "startAt", "2026-10-10T18:00:00", "endAt", "2026-10-10T20:00:00",
-                "maxParticipant", 10, "skillLevel", "BEGINNER", "sportType", "FUTSAL");
+                "maxParticipant", 10, "skillLevel", "BEGINNER", "sportType", "FUTSAL", "genderGroup", "MIXED");
     }
 }

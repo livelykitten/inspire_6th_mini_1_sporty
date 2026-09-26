@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.example.sporty.features.commons.util.SportType;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -48,6 +49,7 @@ public class MatchSearchRequestDto {
 
     private SkillLevel skillLevel;
     private SportType sportType;
+    private GenderGroup genderGroup;
 
     @JsonIgnore
     @AssertTrue(message = "종료 시간은 시작 시간보다 이후여야 합니다.")

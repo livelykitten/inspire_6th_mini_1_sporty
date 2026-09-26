@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -52,6 +53,9 @@ public class MatchCreateRequestDto {
     @NotNull(message = "운동 종목은 필수입니다.")
     private SportType sportType;
 
+    @NotNull(message = "성별 구성은 필수입니다.")
+    private GenderGroup genderGroup;
+
     @JsonIgnore
     @AssertTrue(message = "종료 시간은 시작 시간보다 이후여야 합니다.")
     public boolean isTimeRangeValid() {
@@ -70,6 +74,7 @@ public class MatchCreateRequestDto {
             .skillLevel(this.getSkillLevel())
             .serviceId(serviceId)
             .sportType(this.getSportType())
+            .genderGroup(this.getGenderGroup())
             .build();
     }
 }

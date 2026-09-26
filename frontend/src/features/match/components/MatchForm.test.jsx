@@ -7,12 +7,12 @@ import { initialMatchValues, toMatchPayload, validateMatch } from '../utils/matc
 
 jest.mock('../api/matchApi', () => ({ createMatch: jest.fn(), searchMatchFacilities: jest.fn() }));
 
-const match = { serviceId: 1, title: '주말 풋살 모집', description: '같이 풋살하실 분', startAt: '2026-09-26T19:00', endAt: '2026-09-26T21:00', maxParticipant: 10, skillLevel: 'BEGINNER', sportType: 'FUTSAL' };
+const match = { serviceId: 1, title: '주말 풋살 모집', description: '같이 풋살하실 분', startAt: '2026-09-26T19:00', endAt: '2026-09-26T21:00', maxParticipant: 10, skillLevel: 'BEGINNER', sportType: 'FUTSAL', genderGroup: 'MIXED' };
 const facility = { serviceId: 1, name: '서초 풋살장', region: '서초구', locationName: '서초종합체육관', sportType: 'FUTSAL' };
 
 afterEach(() => { localStorage.clear(); jest.clearAllMocks(); });
 
-test('maps all eight API fields without converting local times to UTC', () => {
+test('maps all API fields without converting local times to UTC', () => {
   expect(toMatchPayload(initialMatchValues(match))).toEqual(match);
   expect(validateMatch(initialMatchValues(match))).toEqual({});
 });
@@ -82,8 +82,8 @@ function LocationProbe() {
   return <div data-testid="location">{location.pathname}{location.search}|{location.state?.from}</div>;
 }
 
-function renderRoute() {
-  return render(<MemoryRouter initialEntries={[{ pathname: '/matches/new', state: { facility } }]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><Routes>
+function renderRoute(state = { facility }) {
+  return render(<MemoryRouter initialEntries={[{ pathname: '/matches/new', state }]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><Routes>
     <Route path="/matches/new" element={<RequireMatchAuth><MatchCreatePage /></RequireMatchAuth>} />
     <Route path="/login" element={<LocationProbe />} />
     <Route path="/matches/:matchId" element={<LocationProbe />} />
@@ -93,6 +93,59 @@ function renderRoute() {
 test('requires authentication and keeps the return URL', () => {
   renderRoute();
   expect(screen.getByTestId('location')).toHaveTextContent('/login?redirect=%2Fmatches%2Fnew|/matches/new');
+});
+
+test.each(['MALE', 'FEMALE', 'MIXED'])('initializes, validates and submits gender %s', genderGroup => {
+  const values = initialMatchValues({ ...match, genderGroup });
+  expect(values.genderGroup).toBe(genderGroup);
+  expect(validateMatch(values)).toEqual({});
+  expect(toMatchPayload(values).genderGroup).toBe(genderGroup);
+});
+
+test.each(['', 'unknown', 'male', 'female', 'mixed', undefined, null, 123])('rejects invalid gender %p without throwing', genderGroup => {
+  expect(validateMatch({ ...initialMatchValues(match), genderGroup }).genderGroup).toBe('성별 구성을 선택해주세요.');
+});
+
+test('defaults a new match to MIXED', () => {
+  expect(initialMatchValues().genderGroup).toBe('MIXED');
+});
+
+test.each(['MALE', 'FEMALE', 'MIXED'])('sends the selected gender %s from the form', async genderGroup => {
+  const submit = jest.fn().mockResolvedValue(undefined);
+  render(<MatchForm initialValues={{ ...match, genderGroup: 'MALE' }} selectedFacility={facility} onSubmit={submit} />);
+  const select = screen.getByRole('combobox', { name: '성별 구성' });
+  expect(select).toHaveValue('MALE');
+  fireEvent.change(select, { target: { value: genderGroup } });
+  fireEvent.click(screen.getByRole('button', { name: '매치 개설 완료하기' }));
+  await waitFor(() => expect(submit).toHaveBeenCalledWith({ ...match, genderGroup }));
+});
+
+test('shows a gender error, focuses the field and clears the error on selection', async () => {
+  const submit = jest.fn().mockResolvedValue(undefined);
+  render(<MatchForm initialValues={match} selectedFacility={facility} onSubmit={submit} />);
+  const select = screen.getByRole('combobox', { name: '성별 구성' });
+  fireEvent.change(select, { target: { value: '' } });
+  fireEvent.click(screen.getByRole('button', { name: '매치 개설 완료하기' }));
+  expect(select).toHaveAttribute('aria-invalid', 'true');
+  expect(select).toHaveAccessibleDescription('성별 구성을 선택해주세요.');
+  await waitFor(() => expect(select).toHaveFocus());
+  expect(submit).not.toHaveBeenCalled();
+  fireEvent.change(select, { target: { value: 'FEMALE' } });
+  expect(select).toHaveAttribute('aria-invalid', 'false');
+  expect(screen.queryByText('성별 구성을 선택해주세요.')).not.toBeInTheDocument();
+});
+
+test('loads an AI draft and submits the user-edited gender', async () => {
+  localStorage.setItem('at', 'test-token');
+  createMatch.mockResolvedValue(42);
+  renderRoute({ aiDraft: { initialValues: { ...match, genderGroup: 'FEMALE' }, facility } });
+  expect(screen.getByLabelText('매치 제목')).toHaveValue(match.title);
+  const select = screen.getByRole('combobox', { name: '성별 구성' });
+  expect(select).toHaveValue('FEMALE');
+  fireEvent.change(select, { target: { value: 'MALE' } });
+  fireEvent.click(screen.getByRole('button', { name: '매치 개설 완료하기' }));
+  await waitFor(() => expect(createMatch).toHaveBeenCalledWith({ ...match, genderGroup: 'MALE' }));
+  expect(await screen.findByTestId('location')).toHaveTextContent('/matches/42');
 });
 
 test.each([201, 401])('handles creation result %s with the correct redirect', async status => {

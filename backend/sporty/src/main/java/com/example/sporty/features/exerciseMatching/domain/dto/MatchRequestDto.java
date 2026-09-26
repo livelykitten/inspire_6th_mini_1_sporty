@@ -3,6 +3,7 @@ package com.example.sporty.features.exerciseMatching.domain.dto;
 import java.time.LocalDateTime;
 
 import com.example.sporty.features.commons.util.SportType;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -35,5 +36,7 @@ public class MatchRequestDto {
     private SportType sportType;
 
     private String region;
+
+    private GenderGroup genderGroup;
     
 }

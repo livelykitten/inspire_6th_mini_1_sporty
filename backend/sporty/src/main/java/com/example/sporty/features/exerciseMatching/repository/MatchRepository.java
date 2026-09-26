@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 
 public interface MatchRepository extends JpaRepository<MatchEntity, Long> {
@@ -24,6 +25,7 @@ public interface MatchRepository extends JpaRepository<MatchEntity, Long> {
             AND (:maxParticipant IS NULL OR m.maxParticipant <= :maxParticipant)
             AND (:skillLevel IS NULL OR m.skillLevel = :skillLevel)
             AND (:sportType IS NULL OR m.sportType = :sportType)
+            AND (:genderGroup IS NULL OR m.genderGroup = :genderGroup)
             """)
     List<MatchEntity> searchMatches(
         @Param ("serviceId") Long serviceId,
@@ -33,6 +35,7 @@ public interface MatchRepository extends JpaRepository<MatchEntity, Long> {
         @Param("endAt") LocalDateTime endAt,
         @Param("maxParticipant") Integer maxParticipant,
         @Param("skillLevel") SkillLevel skillLevel,
-        @Param("sportType") SportType sportType
+        @Param("sportType") SportType sportType,
+        @Param("genderGroup") GenderGroup genderGroup
     );
 }

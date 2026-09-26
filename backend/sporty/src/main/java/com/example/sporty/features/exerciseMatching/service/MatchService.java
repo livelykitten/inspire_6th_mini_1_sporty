@@ -105,7 +105,8 @@ public class MatchService {
             req.getEndAt(),
             req.getMaxParticipant(),
             req.getSkillLevel(),
-            req.getSportType()        
+            req.getSportType(),
+            req.getGenderGroup()
         ).stream()
         .map(MatchResponseDto::toResponseDto)
         .toList();
@@ -185,6 +186,7 @@ public class MatchService {
                 .status(match.getStatus())
                 .skillLevel(match.getSkillLevel())
                 .sportType(match.getSportType())
+                .genderGroup(match.getGenderGroup())
                 .serviceId(match.getServiceId())
                 .participants(participantSummaries)
                 .isOwner(isOwner)

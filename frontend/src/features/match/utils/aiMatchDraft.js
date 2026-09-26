@@ -19,7 +19,7 @@ export function prepareAiMatchDraft(prompt, result) {
   const source = result?.initialValues || {};
   const initialValues = {};
   // 서버의 부가 정보가 폼으로 섞이지 않도록 자동 입력할 필드만 전달한다.
-  for (const field of ['sportType', 'skillLevel', 'startAt', 'endAt', 'title', 'description']) {
+  for (const field of ['sportType', 'skillLevel', 'startAt', 'endAt', 'title', 'description', 'genderGroup']) {
     if (typeof source[field] === 'string') initialValues[field] = source[field];
   }
   if (Number.isInteger(source.maxParticipant) && source.maxParticipant > 0) initialValues.maxParticipant = source.maxParticipant;
