@@ -15,7 +15,6 @@ export default function AppRoutes() {
 
       {/* [USR-02] 로그인 성공 시 원래 요청한 내부 페이지 또는 메인으로 이동한다. */}
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<div>회원가입</div>} />
       {/* [USR-01] 회원가입 화면. 가입 성공 시 기존 /login 경로로 이동한다. */}
       <Route path="/signup" element={<SignUpPage />} />
       <Route path="/mypage" element={<div>마이페이지</div>} />
