@@ -1,16 +1,14 @@
 package com.example.sporty.features.users.controller;
 
+import com.example.sporty.features.users.domain.dto.UserInfoResponseDto;
 import com.example.sporty.features.users.domain.dto.UserSignUpRequestDto;
 import com.example.sporty.features.users.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -20,6 +18,7 @@ public class UserController {
 
     private final UserService userService;
 
+    // [USR-01] 회원가입
     @PostMapping
     public ResponseEntity<Void> signUp(@RequestBody @Valid UserSignUpRequestDto request) {
         userService.signUp(request);
@@ -27,6 +26,15 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .build();
+    }
+
+    // [USR-06] 회원 정보 조회
+    @GetMapping()
+    public ResponseEntity<UserInfoResponseDto> getMyInfo(@AuthenticationPrincipal Long userId) {
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(userService.getMyInfo(userId));
     }
 
 
