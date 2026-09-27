@@ -36,6 +36,15 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .body(userService.getMyInfo(userId));
     }
+    
+    // [USR-04] 회원탈퇴
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> withdrawal( @RequestBody Map<String, String> request) {
+
+        userService.withdrawal(request.get("password"));
+
+        return ResponseEntity.noContent().build();
+    }
 
 
 
