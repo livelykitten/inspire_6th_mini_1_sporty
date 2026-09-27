@@ -35,6 +35,7 @@ import com.example.sporty.features.profiles.repository.ProfileRepository;
 import com.example.sporty.features.users.domain.entity.UserEntity;
 import com.example.sporty.features.users.repository.UserRepository;
 import com.example.sporty.features.facilities.repository.ServiceRepository;
+import com.example.sporty.support.FacilityFixtures;
 
 @ExtendWith(MockitoExtension.class)
 class MatchServiceTest {
@@ -73,7 +74,7 @@ class MatchServiceTest {
                 .skillLevel(SkillLevel.INTERMEDIATE)
                 .sportType(SportType.FUTSAL)
                 .genderGroup(GenderGroup.FEMALE)
-                .serviceId(7L)
+                .service(FacilityFixtures.service(7L, true))
                 .build();
         when(matchRepository.findById(101L)).thenReturn(Optional.of(match));
         when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L)).thenReturn(List.of(
@@ -110,17 +111,17 @@ class MatchServiceTest {
         assertThat(response.getParticipants().get(1).getRole()).isEqualTo(MatchParticipantRole.PARTICIPANT);
         assertThat(response.getIsOwner()).isFalse();
         assertThat(response.getIsParticipant()).isFalse();
-        // 시설 코드 연동 전에는 실제 장소를 임의로 채우지 않는다.
-        assertThat(response.getServiceName()).isNull();
-        assertThat(response.getLocationName()).isNull();
-        assertThat(response.getRegion()).isNull();
+        // 연결된 서비스와 장소 정보를 반환한다.
+        assertThat(response.getServiceName()).isEqualTo("Test service 7");
+        assertThat(response.getLocationName()).isEqualTo("Test location");
+        assertThat(response.getRegion()).isEqualTo("강남구");
         verify(profileRepository).findAllByUser_IdIn(List.of(1L, 2L));
     }
 
     @Test
     @DisplayName("[추가 검증] 참가 정보가 없으면 현재 인원은 0이며 생성자 수를 임의로 더하지 않는다")
     void getMatchDetailReturnsZeroWhenNoParticipantsAreStored() {
-        MatchEntity match = MatchEntity.builder().id(101L).build();
+        MatchEntity match = MatchEntity.builder().id(101L).service(FacilityFixtures.service(7L, true)).build();
         when(matchRepository.findById(101L)).thenReturn(Optional.of(match));
         when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L)).thenReturn(List.of());
 
@@ -149,7 +150,7 @@ class MatchServiceTest {
     @CsvSource({"1,true,true", "2,false,true", "3,false,false"})
     @DisplayName("조회 사용자의 해당 매치 참가 역할로 생성자와 참여 여부를 구분한다")
     void getMatchDetailReturnsCurrentUserState(Long userId, boolean owner, boolean joined) {
-        when(matchRepository.findById(101L)).thenReturn(Optional.of(MatchEntity.builder().id(101L).build()));
+        when(matchRepository.findById(101L)).thenReturn(Optional.of(MatchEntity.builder().id(101L).service(FacilityFixtures.service(7L, true)).build()));
         when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L)).thenReturn(List.of(
                 participant(1L, MatchParticipantRole.OWNER),
                 participant(2L, MatchParticipantRole.PARTICIPANT)));
@@ -164,7 +165,7 @@ class MatchServiceTest {
     @Test
     @DisplayName("프로필이 없어도 참가자 수와 역할을 유지하고 개인정보 필드는 null로 반환한다")
     void missingProfileDoesNotRemoveParticipant() {
-        when(matchRepository.findById(101L)).thenReturn(Optional.of(MatchEntity.builder().id(101L).build()));
+        when(matchRepository.findById(101L)).thenReturn(Optional.of(MatchEntity.builder().id(101L).service(FacilityFixtures.service(7L, true)).build()));
         when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L))
                 .thenReturn(List.of(participant(1L, MatchParticipantRole.OWNER)));
         when(profileRepository.findAllByUser_IdIn(List.of(1L))).thenReturn(List.of());
@@ -184,7 +185,7 @@ class MatchServiceTest {
     @Test
     @DisplayName("프로필 ID는 Long 값을 잘라내지 않고 반환한다")
     void profileIdRetainsLongValue() {
-        when(matchRepository.findById(101L)).thenReturn(Optional.of(MatchEntity.builder().id(101L).build()));
+        when(matchRepository.findById(101L)).thenReturn(Optional.of(MatchEntity.builder().id(101L).service(FacilityFixtures.service(7L, true)).build()));
         when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L))
                 .thenReturn(List.of(participant(1L, MatchParticipantRole.OWNER)));
         when(profileRepository.findAllByUser_IdIn(List.of(1L)))

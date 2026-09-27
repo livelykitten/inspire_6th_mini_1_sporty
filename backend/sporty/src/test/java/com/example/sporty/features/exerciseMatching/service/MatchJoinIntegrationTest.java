@@ -11,6 +11,7 @@ import com.example.sporty.features.users.domain.entity.UserEntity;
 import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.support.MatchUserFixtures;
 import com.example.sporty.support.FacilityFixtures;
+import com.example.sporty.features.facilities.domain.entity.ServiceEntity;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -276,7 +277,7 @@ class MatchJoinIntegrationTest {
         return new TransactionTemplate(transactionManager).execute(status -> {
             MatchEntity match = matchRepository.save(MatchEntity.builder()
                     .title("참여 테스트").sportType(SportType.FUTSAL).maxParticipant(maxParticipant)
-                    .serviceId(serviceId).genderGroup(GenderGroup.MIXED)
+                    .service(entityManager.getReference(ServiceEntity.class, serviceId)).genderGroup(GenderGroup.MIXED)
                     .status(matchStatus).startAt(startAt).endAt(startAt.plusHours(2)).build());
             matchParticipantRepository.save(MatchParticipantEntity.builder()
                     .match(match).user(users.get(1L)).role(MatchParticipantRole.OWNER).build());

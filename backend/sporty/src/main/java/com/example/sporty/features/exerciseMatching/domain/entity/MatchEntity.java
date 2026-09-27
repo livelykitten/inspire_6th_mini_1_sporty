@@ -102,12 +102,8 @@ public class MatchEntity {
     @Column(name = "gender_group", length = 10, nullable = false)
     private GenderGroup genderGroup;
 
-    @Column(name = "service_id", nullable = false)
-    private Long serviceId;
-
-    // serviceId remains the write path for the existing DTO/builder contract.
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id", insertable = false, updatable = false,
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "service_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_match_service"))
     @ToString.Exclude
     private ServiceEntity service;

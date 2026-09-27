@@ -32,7 +32,7 @@ public class MatchResponseDto {
 
     private LocalDateTime startAt;
     private LocalDateTime endAt;
-    private LocalDateTime cancelDeadlineAt;
+    private LocalDateTime reservationDeadlineAt;
 
     private Integer numCurrentParticipant;
     private Integer maxParticipant;
@@ -47,22 +47,22 @@ public class MatchResponseDto {
     @JsonProperty("isFree")
     private Boolean isFree;
 
-    public static MatchResponseDto toResponseDto(MatchEntity entity) {
+    public static MatchResponseDto toResponseDto(MatchEntity entity, long participantCount) {
         return MatchResponseDto.builder()
             .matchId(entity.getId())
             .title(entity.getTitle())
             .description(entity.getDescription())
             .startAt(entity.getStartAt())
             .endAt(entity.getEndAt())
-            .cancelDeadlineAt(null) // TODO
-            .numCurrentParticipant(null) // TODO
+            .reservationDeadlineAt(entity.getService().getReservationDeadlineAt())
+            .numCurrentParticipant(Math.toIntExact(participantCount))
             .maxParticipant(entity.getMaxParticipant())
             .status(entity.getStatus())
             .skillLevel(entity.getSkillLevel())
             .sportType(entity.getSportType())
             .genderGroup(entity.getGenderGroup())
-            .region("") // TODO
-            .isFree(null) // TODO: ServiceEntity 연동 후 실제 유/무료 여부 매핑
+            .region(entity.getService().getLocation().getRegion()) // TODO
+            .isFree(entity.getService().getIsFree()) // TODO: CHAR가 맞는지, erd에 적힌 Y/N이 맞는지 확인
             .distance(null) // TODO
             .build();
     }
