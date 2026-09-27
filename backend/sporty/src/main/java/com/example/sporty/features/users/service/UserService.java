@@ -1,7 +1,10 @@
 package com.example.sporty.features.users.service;
 
+import com.example.sporty.features.auth.service.RefreshTokenService;
 import com.example.sporty.features.commons.exception.users.DuplicateEmailException;
 import com.example.sporty.features.commons.exception.users.DuplicateNicknameException;
+import com.example.sporty.features.commons.exception.users.PasswordMismatchException;
+import com.example.sporty.features.commons.exception.users.UserNotFoundException;
 import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
 import com.example.sporty.features.profiles.repository.ProfileRepository;
@@ -11,6 +14,8 @@ import com.example.sporty.features.users.domain.dto.UserSignUpRequestDto;
 import com.example.sporty.features.users.domain.entity.UserEntity;
 import com.example.sporty.features.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +29,7 @@ public class UserService {
     private final ProfileRepository profileRepository;
     private final SportPreferenceRepository sportPreferenceRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     public void signUp(UserSignUpRequestDto request) {
 
@@ -63,6 +69,34 @@ public class UserService {
 
             sportPreferenceRepository.save(preference);
         }
+    }
+
+    // [USR-04] 회원탈퇴
+    public void withdrawal(String password) {
+
+        // 1. 유저 ID 얻기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Long id = Long.parseLong(auth.getName());
+
+        // 2. 유저 ID로 회원 조회
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(UserNotFoundException::new);
+
+        // 3. 비밀번호 확인
+        // 비밀번호 누락 검사
+        if (password == null || password.isBlank()) {
+            throw new PasswordMismatchException();
+        }
+        // 비밀번호 일치 여부 검사
+        if (!passwordEncoder.matches(password,user.getPassword())) {
+            throw new PasswordMismatchException();
+        }
+
+        // 4. 탈퇴 처리(변경 감지) || 회원 상태를 탈퇴 상태로 변경, Refresh Token 삭제
+        user.withdraw();
+        refreshTokenService.delete(id);
+
+
     }
 
 

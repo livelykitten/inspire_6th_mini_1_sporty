@@ -59,4 +59,10 @@ public class UserEntity {
     @OneToOne(mappedBy = "user")
     private ProfileEntity profileEntity;
 
+
+    // [USR-04] 회원탈퇴
+    public void withdraw() {
+        this.status = UserStatus.WITHDRAWN;
+    }
+
 }
