@@ -1,18 +1,20 @@
 # 기능별 구현 안내
 
-## [#54][USR-01][USR-02] 메인 상단 회원 메뉴
+## [#54][USR-01][USR-02] 공통 헤더와 메인 상단 회원 메뉴
 
-1. `MainPage.jsx`의 `isLoggedIn` state는 로그인 페이지가 저장한 `localStorage.at` 유무로 메뉴를 결정합니다. 서버 인증을 대체하는 상태는 아닙니다.
+메인은 `components/layout/Header.jsx`를 import하여 `<Header />`로 표시합니다. 다른 페이지에서도 Router 내부에서 같은 컴포넌트를 사용할 수 있습니다. 현재는 메인에만 적용했습니다. 검색 아이콘은 `components/layout/assets/header-search.svg`에 있습니다.
+
+1. `components/layout/Header.jsx`의 `isLoggedIn` state는 로그인 페이지가 저장한 `localStorage.at` 유무로 메뉴를 결정합니다. 서버 인증을 대체하는 상태는 아닙니다.
 2. 비로그인: 로그인(`/login`)·회원가입(`/signup`). 로그인: 마이페이지(`/mypage`). 로그인 후 메인에 진입하면 저장된 토큰을 다시 읽습니다.
 3. 다른 탭의 토큰 변경(`storage`)과 브라우저 창 복귀(`focus`)에도 상태를 갱신하며, 화면을 떠나면 이벤트 리스너를 해제합니다.
 4. 로그아웃과 회원탈퇴 버튼은 메인 상단에 배치하지 않습니다. 마이페이지 담당자가 해당 화면에서 구현합니다. 현재 `/mypage`는 임시 화면입니다.
-5. 스타일은 `main.css`의 `.ms-auth-menu`에서 수정합니다. 모바일에서는 로고·회원 메뉴 아래에 시설 검색창이 배치됩니다.
+5. 스타일은 `components/layout/header.css`의 `.sporty-header-auth-menu`에서 수정합니다. 모바일에서는 로고·회원 메뉴 아래에 시설 검색창이 배치됩니다.
 
 이 문서의 경로는 `frontend/src/` 기준입니다. 기능 ID는 FC-01(시설 검색), AI-02(AI 매치 검색), AI-03(AI 매치 생성), EM-02(전체 운동 매칭 목록 조회)를 사용합니다. AI-01은 현재 전달받은 기능 목록에 없어 부여하지 않았습니다.
 
 ## [FC-01] 시설 검색
 
-1. **사용자 입력 → 이동**: `features/main/pages/MainPage.jsx`의 `facilityQuery`(문자열)에 상단 검색어를 저장합니다. 검색 버튼/Enter를 누르면 `facilitySearchHandler`가 `/facilities?query=검색어`로 이동합니다. 이 핸들러는 API를 호출하지 않습니다.
+1. **사용자 입력 → 이동**: `components/layout/Header.jsx`의 `facilityQuery`(문자열)에 상단 검색어를 저장합니다. 검색 버튼/Enter를 누르면 `facilitySearchHandler`가 `/facilities?query=검색어`로 이동합니다. 이 핸들러는 API를 호출하지 않습니다.
 2. **시설 검색 페이지 담당자 작업**: `routes/AppRoutes.jsx`의 `/facilities` 안내 문구를 실제 페이지로 교체합니다. 페이지에서 `useSearchParams`로 `query`를 읽고 시설 조회 API를 호출한 후 결과 state에 담아 목록을 표시합니다. 시설 페이지 자체의 조회 state/핸들러는 아직 없습니다.
 3. **현재 재사용 가능한 API**: `features/match/api/matchApi.js`의 `searchMatchFacilities({ query, region })`가 `GET /api/services`로 요청합니다. query는 `serviceName` 쿼리 파라미터, region은 `region` 파라미터로 전달합니다. 둘 다 문자열이며 빈 값은 생략합니다. FC-01 최종 명세가 다르면 이 함수의 URL/파라미터를 맞춥니다.
 4. **받아올 데이터**: 현재 코드는 배열 `[{ serviceId, serviceName, region, locationName }]`을 가정합니다. serviceId는 정수, serviceName은 문자열 필수입니다. region(자치구), locationName(장소명)은 선택 문자열입니다. `toFacilityOption`이 serviceName을 화면의 name으로 바꿉니다.
