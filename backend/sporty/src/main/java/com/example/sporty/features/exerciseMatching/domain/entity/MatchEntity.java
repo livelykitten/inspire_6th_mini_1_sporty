@@ -11,6 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import com.example.sporty.features.commons.util.SportType;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 
@@ -96,6 +97,11 @@ public class MatchEntity {
     @Column(name = "sport_type", length = 15, nullable = false)
     private SportType sportType;
 
+    @Enumerated (EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "gender_group", length = 10, nullable = false)
+    private GenderGroup genderGroup;
+
     @Column(name = "service_id", nullable = false)
     private Long serviceId;
 
@@ -105,4 +111,9 @@ public class MatchEntity {
             foreignKey = @ForeignKey(name = "fk_match_service"))
     @ToString.Exclude
     private ServiceEntity service;
+
+    // Match의 Status를 CLOSED 로 변경하는 메서드
+    public void closeRecruitment() {
+        this.status = MatchStatus.CLOSED;
+    }
 }

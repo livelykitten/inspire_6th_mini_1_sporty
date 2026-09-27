@@ -2,6 +2,18 @@ import { render, screen } from '@testing-library/react';
 import MatchCard from './MatchCard';
 import { toMatchCard } from '../api/aiMatchApi';
 
+test.each([['MALE', '남성'], ['FEMALE', '여성'], ['MIXED', '혼성']])('displays gender %s from the API', (genderGroup, label) => {
+  const match = toMatchCard({ matchId: 1, title: '풋살', genderGroup });
+  expect(match.genderGroup).toBe(genderGroup);
+  render(<MatchCard match={match} />);
+  expect(screen.getByLabelText(`성별 구성: ${label}`)).toHaveTextContent(label);
+});
+
+test.each([undefined, null, '', 'unknown'])('does not invent a gender for %p', genderGroup => {
+  render(<MatchCard match={toMatchCard({ matchId: 1, title: '풋살', genderGroup })} />);
+  expect(screen.getByText('성별 정보 없음')).toBeInTheDocument();
+});
+
 test.each([
   [0, 12, 0, 'blue'],
   [2, 12, 2 / 12 * 100, 'blue'],

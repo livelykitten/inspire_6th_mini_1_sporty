@@ -35,7 +35,8 @@
 .match-sport small { font-size: 9px; color: var(--match-muted); }
 .match-sport.is-selected small { color: var(--match-blue); }
 .match-form input, .match-form textarea { width: 100%; min-width: 0; background: var(--match-field); color: var(--match-ink); border: 1px solid transparent; border-radius: 12px; padding: 14px 16px; line-height: 1.5; font-size: 14px; }
-.match-form input[aria-invalid=true], .match-form textarea[aria-invalid=true] { border-color: #ba1a1a; }
+.match-form select { width: 100%; min-width: 0; background: var(--match-field); color: var(--match-ink); border: 1px solid transparent; border-radius: 12px; padding: 14px 16px; font: inherit; line-height: 1.5; font-size: 14px; }
+.match-form input[aria-invalid=true], .match-form textarea[aria-invalid=true], .match-form select[aria-invalid=true] { border-color: #ba1a1a; }
 .match-form input::placeholder, .match-form textarea::placeholder { color: #737688; }
 .match-form textarea { resize: vertical; min-height: 150px; }
 .match-search { display: flex; align-items: center; background: var(--match-field); border-radius: 12px; padding-right: 8px; gap: 4px; }

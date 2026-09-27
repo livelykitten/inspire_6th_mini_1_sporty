@@ -7,7 +7,7 @@ import { previewConditions, previewMatches } from '../data/previewData';
 import api from '../../../api/axios';
 import { toConditionSummary, toMatchCard } from '../api/aiMatchApi';
 import { prepareAiMatchDraft } from '../../match/utils/aiMatchDraft';
-import headerSearch from '../assets/header-search.svg';
+import Header from '../../../components/layout/Header';
 import arrow from '../assets/arrow.svg';
 import '../css/main.css';
 
@@ -31,8 +31,6 @@ const MainPage = ({
   pending = false,
   preview = true
 }) => {
-  // [FC-01] string: 상단 시설 검색어. facilitySearchHandler가 URL의 query로 전달한다.
-  const [facilityQuery, setFacilityQuery] = useState('');
   // [AI-02] null | { matches: 배열, conditions: 배열 }: 변환된 검색 응답. null은 아직 검색하지 않은 상태다.
   const [searchResults, setSearchResults] = useState(null);
   // [AI-02] 'idle' | 'loading' | 'success' | 'error': 예시/로딩/결과/오류 화면과 검색 버튼 상태를 결정한다.
@@ -114,36 +112,12 @@ const MainPage = ({
     });
   };
 
-  // [FC-01] 시설 검색
-  // 통합 검색은 시설 검색 화면으로 위임한다. 입력값은 URL에 보존해 이동 후에도 사용할 수 있다.
-  // 시설 검색 페이지 구현 시 useSearchParams().get('query')로 읽어 초기 검색 조건에 사용한다.
-  const facilitySearchHandler = event => {
-    event.preventDefault();
-    const query = facilityQuery.trim();
-    moveUrl(query ? `/facilities?${new URLSearchParams({
-      query
-    })}` : '/facilities');
-  };
+
 
 
   return (
     <div className="ms-page">
-        <header className="ms-header">
-            <div className="ms-container ms-header-inner">
-                <Link className="ms-brand" to="/">
-                    <span>S</span>
-                    <strong>Sporty</strong>
-                </Link>
-                {/* 폼 제출을 사용해 검색 버튼 클릭과 Enter 입력이 같은 경로로 이동하도록 한다. */}
-                <form className="ms-header-search" role="search" aria-label="체육시설 검색" onSubmit={facilitySearchHandler}>
-                    <div className="ms-global-search">
-                        <img src={headerSearch} width="16" height="16" alt="" />
-                        <input type="search" aria-label="체육시설 검색" placeholder="체육시설 검색" value={facilityQuery} onChange={event => setFacilityQuery(event.target.value)} />
-                    </div>
-                    <button type="submit" className="ms-header-search-button">검색</button>
-                </form>
-            </div>
-        </header>
+        <Header />
         <main className="ms-container ms-main">
             <section className="ms-hero">
                 <h1>자연어로 말하듯 검색하면, AI가 딱 맞는 매치 조건을 찾아드립니다</h1>

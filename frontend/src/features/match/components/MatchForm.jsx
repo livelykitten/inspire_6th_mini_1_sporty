@@ -110,7 +110,14 @@ export default function MatchForm({ initialValues, selectedFacility, searchFacil
   }
 
   const errorText = name => errors[name] && <p className="match-error" id={`error-${name}`}>{errors[name]}</p>;
-  const fieldProps = (name, errorName = name) => ({ id: name, name, value: values[name], onChange: event => update(name, event.target.value), 'aria-invalid': !!errors[errorName], 'aria-describedby': errors[errorName] ? `error-${errorName}` : undefined });
+  const fieldProps = (name, errorName = name) => ({
+    id: name,
+    name,
+    value: values[name],
+    onChange: event => update(name, event.target.value),
+    'aria-invalid': !!errors[errorName],
+    'aria-describedby': errors[errorName] ? `error-${errorName}` : undefined }
+  );
 
   return <form className="match-form" ref={formRef} onSubmit={submit} noValidate>
     <fieldset className="match-fields" disabled={pending}>
@@ -133,8 +140,20 @@ export default function MatchForm({ initialValues, selectedFacility, searchFacil
         {facility ? <div className="match-facility"><div><strong>{facility.name}</strong><span className="match-facility-tag">선택한 시설</span><p>{[facility.region, facility.locationName].filter(Boolean).join(' · ')}</p></div><button type="button" onClick={() => { setFacility(null); update('serviceId', ''); }}>선택 해제</button></div> : <p className="match-empty">운동할 체육시설을 선택해주세요.</p>}
         {errorText('serviceId')}
       </Section>
-      <Section number="3" title="일정 및 모집 인원 설정" description="경기 일정과 함께할 인원, 실력 레벨을 정해주세요.">
-        <div className="match-schedule-grid"><div className="match-control"><label htmlFor="date">경기 날짜</label><input type="date" {...fieldProps('date', 'startAt')} />{errorText('startAt')}</div>
+      <Section number="3" title="일정 및 모집 인원 설정" description="경기 일정과 함께할 인원, 성별 구성, 실력 레벨을 정해주세요.">
+        <div className="match-schedule-grid"><div className="match-control"><label htmlFor="date">경기 날짜</label>
+        <input type="date" {...fieldProps('date', 'startAt')} />{errorText('startAt')}</div>
+          <div className="match-control">
+            <label htmlFor="genderGroup">성별 구성</label>
+            {/* TODO: fieldProps('genderGroup')와 errorText('genderGroup')를 연결하세요. */}
+            <select id="genderGroup" name="genderGroup" {...fieldProps('genderGroup')}>
+              <option value="" disabled>성별 구성을 선택해주세요</option>
+              <option value="MALE">남성</option>
+              <option value="FEMALE">여성</option>
+              <option value="MIXED">혼성</option>
+            </select>
+            {errorText('genderGroup')}
+          </div>
           <div className="match-control"><label htmlFor="maxParticipant">모집 최대 인원 (방장 포함)</label><div className="match-stepper"><button type="button" aria-label="모집 인원 줄이기" disabled={Number(values.maxParticipant) <= 1} onClick={() => update('maxParticipant', Math.max(1, Number(values.maxParticipant) - 1))}>−</button><input type="number" min="1" step="1" {...fieldProps('maxParticipant')} /><span>명</span><button type="button" aria-label="모집 인원 늘리기" onClick={() => update('maxParticipant', Number(values.maxParticipant) + 1)}>+</button></div>{errorText('maxParticipant')}</div>
           <div className="match-time-grid"><div className="match-control"><label htmlFor="startTime">시작 시간</label><input type="time" {...fieldProps('startTime', 'startAt')} /></div><div className="match-control"><label htmlFor="endTime">종료 시간</label><input type="time" {...fieldProps('endTime', 'endAt')} /></div><div className="match-control match-end-date"><label htmlFor="endDate">종료 날짜 (미선택 시 경기 당일)</label><input type="date" {...fieldProps('endDate', 'endAt')} />{errorText('endAt')}</div></div>
           <div className="match-control"><span id="match-level-label">경기 실력 레벨</span><div className="match-levels" role="group" aria-labelledby="match-level-label">{SKILL_LEVELS.map(level => <button type="button" key={level.value} aria-pressed={values.skillLevel === level.value} className={values.skillLevel === level.value ? 'is-selected' : ''} onClick={() => update('skillLevel', level.value)}>{level.label}</button>)}</div>{errorText('skillLevel')}</div>

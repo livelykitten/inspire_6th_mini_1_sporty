@@ -14,17 +14,6 @@
 .ms-page button:disabled, .ms-panel button:disabled { cursor: not-allowed; opacity: .65; }
 .ms-page :focus-visible, .ms-panel :focus-visible, .ms-results :focus-visible { outline: 3px solid #60a5fa; outline-offset: 3px; }
 .ms-container { width: min(100%, 1152px); padding-inline: 16px; margin-inline: auto; }
-.ms-header { background: white; border-bottom: 1px solid var(--ms-border); }
-.ms-header-inner { min-height: 64px; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
-.ms-brand, .ms-home, .ms-global-search { display: flex; align-items: center; gap: 8px; }
-.ms-brand { font-size: 18px; white-space: nowrap; }
-.ms-brand > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; background: var(--ms-blue); color: white; font-weight: 700; box-shadow: 0 1px 2px #0000000d; }
-/* 검색 입력과 제출 버튼을 묶어 작은 화면에서도 버튼이 입력창 옆에 남도록 한다. */
-.ms-header-search { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 520px; min-width: 0; }
-.ms-global-search { flex: 1; min-width: 0; min-height: 36px; border: 1px solid var(--ms-border); border-radius: 99px; padding: 8px 16px; background: #f1f5f9; font-size: 12px; }
-.ms-global-search input { width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--ms-ink); font: inherit; }
-.ms-global-search input::placeholder { color: #94a3b8; }
-.ms-header-search-button { flex-shrink: 0; min-height: 36px; padding: 8px 16px; border: 0; border-radius: 99px; background: var(--ms-blue); color: white; }
 .ms-home { color: #475569 !important; white-space: nowrap; gap: 4px; }
 .ms-page img { flex-shrink: 0; object-fit: contain; }
 .ms-main { padding-top: 40px; padding-bottom: 144px; }
@@ -77,9 +66,10 @@
 .ms-card { padding: 16px; min-width: 0; min-height: 287px; display: flex; flex-direction: column; justify-content: space-between; }
 .ms-card-content { display: flex; flex-direction: column; gap: 12px; }
 .ms-card-tags { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
-.ms-card-tags > div { display: flex; gap: 6px; }
+.ms-card-tags > div { display: flex; gap: 6px; flex-wrap: wrap; }
 .ms-tag { display: inline-block; font-size: 11px; padding: 2px 8px; background: #eff6ff; color: var(--ms-blue); border: 1px solid #dbeafe; border-radius: 4px; }
 .ms-tag-level { color: #15803d; background: #f0fdf4; border-color: #dcfce7; }
+.ms-tag-gender { color: #6d28d9; background: #f5f3ff; border-color: #ede9fe; }
 .ms-score { color: #d1fae5; background: #064e3b; border-radius: 99px; padding: 2px 8px; font-size: 10px; font-weight: 700; }
 .ms-card h3 { color: #0f172a; font-size: 14px; line-height: 20px; font-weight: 500; margin: 0; overflow-wrap: anywhere; }
 .ms-description { margin: 0; color: var(--ms-muted); font-size: 12px; line-height: 16px; }
@@ -114,8 +104,6 @@
   .ms-footer-inner { align-items: flex-start; flex-direction: column; }
 }
 @media (max-width: 600px) {
-  .ms-header-inner { gap: 12px; flex-wrap: wrap; padding-block: 12px; }
-  .ms-header-search { flex-basis: 100%; max-width: none; }
   .ms-main { padding-top: 24px; padding-bottom: 100px; }
   .ms-hero h1 { font-size: 24px; line-height: 1.4; }
   .ms-hero p { font-size: 12px; }

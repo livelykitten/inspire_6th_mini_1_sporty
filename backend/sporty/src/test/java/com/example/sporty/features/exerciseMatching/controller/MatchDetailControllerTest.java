@@ -3,6 +3,10 @@ package com.example.sporty.features.exerciseMatching.controller;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -19,6 +23,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -33,6 +39,7 @@ import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchParticipantEntity;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchParticipantRole;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.repository.MatchParticipantRepository;
 import com.example.sporty.features.exerciseMatching.repository.MatchRepository;
 import com.example.sporty.features.exerciseMatching.service.MatchService;
@@ -88,6 +95,7 @@ class MatchDetailControllerTest {
                 .andExpect(jsonPath("$.status").value("RECRUITING"))
                 .andExpect(jsonPath("$.skillLevel").value("BEGINNER"))
                 .andExpect(jsonPath("$.sportType").value("FUTSAL"))
+                .andExpect(jsonPath("$.genderGroup").value("MIXED"))
                 .andExpect(jsonPath("$.serviceId").value(7))
                 .andExpect(jsonPath("$.serviceName").value(nullValue()))
                 .andExpect(jsonPath("$.locationName").value(nullValue()))
@@ -213,7 +221,7 @@ class MatchDetailControllerTest {
                 .id(101L).title("주말 풋살 모집").description("함께 풋살하실 분")
                 .startAt(LocalDateTime.of(2026, 9, 26, 19, 0))
                 .endAt(LocalDateTime.of(2026, 9, 26, 21, 0))
-                .maxParticipant(10).sportType(SportType.FUTSAL).serviceId(7L).build()));
+                .maxParticipant(10).sportType(SportType.FUTSAL).genderGroup(GenderGroup.MIXED).serviceId(7L).build()));
         when(matchParticipantRepository.findAllByMatch_IdOrderByIdAsc(101L)).thenReturn(List.of(
                 MatchParticipantEntity.builder().id(11L).user(UserEntity.builder().id(1L).build())
                         .role(MatchParticipantRole.OWNER).build(),
@@ -224,6 +232,72 @@ class MatchDetailControllerTest {
                         .user(UserEntity.builder().id(1L).email("owner@example.com").password("test-hash").build()).build(),
                 ProfileEntity.builder().id(402L).nickname("참가자")
                         .user(UserEntity.builder().id(2L).build()).build()));
+    }
+
+    @ParameterizedTest
+    @EnumSource(GenderGroup.class)
+    void creationPassesGenderGroupToPersistence(GenderGroup genderGroup) throws Exception {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(UserEntity.builder().id(1L).build()));
+        when(serviceRepository.existsById(7L)).thenReturn(true);
+        when(matchRepository.save(any(MatchEntity.class))).thenAnswer(invocation ->
+                MatchEntity.builder().id(101L).genderGroup(invocation.<MatchEntity>getArgument(0).getGenderGroup()).build());
+
+        mvc.perform(post("/api/matches")
+                .header("Authorization", "Bearer " + new JwtProvider(SECRET).createAccessToken(1L))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createRequest(", \"genderGroup\": \"" + genderGroup.name() + "\"")))
+                .andExpect(status().isCreated());
+        verify(matchRepository).save(argThat(match -> match.getGenderGroup() == genderGroup));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", ", \"genderGroup\": null", ", \"genderGroup\": \"UNKNOWN\""})
+    void creationRejectsMissingNullOrInvalidGenderGroup(String genderField) throws Exception {
+        mvc.perform(post("/api/matches")
+                .header("Authorization", "Bearer " + new JwtProvider(SECRET).createAccessToken(1L))
+                .contentType(MediaType.APPLICATION_JSON).content(createRequest(genderField)))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(matchRepository, matchParticipantRepository, userRepository, serviceRepository);
+    }
+
+    @ParameterizedTest
+    @EnumSource(GenderGroup.class)
+    void searchBindsGenderGroupAndReturnsIt(GenderGroup genderGroup) throws Exception {
+        // TODO: status 조건 검증 및 시설 연동 후 region/isFree 필터 검증 추가.
+        when(matchRepository.searchMatches(
+                null, null, null, null, null, null, null, null, genderGroup,
+                null, null, null)) // status, region, isFree 미지정
+                .thenReturn(List.of(MatchEntity.builder().id(101L).genderGroup(genderGroup).build()));
+        mvc.perform(get("/api/matches").param("genderGroup", genderGroup.name()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].genderGroup").value(genderGroup.name()));
+        verify(matchRepository).searchMatches(
+                null, null, null, null, null, null, null, null, genderGroup,
+                null, null, null); // status, region, isFree 미지정
+    }
+
+    @Test
+    void searchAllowsOmittedGenderGroup() throws Exception {
+        mvc.perform(get("/api/matches")).andExpect(status().isOk());
+        // TODO: 시설 연동 후 region/isFree 조건 생략 시 전체 조회되는지 통합 테스트 추가.
+        verify(matchRepository).searchMatches(
+                null, null, null, null, null, null, null, null, null,
+                null, null, null); // status, region, isFree 미지정
+    }
+
+    @Test
+    void searchRejectsInvalidGenderGroup() throws Exception {
+        mvc.perform(get("/api/matches").param("genderGroup", "UNKNOWN"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(matchRepository);
+    }
+
+    private String createRequest(String genderField) {
+        return """
+                {"serviceId":7,"title":"Test match","description":"Training",
+                 "startAt":"2026-10-10T18:00:00","endAt":"2026-10-10T20:00:00",
+                 "maxParticipant":10,"skillLevel":"BEGINNER","sportType":"FUTSAL"%s}
+                """.formatted(genderField);
     }
 
     private String token(String userId, String secret, Instant expiration) {
