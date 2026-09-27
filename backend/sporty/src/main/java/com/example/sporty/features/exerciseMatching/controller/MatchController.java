@@ -28,7 +28,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchDetailResponseDto;
+import com.example.sporty.features.exerciseMatching.domain.dto.MatchModifyRequestDto;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchParticipantResponseDto;
+import org.springframework.web.bind.annotation.PutMapping;
+
 
 @RestController
 @RequestMapping("/api/matches")
@@ -92,6 +95,29 @@ public class MatchController {
             @AuthenticationPrincipal Long userId) {
 
         return ResponseEntity.ok(matchService.getMatchDetail(matchId, userId));
+    }
+
+    // EM-04: 운동 매칭 기능 수정. 생성자 전용. 인증/권한/매치 확인 실패 시 401/403/404.
+    @PutMapping("/{matchId}")
+    public ResponseEntity<?> modifyMatch(
+            @PathVariable("matchId") Long matchId,
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody MatchModifyRequestDto req,
+            BindingResult bindingResult
+        ) {
+        System.out.println("debug >> MatchController.modifyMatch() called with: " + req);
+        
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errMap = new HashMap<>();
+            bindingResult.getAllErrors().forEach(error -> {
+                String key = error instanceof FieldError fieldError
+                    ? fieldError.getField() : error.getObjectName();
+                errMap.put(key, error.getDefaultMessage());
+            });
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errMap);
+        }
+
+        return ResponseEntity.ok(matchService.modifyMatch(matchId, userId, req));
     }
 
     // EM-05: 생성자 전용 삭제. 인증/권한/매치 확인 실패 시 401/403/404.
