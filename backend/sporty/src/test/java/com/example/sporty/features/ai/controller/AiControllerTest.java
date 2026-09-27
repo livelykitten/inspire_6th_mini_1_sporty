@@ -18,11 +18,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.sporty.features.ai.agent.MatchAiAgent;
 import com.example.sporty.features.ai.agent.MatchDraftAiAgent;
+import com.example.sporty.features.commons.exception.ai.AiDraftException;
 import com.example.sporty.features.commons.exception.ai.AiSearchException;
 import com.example.sporty.features.commons.handler.GlobalExceptionHandler;
 
 /*
-- AI-02 요청 입력값 검증 테스트
+- AI-01, AI-02 요청 입력값 검증 테스트
 - AI는 Mock으로 대체하므로 API 키, DB 없이 실행된다.
 */
 @ExtendWith(MockitoExtension.class)
@@ -81,5 +82,30 @@ class AiControllerTest {
                         .content("{\"prompt\": \"같이 운동할 사람 있나요\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("검색 조건을 찾지 못했습니다."));
+    }
+
+    @Test
+    @DisplayName("[TC-AI01-01] 초안 생성 prompt가 비어 있으면 400과 안내 문구를 반환하고 AI를 호출하지 않는다")
+    void returnsBadRequestWhenDraftPromptIsBlank() throws Exception {
+        mockMvc.perform(post("/api/ai/matches")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"prompt\": \"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("요청 내용을 입력해주세요."));
+
+        verifyNoInteractions(matchDraftAiAgent);
+    }
+
+    @Test
+    @DisplayName("[TC-AI01-02] AI가 매치 정보를 찾지 못하면 400과 안내 문구를 반환한다")
+    void returnsBadRequestWhenNoMatchInfo() throws Exception {
+        when(matchDraftAiAgent.draft("같이 운동해요"))
+                .thenThrow(new AiDraftException("만들 매치 정보를 찾지 못했습니다."));
+
+        mockMvc.perform(post("/api/ai/matches")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"prompt\": \"같이 운동해요\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("만들 매치 정보를 찾지 못했습니다."));
     }
 }
