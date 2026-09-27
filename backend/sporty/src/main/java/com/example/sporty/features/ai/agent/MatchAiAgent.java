@@ -5,9 +5,9 @@ import java.time.LocalDate;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
+import com.example.sporty.features.ai.domain.dto.AiSearchConditionDto;
 import com.example.sporty.features.ai.util.PromptDateTable;
 import com.example.sporty.features.commons.exception.ai.AiSearchException;
-import com.example.sporty.features.exerciseMatching.domain.dto.MatchRequestDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -23,7 +23,7 @@ public class MatchAiAgent {
     private final ChatClient matchChatClient;
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
-    public MatchRequestDto search(String prompt) {
+    public AiSearchConditionDto search(String prompt) {
         System.out.println("debug >>>> match ai agent search : " + prompt);
 
         LocalDate today = PromptDateTable.today();
@@ -50,7 +50,7 @@ public class MatchAiAgent {
 
         System.out.println("debug >>>> match ai agent search result : " + result);
         
-        MatchRequestDto condition = toCondition(result);
+        AiSearchConditionDto condition = toCondition(result);
         if (condition == null || hasNoCondition(condition)) {
             throw new AiSearchException(NO_CONDITION_MESSAGE);
         }
@@ -58,19 +58,19 @@ public class MatchAiAgent {
     }
 
     // tool이 호출되면 조건 JSON, 호출되지 않으면 AI의 안내 문장이 온다.
-    private MatchRequestDto toCondition(String result) {
+    private AiSearchConditionDto toCondition(String result) {
         if (result == null || result.isBlank()) {
             return null;
         }
         try {
-            return objectMapper.readValue(result, MatchRequestDto.class);
+            return objectMapper.readValue(result, AiSearchConditionDto.class);
         } catch (JsonProcessingException e) {
             return null;
         }
     }
 
     // tool은 호출됐지만 추출된 조건이 하나도 없는 경우
-    private boolean hasNoCondition(MatchRequestDto condition) {
+    private boolean hasNoCondition(AiSearchConditionDto condition) {
         return condition.getSportType() == null
                 && condition.getRegion() == null
                 && condition.getStartAt() == null

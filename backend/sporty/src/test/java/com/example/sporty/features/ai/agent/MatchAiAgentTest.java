@@ -17,10 +17,10 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 
+import com.example.sporty.features.ai.domain.dto.AiSearchConditionDto;
 import com.example.sporty.features.ai.tools.MatchAiTool;
 import com.example.sporty.features.commons.exception.ai.AiSearchException;
 import com.example.sporty.features.commons.util.SportType;
-import com.example.sporty.features.exerciseMatching.domain.dto.MatchRequestDto;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 
@@ -61,7 +61,7 @@ class MatchAiAgentTest {
         matchAIAgent = new MatchAiAgent(chatClient);
     }
 
-    private MatchRequestDto search(String prompt) {
+    private AiSearchConditionDto search(String prompt) {
         return matchAIAgent.search(prompt);
     }
 
@@ -84,7 +84,7 @@ class MatchAiAgentTest {
     @Test
     @DisplayName("[TC-AI02-01] 종목, 지역, 실력, 기간(이번 주말)을 모두 추출한다")
     void extractsAllConditions() throws Exception {
-        MatchRequestDto condition = search("이번 주말 강남에서 풋살 초보 매치 찾아줘");
+        AiSearchConditionDto condition = search("이번 주말 강남에서 풋살 초보 매치 찾아줘");
 
         assertThat(condition.getSportType()).isEqualTo(SportType.FUTSAL);
         assertThat(condition.getRegion()).isEqualTo("강남구");
@@ -96,7 +96,7 @@ class MatchAiAgentTest {
     @Test
     @DisplayName("[TC-AI02-02] 동네 이름을 자치구로 변환한다 (잠실 → 송파구)")
     void convertsNeighborhoodToDistrict() throws Exception {
-        MatchRequestDto condition = search("잠실에서 농구할 사람");
+        AiSearchConditionDto condition = search("잠실에서 농구할 사람");
 
         assertThat(condition.getSportType()).isEqualTo(SportType.BASKETBALL);
         assertThat(condition.getRegion()).isEqualTo("송파구");
@@ -106,7 +106,7 @@ class MatchAiAgentTest {
     @Test
     @DisplayName("[TC-AI02-03] 상대 날짜(내일)를 오늘 기준으로 계산한다")
     void calculatesRelativeDate() throws Exception {
-        MatchRequestDto condition = search("내일 테니스 칠 사람 구해요");
+        AiSearchConditionDto condition = search("내일 테니스 칠 사람 구해요");
 
         assertThat(condition.getSportType()).isEqualTo(SportType.TENNIS);
         assertThat(condition.getStartAt().toLocalDate()).isEqualTo(today().plusDays(1));
@@ -115,7 +115,7 @@ class MatchAiAgentTest {
     @Test
     @DisplayName("[TC-AI02-04] 모집 상태와 실력 수준을 enum으로 추출한다")
     void extractsStatusAndSkillLevel() throws Exception {
-        MatchRequestDto condition = search("모집 중인 배드민턴 상급 매치 보여줘");
+        AiSearchConditionDto condition = search("모집 중인 배드민턴 상급 매치 보여줘");
 
         assertThat(condition.getSportType()).isEqualTo(SportType.BADMINTON);
         assertThat(condition.getSkillLevel()).isEqualTo(SkillLevel.ADVANCED);
