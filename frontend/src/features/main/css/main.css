@@ -25,6 +25,11 @@
 .ms-global-search input { width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--ms-ink); font: inherit; }
 .ms-global-search input::placeholder { color: #94a3b8; }
 .ms-header-search-button { flex-shrink: 0; min-height: 36px; padding: 8px 16px; border: 0; border-radius: 99px; background: var(--ms-blue); color: white; }
+/* [#54] 컬러 가이드 2의 파랑·흰색 버튼. 회원 메뉴는 검색 영역에 눌려 줄바꿈되지 않는다. */
+.ms-auth-menu { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.ms-auth-menu a { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 8px 14px; border: 1px solid var(--ms-border); border-radius: 8px; font-size: 12px; white-space: nowrap; }
+.ms-auth-menu .ms-auth-login { background: white; color: var(--ms-ink); }
+.ms-auth-menu .ms-auth-primary { background: var(--ms-blue); border-color: var(--ms-blue); color: white; }
 .ms-home { color: #475569 !important; white-space: nowrap; gap: 4px; }
 .ms-page img { flex-shrink: 0; object-fit: contain; }
 .ms-main { padding-top: 40px; padding-bottom: 144px; }
@@ -116,7 +121,7 @@
 }
 @media (max-width: 600px) {
   .ms-header-inner { gap: 12px; flex-wrap: wrap; padding-block: 12px; }
-  .ms-header-search { flex-basis: 100%; max-width: none; }
+  .ms-header-search { flex-basis: 100%; max-width: none; order: 1; }
   .ms-main { padding-top: 24px; padding-bottom: 100px; }
   .ms-hero h1 { font-size: 24px; line-height: 1.4; }
   .ms-hero p { font-size: 12px; }

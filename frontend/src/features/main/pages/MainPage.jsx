@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AISearchBox from '../components/AISearchBox';
 import AIConditionSummary from '../components/AIConditionSummary';
@@ -31,6 +31,22 @@ const MainPage = ({
   pending = false,
   preview = true
 }) => {
+  // [#54][USR-02] 상단 메뉴 표시용 로그인 상태. 로그인 페이지가 저장하는 at 유무를 사용한다.
+  // 실제 API 접근 권한/토큰 만료 검증은 서버가 담당한다.
+  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(localStorage.getItem('at')?.trim()));
+  useEffect(() => {
+    const syncLoginState = () => setIsLoggedIn(Boolean(localStorage.getItem('at')?.trim()));
+    const storageHandler = event => {
+      if (event.key === 'at' || event.key === null) syncLoginState();
+    };
+    // [#54] 다른 탭의 로그인/로그아웃과 메인 화면 복귀 시 상태를 다시 읽는다.
+    window.addEventListener('storage', storageHandler);
+    window.addEventListener('focus', syncLoginState);
+    return () => {
+      window.removeEventListener('storage', storageHandler);
+      window.removeEventListener('focus', syncLoginState);
+    };
+  }, []);
   // [FC-01] string: 상단 시설 검색어. facilitySearchHandler가 URL의 query로 전달한다.
   const [facilityQuery, setFacilityQuery] = useState('');
   // [AI-02] null | { matches: 배열, conditions: 배열 }: 변환된 검색 응답. null은 아직 검색하지 않은 상태다.
@@ -142,6 +158,13 @@ const MainPage = ({
                     </div>
                     <button type="submit" className="ms-header-search-button">검색</button>
                 </form>
+                {/* [#54][USR-01][USR-02] 로그아웃·회원탈퇴는 마이페이지에서 처리한다. */}
+                <nav className="ms-auth-menu" aria-label="회원 메뉴">
+                    {isLoggedIn ? <Link className="ms-auth-primary" to="/mypage">마이페이지</Link> : <>
+                        <Link className="ms-auth-login" to="/login">로그인</Link>
+                        <Link className="ms-auth-primary" to="/signup">회원가입</Link>
+                    </>}
+                </nav>
             </div>
         </header>
         <main className="ms-container ms-main">
