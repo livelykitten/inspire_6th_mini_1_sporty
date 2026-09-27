@@ -6,9 +6,10 @@ import java.time.LocalTime;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
+import com.example.sporty.features.ai.domain.dto.AiDraftDto;
+import com.example.sporty.features.ai.domain.dto.AiDraftResponseDto;
 import com.example.sporty.features.ai.util.PromptDateTable;
 import com.example.sporty.features.commons.exception.ai.AiDraftException;
-import com.example.sporty.features.exerciseMatching.domain.dto.MatchRequestDto;
 import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +29,7 @@ public class MatchDraftAiAgent {
     private final ChatClient matchDraftChatClient;
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
-    public MatchRequestDto draft(String prompt) {
+    public AiDraftResponseDto draft(String prompt) {
         System.out.println("debug >>>> match draft ai agent draft : " + prompt);
 
         String systemPrompt = """
@@ -59,15 +60,15 @@ public class MatchDraftAiAgent {
 
         System.out.println("debug >>>> match draft ai agent result : " + result);
 
-        MatchRequestDto draft = toDraft(result);
+        AiDraftDto draft = toDraft(result);
         if (draft == null || hasNoMatchInfo(draft)) {
             throw new AiDraftException(NO_INFO_MESSAGE);
         }
-        return complete(draft);
+        return AiDraftResponseDto.builder().initialValues(complete(draft)).build();
     }
 
     // 폼에 바로 넣을 수 있게 보정: 종료 시각 기본값(시작 + 2시간), 성별 기본값(MIXED), 글자 수 제한
-    static MatchRequestDto complete(MatchRequestDto draft) {
+    static AiDraftDto complete(AiDraftDto draft) {
         LocalDateTime startAt = draft.getStartAt();
         LocalDateTime endAt = draft.getEndAt();
         if (startAt != null && (endAt == null || !endAt.isAfter(startAt))) {
@@ -77,7 +78,7 @@ public class MatchDraftAiAgent {
                     : startAt.plusHours(DEFAULT_MATCH_HOURS);
         }
         GenderGroup genderGroup = draft.getGenderGroup() != null ? draft.getGenderGroup() : GenderGroup.MIXED;
-        return MatchRequestDto.builder()
+        return AiDraftDto.builder()
                 .sportType(draft.getSportType()).region(draft.getRegion())
                 .startAt(startAt).endAt(endAt)
                 .maxParticipant(draft.getMaxParticipant()).skillLevel(draft.getSkillLevel())
@@ -88,19 +89,19 @@ public class MatchDraftAiAgent {
     }
 
     // tool이 호출되면 초안 JSON, 호출되지 않으면 AI의 안내 문장이 온다.
-    private MatchRequestDto toDraft(String result) {
+    private AiDraftDto toDraft(String result) {
         if (result == null || result.isBlank()) {
             return null;
         }
         try {
-            return objectMapper.readValue(result, MatchRequestDto.class);
+            return objectMapper.readValue(result, AiDraftDto.class);
         } catch (JsonProcessingException e) {
             return null;
         }
     }
 
     // tool은 호출됐지만 매치 정보가 하나도 없는 경우 (제목·설명은 AI가 항상 쓰므로 제외)
-    private boolean hasNoMatchInfo(MatchRequestDto draft) {
+    private boolean hasNoMatchInfo(AiDraftDto draft) {
         return draft.getSportType() == null
                 && draft.getRegion() == null
                 && draft.getStartAt() == null
