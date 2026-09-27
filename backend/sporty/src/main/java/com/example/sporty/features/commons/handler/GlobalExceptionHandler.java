@@ -5,6 +5,7 @@ import com.example.sporty.features.commons.exception.matches.WithdrawnUserFoundE
 import com.example.sporty.features.commons.exception.matches.ServiceNotFoundException;
 import com.example.sporty.features.commons.exception.auth.LoginFailException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
+import com.example.sporty.features.commons.exception.profiles.ProfileNotFoundException;
 import com.example.sporty.features.commons.exception.users.DuplicateEmailException;
 import com.example.sporty.features.commons.exception.users.DuplicateNicknameException;
 import org.springframework.http.HttpStatus;
@@ -81,6 +82,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.builder()
                         .code("LOGIN_FAILED")
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(ProfileNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleProfileNotFound (
+            ProfileNotFoundException e
+    ) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.builder()
+                        .code("PROFILE_NOT_FOUND")
                         .message(e.getMessage())
                         .build());
     }
