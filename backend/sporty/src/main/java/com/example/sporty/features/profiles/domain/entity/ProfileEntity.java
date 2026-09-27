@@ -26,7 +26,6 @@ public class ProfileEntity {
     @Column(length = 50, nullable = false, unique = true)
     private String nickname;
 
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private District district;
@@ -60,5 +59,11 @@ public class ProfileEntity {
     @Builder.Default
     @OneToMany(mappedBy = "profile")
     private List<SportPreferenceEntity> sports = new ArrayList<>();
+
+    // [PR-01] 프로필 수정
+    public void updateProfile(String nickname, District district) {
+        this.nickname = nickname;
+        this.district = district;
+    }
 
 }

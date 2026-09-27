@@ -10,4 +10,7 @@ public interface SportPreferenceRepository extends JpaRepository<SportPreference
 
     List<SportPreferenceEntity> findByProfileId(Long profileId);
 
+    // [PR-01] 선호 종목 삭제
+    void deleteByProfileId(Long profileId);
+
 }
