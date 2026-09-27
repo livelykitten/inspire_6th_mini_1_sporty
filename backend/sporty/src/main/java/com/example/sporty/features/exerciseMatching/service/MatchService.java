@@ -10,12 +10,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchDeleteForbiddenException;
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchModifyForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchAlreadyJoinedException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchAlreadyStartedException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchFullException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchRecruitmentClosedException;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchDetailResponseDto;
+import com.example.sporty.features.exerciseMatching.domain.dto.MatchModifyRequestDto;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchParticipantResponseDto;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchParticipantSummaryDto;
 import com.example.sporty.features.commons.exception.matches.MatchUserNotFoundException;
@@ -162,6 +164,36 @@ public class MatchService {
         
         // 5. return matchId
         return savedMatchEntity.getId();
+    }
+
+    @Transactional
+    public MatchDetailResponseDto modifyMatch(
+        Long matchId,
+        Long userId,
+        MatchModifyRequestDto req
+    ) {
+        // 매치 조회
+        MatchEntity match = matchRepository.findById(matchId)
+                .orElseThrow(MatchNotFoundException::new);
+
+        // 생성자 권한 확인
+        matchParticipantRepository.findByMatch_IdAndUserId(matchId, userId)
+                .filter(participant -> participant.getRole() == MatchParticipantRole.OWNER)
+                .orElseThrow(MatchModifyForbiddenException::new);
+        
+        // 업데이트
+
+        match.update(
+            req.getTitle(),
+            req.getDescription(),
+            req.getStartAt(),
+            req.getEndAt(),
+            req.getMaxParticipant(),
+            req.getSkillLevel(),
+            req.getGenderGroup()
+        );
+
+        return getMatchDetail(matchId, userId);
     }
 
     public List<MatchResponseDto> searchMatches(MatchSearchRequestDto req) {
