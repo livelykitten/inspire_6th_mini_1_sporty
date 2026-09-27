@@ -59,11 +59,12 @@ class MatchAiAgentTest {
                 .defaultTools(new MatchAiTool())
                 .build();
 
-        matchAIAgent = new MatchAiAgent(chatClient);
+        // 조건 추출만 검증하므로 MatchService는 사용하지 않는다.
+        matchAIAgent = new MatchAiAgent(chatClient, null);
     }
 
     private AiSearchConditionDto search(String prompt) {
-        return matchAIAgent.search(prompt);
+        return matchAIAgent.extractCondition(prompt);
     }
 
     private LocalDate today() {
@@ -128,7 +129,7 @@ class MatchAiAgentTest {
     @DisplayName("[TC-AI02-05] 검색 조건이 없으면 안내 문구와 함께 AiSearchException을 던진다")
     void throwsWhenNoCondition() {
         AiSearchException e = assertThrows(AiSearchException.class,
-                () -> matchAIAgent.search("같이 운동할 사람 있나요"));
+                () -> matchAIAgent.extractCondition("같이 운동할 사람 있나요"));
 
         assertThat(e.getMessage()).startsWith("검색 조건을 찾지 못했습니다.");
     }

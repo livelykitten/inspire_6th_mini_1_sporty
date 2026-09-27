@@ -16,9 +16,6 @@ import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 @Component 
 public class MatchAiTool {
     
-    // TODO: MatchService.search()가 완성되면 주입받아 호출
-    // private final MatchService matchService;
-
     @Tool(description = "종목, 지역, 날짜, 실력, 성별 구성, 모집 상태 조건으로 운동 매치를 검색한다.",
         returnDirect = true)
     public AiSearchConditionDto searchMatches(
@@ -42,7 +39,6 @@ public class MatchAiTool {
 
         System.out.println("debug >>>> ai tool searchMatches condition : " + condition);
 
-        // TODO: return matchService.search(condition);  (반환 타입도 List<MatchResponseDto>로 변경)
         return condition;
     }
 }
