@@ -21,6 +21,7 @@ import com.example.sporty.features.exerciseMatching.domain.dto.MatchParticipantS
 import com.example.sporty.features.commons.exception.matches.MatchUserNotFoundException;
 import com.example.sporty.features.commons.exception.matches.WithdrawnUserFoundException;
 import com.example.sporty.features.commons.exception.matches.ServiceNotFoundException;
+import com.example.sporty.features.facilities.domain.entity.ServiceEntity;
 import com.example.sporty.features.facilities.repository.ServiceRepository;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchCreateRequestDto;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchResponseDto;
@@ -138,13 +139,11 @@ public class MatchService {
         }
 
         // Validate the catalog before creating either match or participant records.
-        Long serviceId = req.getServiceId();
-        if (!serviceRepository.existsById(serviceId)) {
-            throw new ServiceNotFoundException();
-        }
+        ServiceEntity service = serviceRepository.findById(req.getServiceId())
+            .orElseThrow(ServiceNotFoundException::new);
 
         // 3. create MatchEntity and save
-        MatchEntity match = req.toEntity(serviceId);
+        MatchEntity match = req.toEntity(service);
         MatchEntity savedMatchEntity =
             matchRepository.save(match);
         
@@ -168,7 +167,7 @@ public class MatchService {
     public List<MatchResponseDto> searchMatches(MatchSearchRequestDto req) {
         System.out.println("debug >> MatchService.searchMatches(), req: " + req);
 
-        return matchRepository.searchMatches(
+        List<MatchEntity> matches = matchRepository.searchMatches(
             req.getServiceId(),
             escapeSearchKeyword(req.getTitleKeyword()),
             escapeSearchKeyword(req.getDescriptionKeyword()),
@@ -179,11 +178,27 @@ public class MatchService {
             req.getSportType(),
             req.getGenderGroup(),
             req.getStatus(),
-            req.getRegion(),
+            escapeSearchKeyword(req.getRegion()),
             req.getIsFree()
-        ).stream()
-        .map(MatchResponseDto::toResponseDto)
-        .toList();
+        );
+
+        if (matches.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> matchIds = matches.stream().map(match -> match.getId()).toList();
+
+        Map<Long, Long> countsByMatchId = 
+            matchRepository.countByMatchIds(matchIds).stream()
+            .collect(Collectors.toMap(r -> r.getMatchId(), r -> r.getParticipantCount()));
+
+
+        return matches.stream()
+            .map(match -> MatchResponseDto.toResponseDto(
+                match,
+                countsByMatchId.getOrDefault(match.getId(), 0L)
+            )).toList();
+
     }
 
     private String escapeSearchKeyword(String keyword) {
@@ -247,8 +262,6 @@ public class MatchService {
             }
         }
 
-        // TODO: Service/Location Entity 연동 후 장소 정보를 조회한다.
-        // 시설 코드가 들어오기 전까지 serviceName/locationName/region은 null로 유지한다.
         return MatchDetailResponseDto.builder()
                 .matchId(match.getId())
                 .title(match.getTitle())
@@ -261,10 +274,13 @@ public class MatchService {
                 .skillLevel(match.getSkillLevel())
                 .sportType(match.getSportType())
                 .genderGroup(match.getGenderGroup())
-                .serviceId(match.getServiceId())
+                .serviceId(match.getService().getId())
                 .participants(participantSummaries)
                 .isOwner(isOwner)
                 .isParticipant(isParticipant)
+                .region(match.getService().getLocation().getRegion())
+                .serviceName(match.getService().getName())
+                .locationName(match.getService().getLocation().getName())
                 .build();
     }
 }
