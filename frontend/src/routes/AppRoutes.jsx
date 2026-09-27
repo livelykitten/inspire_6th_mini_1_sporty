@@ -7,6 +7,7 @@ import MatchDetailPreviewPage from '../features/match/pages/MatchDetailPreviewPa
 import SignUpPage from '../features/auth/pages/SignUpPage';
 import MainPage from '../features/main/pages/MainPage';
 import MatchListPage from '../features/match/pages/MatchListPage';
+import MyPage from '../features/mypage/pages/MyPage';
 
 export default function AppRoutes() {
   return (
@@ -21,7 +22,8 @@ export default function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       {/* [USR-01] 회원가입 화면. 가입 성공 시 기존 /login 경로로 이동한다. */}
       <Route path="/signup" element={<SignUpPage />} />
-      <Route path="/mypage" element={<div>마이페이지</div>} />
+      {/* API 준비 후 preview를 제거하고 loadMyPage/saveProfile 함수를 연결한다. */}
+      <Route path="/mypage" element={<MyPage preview />} />
 
       <Route path="/matches/new" element={<RequireMatchAuth><MatchCreatePage /></RequireMatchAuth>} />
       {process.env.NODE_ENV === 'development' && (
