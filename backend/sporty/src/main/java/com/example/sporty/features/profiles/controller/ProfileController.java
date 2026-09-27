@@ -16,7 +16,7 @@ public class ProfileController {
 
     // [PR-02] 프로필 조회
     @GetMapping
-    public ResponseEntity<ProfileDetailResponseDto> getProfile(@PathVariable Long profileId) {
+    public ResponseEntity<ProfileDetailResponseDto> getProfile(@PathVariable("profileId") Long profileId) {
 
         ProfileDetailResponseDto response = profileService.getProfile(profileId);
 
