@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import com.example.sporty.support.FacilityFixtures;
+import com.example.sporty.features.facilities.domain.entity.ServiceEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -183,7 +184,7 @@ class MatchIntegrationTest {
     private MatchEntity match(String title, String description, Long serviceId,
             LocalDateTime start, int capacity, SkillLevel skill, GenderGroup genderGroup) {
         return em.persist(MatchEntity.builder().title(title).description(description)
-                .serviceId(serviceId).startAt(start).endAt(start.plusHours(2))
+                .service(em.getEntityManager().getReference(ServiceEntity.class, serviceId)).startAt(start).endAt(start.plusHours(2))
                 .maxParticipant(capacity).skillLevel(skill).sportType(SportType.FUTSAL)
                 .genderGroup(genderGroup).build());
     }

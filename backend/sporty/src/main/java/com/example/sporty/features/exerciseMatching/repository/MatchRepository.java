@@ -25,12 +25,12 @@ public interface MatchRepository extends JpaRepository<MatchEntity, Long> {
     @Query("select m from MatchEntity m where m.id = :matchId")
     Optional<MatchEntity> findByIdForUpdate(@Param("matchId") Long matchId);
 
-    // TODO: FacilityEntity와 ServiceEntity가 추가되면,
-    // JOIN FETCH로 ServiceEntity와 FacilityEntity까지 불러오기.
     @Query ("""
             SELECT m
             FROM MatchEntity m
-            WHERE (:serviceId IS NULL OR m.serviceId = :serviceId)
+            JOIN FETCH m.service s
+            JOIN FETCH s.location l
+            WHERE (:serviceId IS NULL OR m.service.id = :serviceId)
             AND (:titleKeyword IS NULL OR LOWER(m.title) LIKE LOWER(CONCAT('%', :titleKeyword, '%')) ESCAPE '!')
             AND (:descriptionKeyword IS NULL OR LOWER(m.description) LIKE LOWER(CONCAT('%', :descriptionKeyword, '%')) ESCAPE '!')
             AND (:startAt IS NULL OR m.startAt >= :startAt)
@@ -40,6 +40,8 @@ public interface MatchRepository extends JpaRepository<MatchEntity, Long> {
             AND (:sportType IS NULL OR m.sportType = :sportType)
             AND (:genderGroup IS NULL OR m.genderGroup = :genderGroup)
             AND (:status IS NULL OR m.status = :status)
+            AND (:region IS NULL OR LOWER(l.region) LIKE LOWER(CONCAT('%', :region, '%')) ESCAPE '!')
+            AND (:isFree IS NULL OR s.isFree = :isFree)
         """)
     List<MatchEntity> searchMatches(
         @Param ("serviceId") Long serviceId,
@@ -51,10 +53,23 @@ public interface MatchRepository extends JpaRepository<MatchEntity, Long> {
         @Param("skillLevel") SkillLevel skillLevel,
         @Param("sportType") SportType sportType,
         @Param("genderGroup") GenderGroup genderGroup,
-        @Param("status") MatchStatus status, // TODO 
-        @Param("region") String region, // TODO
-        @Param("isFree") Boolean isFree // TODO
-        
-
+        @Param("status") MatchStatus status, 
+        @Param("region") String region,
+        @Param("isFree") Boolean isFree
     );
+
+    interface MatchParticipantCount {
+        Long getMatchId();
+        Long getParticipantCount();
+    }
+
+    @Query("""
+        SELECT
+            mp.match.id as matchId, 
+            COUNT(mp) as participantCount
+        FROM MatchParticipantEntity mp
+        WHERE mp.match.id IN :matchIds
+        GROUP BY mp.match.id
+    """)
+    List<MatchParticipantCount> countByMatchIds(@Param("matchIds") List<Long> matchIds);
 }

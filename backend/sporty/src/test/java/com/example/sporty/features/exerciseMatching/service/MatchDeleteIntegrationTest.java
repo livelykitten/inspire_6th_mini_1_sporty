@@ -13,6 +13,7 @@ import com.example.sporty.features.users.domain.entity.UserEntity;
 import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.support.MatchUserFixtures;
 import com.example.sporty.support.FacilityFixtures;
+import com.example.sporty.features.facilities.domain.entity.ServiceEntity;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -84,12 +85,12 @@ class MatchDeleteIntegrationTest {
             serviceId = FacilityFixtures.create(entityManager, FacilityFixtures.newServiceId()).getId();
             MatchEntity match = matchRepository.save(MatchEntity.builder()
                     .title("삭제 대상").sportType(SportType.FUTSAL)
-                    .maxParticipant(5).genderGroup(GenderGroup.MIXED).serviceId(serviceId)
+                    .maxParticipant(5).genderGroup(GenderGroup.MIXED).service(entityManager.getReference(ServiceEntity.class, serviceId))
                     .startAt(LocalDateTime.now().plusDays(1)).endAt(LocalDateTime.now().plusDays(1).plusHours(2))
                     .build());
             MatchEntity otherMatch = matchRepository.save(MatchEntity.builder()
                     .title("유지 대상").sportType(SportType.FUTSAL)
-                    .maxParticipant(5).genderGroup(GenderGroup.MIXED).serviceId(serviceId)
+                    .maxParticipant(5).genderGroup(GenderGroup.MIXED).service(entityManager.getReference(ServiceEntity.class, serviceId))
                     .startAt(LocalDateTime.now().plusDays(1)).endAt(LocalDateTime.now().plusDays(1).plusHours(2))
                     .build());
             matchId = match.getId();
