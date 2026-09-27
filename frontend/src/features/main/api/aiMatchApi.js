@@ -4,7 +4,7 @@
  * 흐름: AISearchBox → MainPage.searchHandler(api.post) → 이 파일의 변환 함수 → 조건 요약/카드.
  * 서버 주소·인증 헤더는 src/api/axios.js에서 공통 관리한다.
  * OpenAI 호출과 자연어 정제는 백엔드 책임이며 이 파일은 정제된 JSON만 받는다.
- * 현재 가정한 계약: 요청 { query }, 응답 { conditions, matches }.
+ * 계약: 요청 { prompt }, 응답 { conditions, matches }.
  * DTO 확정 후 MainPage.searchHandler의 요청 본문과 이 파일의 두 변환 함수를 수정한다.
  */
 
@@ -56,9 +56,9 @@ export function toMatchCard(match) {
     isFree: typeof match.isFree === 'boolean' ? match.isFree : null,
     score: Number.isFinite(match.score) ? match.score : null,
     distance: Number.isFinite(match.distance) ? match.distance : null,
-    // [AI-02] 참여 인원: 현재 인원 필드명 확정 후 이 매핑을 수정한다.
+    // [AI-02] 참여 인원: 서버 MatchResponseDto는 numCurrentParticipant로 내려준다.
     // 숫자 표시와 진행률 계산은 MatchCard에서 함께 처리한다.
-    currentParticipant: match.currentParticipant,
+    currentParticipant: match.numCurrentParticipant,
     maxParticipant: match.maxParticipant,
     genderGroup: match.genderGroup,
     genderGroupLabel: GENDER_LABELS[match.genderGroup] || '성별 구성 정보 없음 ',

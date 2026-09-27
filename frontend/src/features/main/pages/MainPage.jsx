@@ -58,7 +58,7 @@ const MainPage = ({
     // 수업 방식: 페이지의 핸들러에서 요청 → 응답 데이터 → 상태 변경 순서로 처리한다.
     // onSearch는 테스트/외부 연결용이며, 일반 화면에서는 아래 api.post가 실행된다.
     const request = onSearch ? Promise.resolve().then(() => onSearch(query)) : api.post('/api/ai/matches/search', {
-      query: query.trim()
+      prompt: query.trim()
     }).then(response => {
       const data = response.data;
       if (!Array.isArray(data?.matches)) throw new Error('매치 목록 응답 형식을 확인해주세요.');

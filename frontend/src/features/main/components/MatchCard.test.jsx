@@ -24,7 +24,7 @@ test.each([
   [12, 12, 100, 'red'],
   [13, 12, 100, 'red'],
 ])('shows %s/%s participants with matching progress and color', (currentParticipant, maxParticipant, percent, color) => {
-  const match = toMatchCard({ matchId: 1, title: '풋살', currentParticipant, maxParticipant });
+  const match = toMatchCard({ matchId: 1, title: '풋살', numCurrentParticipant: currentParticipant, maxParticipant });
   render(<MatchCard match={match} />);
   expect(screen.getByText(`참여 인원 ${currentParticipant}/${maxParticipant}명`)).toBeInTheDocument();
   const progress = screen.getByRole('progressbar');
