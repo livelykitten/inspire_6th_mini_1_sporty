@@ -1,6 +1,7 @@
 package com.example.sporty.features.ai.agent;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
@@ -67,14 +68,18 @@ public class MatchDraftAiAgent {
 
     // 폼에 바로 넣을 수 있게 보정: 종료 시각 기본값(시작 + 2시간), 성별 기본값(MIXED), 글자 수 제한
     static MatchRequestDto complete(MatchRequestDto draft) {
+        LocalDateTime startAt = draft.getStartAt();
         LocalDateTime endAt = draft.getEndAt();
-        if (draft.getStartAt() != null && (endAt == null || !endAt.isAfter(draft.getStartAt()))) {
-            endAt = draft.getStartAt().plusHours(DEFAULT_MATCH_HOURS);
+        if (startAt != null && (endAt == null || !endAt.isAfter(startAt))) {
+            // 시각을 말하지 않아 00:00이면 종료도 00:00으로 둬서 사용자가 폼에서 직접 고치게 한다.
+            endAt = startAt.toLocalTime().equals(LocalTime.MIDNIGHT)
+                    ? startAt
+                    : startAt.plusHours(DEFAULT_MATCH_HOURS);
         }
         GenderGroup genderGroup = draft.getGenderGroup() != null ? draft.getGenderGroup() : GenderGroup.MIXED;
         return MatchRequestDto.builder()
                 .sportType(draft.getSportType()).region(draft.getRegion())
-                .startAt(draft.getStartAt()).endAt(endAt)
+                .startAt(startAt).endAt(endAt)
                 .maxParticipant(draft.getMaxParticipant()).skillLevel(draft.getSkillLevel())
                 .genderGroup(genderGroup)
                 .title(cut(draft.getTitle(), TITLE_MAX))
