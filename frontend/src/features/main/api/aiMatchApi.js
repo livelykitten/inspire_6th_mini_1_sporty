@@ -8,6 +8,7 @@
  * DTO 확정 후 MainPage.searchHandler의 요청 본문과 이 파일의 두 변환 함수를 수정한다.
  */
 
+import api from '../../../api/axios';
 import { formatMatchDate, formatMatchLocation } from '../utils/matchDisplay';
 
 const SKILL_LABELS = { BEGINNER: '초급', INTERMEDIATE: '중급', ADVANCED: '고급' };
@@ -63,4 +64,18 @@ export function toMatchCard(match) {
     genderGroup: match.genderGroup,
     genderGroupLabel: GENDER_LABELS[match.genderGroup] || '성별 구성 정보 없음 ',
   };
+}
+
+// [AI-01] AI 매치 초안 생성
+// MainPage.generateHandler가 prepareAiMatchDraft로 넘길 응답 본문 { initialValues }를 반환한다.
+// 실패 메시지는 AISearchBox가 입력창 아래에 표시한다.
+export async function draftAiMatch(prompt) {
+  try {
+    const { data } = await api.post('/api/ai/matches', { prompt });
+    return data;
+  } catch (error) {
+    if (error.response?.status === 401) throw new Error('로그인 후 AI 매치 생성을 이용할 수 있습니다.');
+    const message = error.response?.data?.message;
+    throw new Error(message || '매치 초안을 만들지 못했습니다. 잠시 후 다시 시도해주세요.');
+  }
 }

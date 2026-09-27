@@ -99,8 +99,7 @@ const MainPage = ({
       if (onGenerate && result == null) throw new Error('매치 생성 조건 응답이 없습니다.');
       const aiDraft = prepareAiMatchDraft(query, result);
       // 다른 라우트에는 props를 직접 넘길 수 없어 state를 사용한다.
-      // [AI-03] 현재는 state.aiDraft 전달까지만 구현되어 있으며 생성 폼 자동 입력은 미연결이다.
-      // 생성 담당자가 MatchCreatePage에서 초안을 읽어 MatchForm의 initialValues/selectedFacility props로 연결해야 한다.
+      // MatchCreatePage가 state.aiDraft를 읽어 MatchForm의 initialValues/selectedFacility로 전달한다.
       moveUrl('/matches/new', {
         state: {
           aiDraft
