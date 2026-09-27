@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.example.sporty.features.ai.tools.MatchAiTool;
+import com.example.sporty.features.ai.tools.MatchDraftAiTool;
 
 @Configuration 
 public class AiAgentConfig {
@@ -13,5 +14,11 @@ public class AiAgentConfig {
     @Bean
     public ChatClient matchChatClient(ChatClient.Builder builder, MatchAiTool matchAITool) {
         return builder.defaultTools(matchAITool).build();
+    }
+
+    // MatchDraftAiAgent의 ChatClient 변수명과 같아야 함
+    @Bean
+    public ChatClient matchDraftChatClient(ChatClient.Builder builder, MatchDraftAiTool matchDraftAiTool) {
+        return builder.defaultTools(matchDraftAiTool).build();
     }
 }

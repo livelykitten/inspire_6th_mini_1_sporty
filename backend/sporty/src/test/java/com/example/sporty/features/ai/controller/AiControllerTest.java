@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.sporty.features.ai.agent.MatchAiAgent;
+import com.example.sporty.features.ai.agent.MatchDraftAiAgent;
 import com.example.sporty.features.commons.exception.ai.AiSearchException;
 import com.example.sporty.features.commons.handler.GlobalExceptionHandler;
 
@@ -30,12 +31,15 @@ class AiControllerTest {
     @Mock
     private MatchAiAgent matchAiAgent;
 
+    @Mock
+    private MatchDraftAiAgent matchDraftAiAgent;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         // Spring 전체를 띄우지 않고 AiController만으로 HTTP 요청을 흉내 낸다.
-        mockMvc = MockMvcBuilders.standaloneSetup(new AiController(matchAiAgent))
+        mockMvc = MockMvcBuilders.standaloneSetup(new AiController(matchAiAgent, matchDraftAiAgent))
                 .setControllerAdvice(new GlobalExceptionHandler())   // 공통 핸들러 연결
                 .build();
     }

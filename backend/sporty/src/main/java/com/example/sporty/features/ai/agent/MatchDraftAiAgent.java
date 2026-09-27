@@ -6,7 +6,10 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 import com.example.sporty.features.ai.util.PromptDateTable;
+import com.example.sporty.features.commons.exception.ai.AiDraftException;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchRequestDto;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -36,9 +39,11 @@ public class MatchDraftAiAgent {
                 3. 지역은 서울시 자치구 이름으로 변환한다. 예: 강남역 → 강남구, 잠실 → 송파구
                 4. 날짜는 직접 계산하지 않고 아래 날짜표에서 찾아 사용한다.
                 5. 시각은 24시간제로 변환한다. 예: 저녁 7시 → 19:00
-                6. 종료 시각을 말하지 않았으면 endAt은 채우지 않는다.
-                7. title은 지역, 종목, 분위기를 담아 30자 안팎으로 작성한다.
-                8. description은 참가자에게 보내는 친근한 안내를 2~3문장으로 작성한다.
+                6. 날짜만 있고 시각을 말하지 않았으면 시작 시각은 00:00으로 한다.
+                7. 종료 시각을 말하지 않았으면 endAt은 채우지 않는다.
+                8. 성별 구성은 남성만, 여성만처럼 문장에 있을 때만 채운다.
+                9. title은 지역, 종목, 분위기를 담아 30자 안팎으로 작성한다.
+                10. description은 참가자에게 보내는 친근한 안내를 2~3문장으로 작성한다.
                     문장에 없는 사실(가격, 시설, 준비물 등)은 지어내지 않는다.
 
                 ## 날짜표
@@ -60,22 +65,48 @@ public class MatchDraftAiAgent {
         return complete(draft);
     }
 
-    // 폼에 바로 넣을 수 있게 보정: 종료 시각 기본값(시작 + 2시간), 글자 수 제한
+    // 폼에 바로 넣을 수 있게 보정: 종료 시각 기본값(시작 + 2시간), 성별 기본값(MIXED), 글자 수 제한
     static MatchRequestDto complete(MatchRequestDto draft) {
         LocalDateTime endAt = draft.getEndAt();
         if (draft.getStartAt() != null && (endAt == null || !endAt.isAfter(draft.getStartAt()))) {
             endAt = draft.getStartAt().plusHours(DEFAULT_MATCH_HOURS);
         }
+        GenderGroup genderGroup = draft.getGenderGroup() != null ? draft.getGenderGroup() : GenderGroup.MIXED;
         return MatchRequestDto.builder()
                 .sportType(draft.getSportType()).region(draft.getRegion())
                 .startAt(draft.getStartAt()).endAt(endAt)
                 .maxParticipant(draft.getMaxParticipant()).skillLevel(draft.getSkillLevel())
+                .genderGroup(genderGroup)
                 .title(cut(draft.getTitle(), TITLE_MAX))
                 .description(cut(draft.getDescription(), DESCRIPTION_MAX))
                 .build();
     }
 
-    // toDraft(): MatchAiAgent.toCondition()과 동일한 JSON 변환
-    // hasNoMatchInfo(): 종목, 지역, 시작 일시, 인원, 실력이 모두 null (제목·설명은 AI가 항상 쓰므로 제외)
-    // cut(): null이면 null, 길면 앞에서부터 자름
+    // tool이 호출되면 초안 JSON, 호출되지 않으면 AI의 안내 문장이 온다.
+    private MatchRequestDto toDraft(String result) {
+        if (result == null || result.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(result, MatchRequestDto.class);
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    // tool은 호출됐지만 매치 정보가 하나도 없는 경우 (제목·설명은 AI가 항상 쓰므로 제외)
+    private boolean hasNoMatchInfo(MatchRequestDto draft) {
+        return draft.getSportType() == null
+                && draft.getRegion() == null
+                && draft.getStartAt() == null
+                && draft.getMaxParticipant() == null
+                && draft.getSkillLevel() == null;
+    }
+
+    private static String cut(String text, int max) {
+        if (text == null || text.length() <= max) {
+            return text;
+        }
+        return text.substring(0, max);
+    }
 }
