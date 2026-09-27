@@ -37,6 +37,7 @@ public class MatchAiAgent {
                 3. 지역은 서울시 자치구 이름으로 변환한다. 예: 강남역 → 강남구, 잠실 → 송파구
                 4. 날짜는 직접 계산하지 않고 아래 날짜표에서 찾아 사용한다.
                 5. 기간 표현은 startAt을 시작일 00:00, endAt을 종료일 23:59로 한다.
+                6. 성별 구성은 남자만 → MALE, 여자만 → FEMALE, 남녀 함께·혼성 → MIXED로 변환한다.
 
                 ## 날짜표
                 %s
@@ -76,6 +77,7 @@ public class MatchAiAgent {
                 && condition.getStartAt() == null
                 && condition.getEndAt() == null
                 && condition.getSkillLevel() == null
+                && condition.getGenderGroup() == null
                 && condition.getStatus() == null;
     }
 }

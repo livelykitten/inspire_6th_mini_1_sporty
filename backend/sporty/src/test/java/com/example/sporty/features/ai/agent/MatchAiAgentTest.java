@@ -21,6 +21,7 @@ import com.example.sporty.features.ai.domain.dto.AiSearchConditionDto;
 import com.example.sporty.features.ai.tools.MatchAiTool;
 import com.example.sporty.features.commons.exception.ai.AiSearchException;
 import com.example.sporty.features.commons.util.SportType;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 
@@ -130,5 +131,14 @@ class MatchAiAgentTest {
                 () -> matchAIAgent.search("같이 운동할 사람 있나요"));
 
         assertThat(e.getMessage()).startsWith("검색 조건을 찾지 못했습니다.");
+    }
+
+    @Test
+    @DisplayName("[TC-AI02-09] 성별 구성을 enum으로 추출한다 (여자끼리 → FEMALE)")
+    void extractsGenderGroup() throws Exception {
+        AiSearchConditionDto condition = search("여자끼리 배드민턴 칠 사람");
+
+        assertThat(condition.getSportType()).isEqualTo(SportType.BADMINTON);
+        assertThat(condition.getGenderGroup()).isEqualTo(GenderGroup.FEMALE);
     }
 }

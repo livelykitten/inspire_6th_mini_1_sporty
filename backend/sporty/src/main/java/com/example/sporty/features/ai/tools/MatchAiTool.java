@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.sporty.features.ai.domain.dto.AiSearchConditionDto;
 import com.example.sporty.features.commons.util.SportType;
+import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 
@@ -18,7 +19,7 @@ public class MatchAiTool {
     // TODO: MatchService.search()가 완성되면 주입받아 호출
     // private final MatchService matchService;
 
-    @Tool(description = "종목, 지역, 날짜, 실력, 모집 상태 조건으로 운동 매치를 검색한다.",
+    @Tool(description = "종목, 지역, 날짜, 실력, 성별 구성, 모집 상태 조건으로 운동 매치를 검색한다.",
         returnDirect = true)
     public AiSearchConditionDto searchMatches(
             @ToolParam(required = false, description = "운동 종목") SportType sportType,
@@ -26,6 +27,7 @@ public class MatchAiTool {
             @ToolParam(required = false, description = "검색 시작 일시") LocalDateTime startAt,
             @ToolParam(required = false, description = "검색 종료 일시") LocalDateTime endAt,
             @ToolParam(required = false, description = "실력 수준") SkillLevel skillLevel,
+            @ToolParam(required = false, description = "참가자 성별 구성") GenderGroup genderGroup,
             @ToolParam(required = false, description = "모집 상태") MatchStatus status) {
 
         AiSearchConditionDto condition = AiSearchConditionDto.builder()
@@ -34,6 +36,7 @@ public class MatchAiTool {
                 .startAt(startAt)
                 .endAt(endAt)
                 .skillLevel(skillLevel)
+                .genderGroup(genderGroup)
                 .status(status)
                 .build();
 
