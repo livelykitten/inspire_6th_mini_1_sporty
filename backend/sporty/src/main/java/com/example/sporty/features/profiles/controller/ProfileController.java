@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/profiles/{profileId}")
+@RequestMapping("api/profiles")
 public class ProfileController {
 
     private final ProfileService profileService;
 
     // [PR-02] 프로필 조회
-    @GetMapping
+    @GetMapping("/{profileId}")
     public ResponseEntity<ProfileDetailResponseDto> getProfile(@PathVariable("profileId") Long profileId) {
 
         ProfileDetailResponseDto response = profileService.getProfile(profileId);
