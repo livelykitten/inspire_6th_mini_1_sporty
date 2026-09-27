@@ -29,7 +29,7 @@ public class UserController {
     }
 
     // [USR-06] 회원 정보 조회
-    @GetMapping()
+    @GetMapping("/me")
     public ResponseEntity<UserInfoResponseDto> getMyInfo(@AuthenticationPrincipal Long userId) {
 
         return ResponseEntity
