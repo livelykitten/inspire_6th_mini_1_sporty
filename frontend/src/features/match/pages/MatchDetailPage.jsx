@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getMatchDetail } from '../api/matchApi';
+import ProfileModal from '../../profiles/components/ProfileModal';
 import logo from '../assets/logo.png';
 import '../css/match.css';
 import '../css/matchDetail.css';
@@ -44,14 +45,14 @@ function Avatar({ participant }) {
   );
 }
 
-function Participant({ participant, preview }) {
+function Participant({ participant, preview, onProfileClick }) {
   const name = participant.nickname || '프로필 정보 없음';
   return (
     <li className={`detail-person ${participant.role === 'OWNER' ? 'detail-person-owner' : ''}`}>
       <Avatar participant={participant} />
       <div>
         {participant.profileId && !preview
-          ? <Link to={`/profiles/${participant.profileId}`}>{name}</Link>
+          ? <button type="button" className="detail-profile-button" aria-haspopup="dialog" onClick={() => onProfileClick(participant.profileId)}>{name}</button>
           : <strong>{name}</strong>}
         <span className="detail-person-role">{participant.role === 'OWNER' ? '매치 생성자' : '참가자'}</span>
       </div>
@@ -138,6 +139,8 @@ export default function MatchDetailPage({ previewMatch }) {
 }
 
 function MatchDetailContent({ match, preview }) {
+  // [PR-02] 선택한 참가자의 프로필 ID. null이면 모달을 닫고, 로그인 안내/조회는 모달이 처리한다.
+  const [selectedProfileId, setSelectedProfileId] = useState(null);
   const participants = Array.isArray(match.participants) ? match.participants : null;
   const owners = participants?.filter(person => person.role === 'OWNER') || [];
   const members = participants?.filter(person => person.role !== 'OWNER') || [];
@@ -193,8 +196,8 @@ function MatchDetailContent({ match, preview }) {
           <section className="match-section detail-section" aria-labelledby="detail-participants-title">
             <div className="detail-section-title"><h2 id="detail-participants-title"><span className="detail-section-symbol" aria-hidden="true">♧</span>참여 인원 현황</h2><span>{current === null ? '인원 정보 없음' : `${current}명 참여 중`}</span></div>
             {participants === null ? <p className="detail-empty">참가자 정보를 확인할 수 없습니다.</p> : participants.length === 0 ? <p className="detail-empty">아직 참여한 사람이 없습니다.</p> : <>
-              {owners.length > 0 && <ul className="detail-owner-list">{owners.map((person, index) => <Participant key={person.profileId ?? `owner-${index}`} participant={person} preview={preview} />)}</ul>}
-              <ul className="detail-member-list">{members.map((person, index) => <Participant key={person.profileId ?? `member-${index}`} participant={person} preview={preview} />)}</ul>
+              {owners.length > 0 && <ul className="detail-owner-list">{owners.map((person, index) => <Participant key={person.profileId ?? `owner-${index}`} participant={person} preview={preview} onProfileClick={setSelectedProfileId} />)}</ul>}
+              <ul className="detail-member-list">{members.map((person, index) => <Participant key={person.profileId ?? `member-${index}`} participant={person} preview={preview} onProfileClick={setSelectedProfileId} />)}</ul>
             </>}
             {match.status === 'RECRUITING' && remaining > 0 && <p className="detail-open-slot"><span aria-hidden="true">＋</span> 함께할 {remaining}명을 기다리고 있어요</p>}
           </section>
@@ -211,6 +214,7 @@ function MatchDetailContent({ match, preview }) {
           <section className="match-section detail-guide"><h2><span aria-hidden="true">✓</span> 참여 전 확인해 주세요</h2><p>매치 일정과 실력 수준을 확인해 주세요.</p><p>준비물과 모임 안내는 매치 상세 내용을 참고해 주세요.</p><p>서로를 배려하며 즐겁게 운동해요.</p></section>
         </aside>
       </div>
+      {selectedProfileId !== null && <ProfileModal profileId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />}
     </>
   );
 }
