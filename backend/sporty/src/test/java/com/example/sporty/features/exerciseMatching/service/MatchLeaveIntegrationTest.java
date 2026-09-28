@@ -16,6 +16,8 @@ import com.example.sporty.features.facilities.domain.entity.ServiceEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -32,6 +34,7 @@ import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchParticipantEntity;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchParticipantRole;
+import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.repository.MatchParticipantRepository;
 import com.example.sporty.features.exerciseMatching.repository.MatchRepository;
 
@@ -101,7 +104,7 @@ class MatchLeaveIntegrationTest {
     }
 
     @Test
-    @DisplayName("[EM07-001] ?? ?? ? ??? ?? ??? ???? ??? ?? ???? ????")
+    @DisplayName("[EM07-001] 탈퇴 후 본인의 참가 정보만 삭제하고 매치와 다른 참가자는 유지한다")
     void leaveCommitsOnlyCurrentParticipantDeletion() {
         matchService.leaveMatch(matchId, userId(2L));
 
@@ -112,13 +115,13 @@ class MatchLeaveIntegrationTest {
                 .containsExactlyInAnyOrder(participantIds.get(0), participantIds.get(2));
         assertThat(matchParticipantRepository.countByMatch_Id(otherMatchId)).isEqualTo(1);
         assertThat(matchRepository.existsById(otherMatchId)).isTrue();
-        // ?? ?? ??? ?? ?? ??? ???? 404 ???.
+        // 순차 중복 요청은 이미 참가 정보가 없으므로 404 예외다.
         assertThatThrownBy(() -> matchService.leaveMatch(matchId, userId(2L)))
                 .isInstanceOf(MatchParticipantNotFoundException.class);
     }
 
     @Test
-    @DisplayName("[EM07-003, EM07-007] OWNER ?? ?? ? ???? ???? ?? ??? ??? ? ??")
+    @DisplayName("[EM07-003, EM07-007] OWNER 탈퇴 실패 후 데이터가 유지되고 매치 삭제로 종료한다")
     void ownerCanDeleteAfterRejectedLeave() {
         assertThatThrownBy(() -> matchService.leaveMatch(matchId, userId(1L)))
                 .isInstanceOf(MatchOwnerCannotLeaveException.class);
@@ -133,13 +136,41 @@ class MatchLeaveIntegrationTest {
     }
 
     @Test
-    @DisplayName("[EM07-004, EM07-005] ????? ?? ??? ?? ?? ? DB? ????")
+    @DisplayName("[EM07-004, EM07-005] 미참여자와 없는 매치의 탈퇴 실패 후 DB를 유지한다")
     void failedLeavePreservesData() {
         assertThatThrownBy(() -> matchService.leaveMatch(matchId, userId(4L)))
                 .isInstanceOf(MatchParticipantNotFoundException.class);
         assertThatThrownBy(() -> matchService.leaveMatch(Long.MAX_VALUE, userId(2L)))
                 .isInstanceOf(MatchNotFoundException.class);
         assertTargetMatchIsUnchanged();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1,RECRUITING", "-1,CLOSED"})
+    @DisplayName("5명 정원에서 탈퇴하면 시작 전에는 재모집하고 시작 후에는 마감을 유지한다")
+    void fullMatchReopensOnlyBeforeStart(int startOffsetHours, MatchStatus expectedStatus) {
+        new TransactionTemplate(transactionManager).executeWithoutResult(transaction -> {
+            MatchEntity match = matchRepository.findById(matchId).orElseThrow();
+            LocalDateTime startAt = LocalDateTime.now().plusHours(startOffsetHours);
+            match.update(match.getTitle(), match.getDescription(), startAt, startAt.plusHours(2),
+                    5, match.getSkillLevel(), match.getGenderGroup());
+            match.closeRecruitment();
+            matchParticipantRepository.saveAll(List.of(
+                    participant(match, 4L, MatchParticipantRole.PARTICIPANT),
+                    participant(match, 5L, MatchParticipantRole.PARTICIPANT)));
+        });
+        assertThat(matchParticipantRepository.countByMatch_Id(matchId)).isEqualTo(5);
+
+        matchService.leaveMatch(matchId, userId(2L));
+
+        assertThat(matchParticipantRepository.countByMatch_Id(matchId)).isEqualTo(4);
+        assertThat(matchRepository.findById(matchId).orElseThrow().getStatus()).isEqualTo(expectedStatus);
+        if (startOffsetHours > 0) {
+            // 재모집 이후 실제로 다른 사용자가 참여할 수 있고, 다시 정원이 차면 마감된다.
+            matchService.joinMatch(matchId, userId(6L));
+            assertThat(matchParticipantRepository.countByMatch_Id(matchId)).isEqualTo(5);
+            assertThat(matchRepository.findById(matchId).orElseThrow().getStatus()).isEqualTo(MatchStatus.CLOSED);
+        }
     }
 
     private void assertTargetMatchIsUnchanged() {

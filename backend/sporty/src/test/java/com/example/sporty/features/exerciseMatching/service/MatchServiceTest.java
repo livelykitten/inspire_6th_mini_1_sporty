@@ -6,6 +6,8 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
@@ -260,6 +263,32 @@ class MatchServiceTest {
         verify(matchRepository).findByIdForUpdate(99999L);
         verifyNoMoreInteractions(matchRepository);
         verifyNoInteractions(matchParticipantRepository, profileRepository);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1,4,RECRUITING", "0,4,CLOSED", "-1,4,CLOSED", "1,5,CLOSED", "1,6,CLOSED"})
+    @DisplayName("마감된 매치는 시작 전이고 탈퇴 후 빈자리가 있을 때만 모집을 재개한다")
+    void leaveReopensOnlyBeforeStartWithVacancy(int startOffsetSeconds, long remainingCount,
+            MatchStatus expectedStatus) {
+        LocalDateTime now = LocalDateTime.of(2026, 9, 28, 19, 0);
+        MatchEntity match = MatchEntity.builder().id(301L).maxParticipant(5)
+                .startAt(now.plusSeconds(startOffsetSeconds)).status(MatchStatus.CLOSED).build();
+        when(matchRepository.findByIdForUpdate(301L)).thenReturn(Optional.of(match));
+        when(matchParticipantRepository.findByMatch_IdAndUserId(301L, 2L))
+                .thenReturn(Optional.of(participant(2L, MatchParticipantRole.PARTICIPANT)));
+        if (startOffsetSeconds > 0) {
+            when(matchParticipantRepository.countByMatch_Id(301L)).thenReturn(remainingCount);
+        }
+
+        try (MockedStatic<LocalDateTime> clock = mockStatic(LocalDateTime.class)) {
+            clock.when(LocalDateTime::now).thenReturn(now);
+            matchService.leaveMatch(301L, 2L);
+        }
+
+        assertThat(match.getStatus()).isEqualTo(expectedStatus);
+        if (startOffsetSeconds <= 0) {
+            verify(matchParticipantRepository, never()).countByMatch_Id(301L);
+        }
     }
 
     private MatchParticipantEntity participant(Long userId, MatchParticipantRole role) {
