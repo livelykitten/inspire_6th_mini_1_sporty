@@ -1,8 +1,25 @@
 import api from '../../../api/axios';
-import { createMatch, searchMatchFacilities, getMatchDetail, modifyMatch, joinMatch, deleteMatch } from './matchApi';
+import { createMatch, searchMatchFacilities, getMatchDetail, modifyMatch, joinMatch, leaveMatch, deleteMatch } from './matchApi';
 
 jest.mock('../../../api/axios', () => ({ post: jest.fn(), get: jest.fn(), put: jest.fn(), delete: jest.fn() }));
 afterEach(() => jest.clearAllMocks());
+
+test('leaves only the current users participation and accepts an empty 204', async () => {
+  api.delete.mockResolvedValue({ status: 204, data: '' });
+  await expect(leaveMatch(101)).resolves.toBeUndefined();
+  expect(api.delete).toHaveBeenCalledWith('/api/matches/101/participants/me');
+});
+
+test('does not report leave success for an unexpected 200 response', async () => {
+  api.delete.mockResolvedValue({ status: 200, data: '<html>frontend fallback</html>' });
+  await expect(leaveMatch(101)).rejects.toThrow('탈퇴 결과');
+});
+
+test.each([401, 403, 404])('preserves leave error %s for the page to handle', async status => {
+  const error = { response: { status } };
+  api.delete.mockRejectedValue(error);
+  await expect(leaveMatch(101)).rejects.toBe(error);
+});
 
 test('posts participation and requires HTTP 201', async () => {
   api.post.mockResolvedValue({ status: 201, data: { matchId: 101, role: 'PARTICIPANT' } });
