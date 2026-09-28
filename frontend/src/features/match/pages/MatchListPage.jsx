@@ -3,7 +3,7 @@ import MatchListFilters from '../components/MatchListFilters';
 import MatchBrowseCard from '../components/MatchBrowseCard';
 import { previewMatches, previewProfile, previewRecommendations } from '../data/matchListPreview';
 import logo from '../assets/logo.png';
-import searchIcon from '../../main/assets/header-search.svg';
+import searchIcon from '../../../components/layout/assets/header-search.svg';
 import '../css/match.css';
 import '../css/matchList.css';
 import useMatchList from '../hooks/useMatchList';
