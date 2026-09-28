@@ -15,7 +15,7 @@
 ## [FC-01] 시설 검색
 
 1. **사용자 입력 → 이동**: `components/layout/Header.jsx`의 `facilityQuery`(문자열)에 상단 검색어를 저장합니다. 검색 버튼/Enter를 누르면 `facilitySearchHandler`가 `/facilities?query=검색어`로 이동합니다. 이 핸들러는 API를 호출하지 않습니다.
-2. **시설 검색 페이지 담당자 작업**: `routes/AppRoutes.jsx`의 `/facilities` 안내 문구를 실제 페이지로 교체합니다. 페이지에서 `useSearchParams`로 `query`를 읽고 시설 조회 API를 호출한 후 결과 state에 담아 목록을 표시합니다. 시설 페이지 자체의 조회 state/핸들러는 아직 없습니다.
+2. **시설 검색 페이지**: `features/facilities/pages/FacilityListPage.jsx`가 `/facilities`를 담당합니다. `useSearchParams`의 `query`는 백엔드 `serviceName` 조건으로 사용합니다.
 3. **현재 재사용 가능한 API**: `features/match/api/matchApi.js`의 `searchMatchFacilities({ query, region })`가 `GET /api/services`로 요청합니다. query는 `serviceName` 쿼리 파라미터, region은 `region` 파라미터로 전달합니다. 둘 다 문자열이며 빈 값은 생략합니다. FC-01 최종 명세가 다르면 이 함수의 URL/파라미터를 맞춥니다.
 4. **받아올 데이터**: 현재 코드는 배열 `[{ serviceId, serviceName, region, locationName }]`을 가정합니다. serviceId는 정수, serviceName은 문자열 필수입니다. region(자치구), locationName(장소명)은 선택 문자열입니다. `toFacilityOption`이 serviceName을 화면의 name으로 바꿉니다.
 5. **생성 폼 내부 검색**: `features/match/components/MatchForm.jsx`의 `search()`가 같은 API를 사용합니다. query/region 입력 → results에 시설 배열 저장 → 클릭한 시설을 facility에 저장 → values.serviceId에 실제 시설 ID를 저장합니다. 시설 선택은 종목을 자동 변경하지 않습니다.
