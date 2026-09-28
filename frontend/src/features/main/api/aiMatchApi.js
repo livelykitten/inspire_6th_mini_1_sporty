@@ -62,7 +62,8 @@ export function toMatchCard(match) {
     currentParticipant: match.numCurrentParticipant,
     maxParticipant: match.maxParticipant,
     genderGroup: match.genderGroup,
-    genderGroupLabel: GENDER_LABELS[match.genderGroup] || '성별 구성 정보 없음 ',
+    // 모르는 값은 null로 두고, 표시 문구는 MatchCard 기본값을 사용한다.
+    genderGroupLabel: GENDER_LABELS[match.genderGroup] ?? null,
   };
 }
 
