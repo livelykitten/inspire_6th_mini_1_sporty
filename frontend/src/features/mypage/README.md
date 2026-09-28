@@ -1,48 +1,28 @@
-# 마이페이지 프론트
+# 마이페이지
 
-`/mypage`는 현재 `preview` 모드다. 예시 데이터를 편집하고 저장하면 화면에만 반영되며 새로고침하면 초기화된다. 실제 회원 정보/프로필 API를 호출하지 않는다.
+`/mypage`는 실제 API를 사용한다. 로그인하지 않으면 `/login`으로 이동하고 로그인 후 돌아온다. `/mypage/preview`는 개발 환경 전용 예시 화면이며 탈퇴/로그아웃은 비활성이다.
 
-## 파일별 담당 지점
+## 연결된 기능
 
-- `pages/MyPage.jsx`: 조회, 입력, 취소, 저장 이벤트 및 화면. 각 state/핸들러에 용도 주석이 있다.
-- `data/previewData.js`: 예시 회원 정보/프로필. 실제 로그인 사용자의 데이터가 아니다.
-- `css/mypage.css`: Figma 49:2 배치와 컬러 가이드 2를 적용한 반응형 스타일.
-- `assets/`: Figma 원본 아이콘.
-- `src/routes/AppRoutes.jsx`: 실제 API 함수 연결 및 preview 제거 지점.
+- [USR-06] `api/myPageApi.js`의 loadMyPage: GET /api/users/me. 평면 응답을 user(이메일·성별)와 profile(닉네임·자치구·선호 종목)로 나눈다. 응답에 없는 가입일/상태는 표시하지 않는다.
+- [PR-01] saveProfile: PUT /api/profiles/me. `{ nickname, district, sportTypes }` 전송, 응답의 preferenceSports를 폼에 반영한다. 사진 업로드/기본 이미지 버튼/이미지 요청 필드는 제거했다.
+- [USR-03] 기존 auth/components/LogoutButton 재사용. POST /api/auth/logout 후 세션 정리.
+- [USR-04] components/WithdrawalButton: 비밀번호 확인 dialog에서 DELETE /api/users/me에 `{ password }` 전송. 204 성공 후에만 at/rt/userId를 지우고 로그인 화면으로 이동. 실패 시 세션 유지. 비밀번호는 모달 종료 시 초기화한다.
 
-## 1. 회원정보·프로필 조회 연결
+## 내 정보 / 내 매치 목록
 
-API 명세 확정 후 별도 API 모듈에 `loadMyPage({ signal })` 함수를 만들고 `<MyPage loadMyPage={loadMyPage} saveProfile={saveProfile} />`로 전달한다. 공통 `src/api/axios.js`를 사용한다. 경로/HTTP 메서드는 아직 정해지지 않아 임의 요청을 만들지 않았다.
+MyPage의 activeTab이 왼쪽 메뉴를 관리한다. 탭을 바꿔도 수정 중인 폼은 유지한다. 취소는 마지막 저장/조회 값으로 복구한다.
 
-함수는 Promise로 다음 객체를 반환한다. user와 profile이 별도 API라면 함수 안에서 조회하고 합쳐 반환한다. axios response 전체가 아닌 아래 데이터를 반환해야 한다.
+내 매치 목록은 생성·참여 모두 표시하도록 components/MyMatches.jsx에 준비했다. 아직 전용 API가 없어 현재는 조회 준비 중 안내가 나온다. 전체 공개 목록으로 대체하거나 임의 경로를 호출하지 않는다.
 
-```js
-{
-  user: { email: 'sporty@example.com', gender: 'MALE', status: 'ACTIVE', createdAt: '2026-09-01T10:00:00' },
-  profile: { nickname: '성수동매치', district: 'SEONGDONG', preferenceSports: ['SOCCER'], imageUrl: null }
-}
-```
-
-`signal`을 axios 요청 옵션에 전달한다. 회원 정보는 읽기 전용이며 비밀번호는 조회/표시하지 않는다. 프로필 조회값으로 input/select/checkbox를 채운다. 빈 종목은 `[]`, 기본 사진은 `null`로 정규화한다. live 모드에서는 토큰이 없거나 API 401이면 로그인으로 이동한다.
-
-## 2. 프로필 수정 연결
-
-`keyHandler`는 닉네임/자치구, `sportHandler`는 선호 종목, `imageHandler`는 사진 파일을 수정한다. 이 단계에서는 서버 요청이 없다. `saveHandler`가 검증 후 다음 형태로 연결 함수를 호출한다.
+API 구현 후 loadMyMatches({ signal }) 함수를 만들어 MyPage props로 전달한다. 반환 형식:
 
 ```js
-saveProfile({ nickname, district, preferenceSports, imageUrl }, imageFile)
+[{ id: 1, title: '주말 축구', startAt: '2026-10-01T18:00:00', location: '성동구 운동장', role: 'OWNER' }]
 ```
 
-`imageFile`은 새로 선택한 File 또는 null이다. 새 파일이 있으면 업로드한 후 영구 이미지 URL로 저장하거나, 백엔드 명세에 따라 FormData를 사용한다. 기존 `imageUrl`보다 새 파일이 우선이다. 새 파일 없이 `imageUrl: null`이면 기본 이미지로 변경한다. 브라우저 blob URL을 서버로 보내지 않는다.
+role은 OWNER(생성) 또는 PARTICIPANT(참여)이며, 목록 항목은 /matches/:id 상세로 이동한다. 실제 응답 필드가 다르면 연결 함수에서 변환한다. AbortSignal을 axios에 전달하고 실패 시 reject한다. 빈 배열은 참여/생성한 매치가 없다는 안내로 표시한다.
 
-함수는 **저장이 완료된 전체 profile 객체**를 반환한다. 수정 응답이 204이면 저장 후 재조회하여 반환한다. 저장 실패는 reject해야 한다. 그래야 화면에 성공 표시가 나오지 않고 입력값이 유지된다. `DUPLICATE_NICKNAME` 오류 코드는 현재 회원가입과 동일하게 처리하며, 명세 변경 시 분기를 수정한다. 별도 중복 검사 API는 호출하지 않는다. 닉네임 1~50자 기준은 기존 회원가입 기준이며 수정 DTO 확정 시 맞춘다.
+## 실행 시 주의
 
-## 3. 취소·사진·선택지
-
-`cancelHandler`는 마지막 조회/저장 시점으로 폼, 사진, 체크박스를 복구한다. 사진 선택은 JPG/PNG 10MB 이하만 허용한다. 화면 미리보기 URL은 정리한다. 자치구/운동 선택지는 기존 `auth/data/signUpOptions.js`를 재사용한다.
-
-## 4. 로그아웃·회원탈퇴
-
-live 모드에서는 기존 `[USR-03] LogoutButton`을 재사용한다. preview 모드에서는 실제 세션을 종료하지 않도록 비활성 상태다. 회원탈퇴는 이번 조회/프로필 편집 범위에 포함하지 않아 준비 중으로 표시한다. 추후 비밀번호 확인 모달 및 탈퇴 API를 연결한다.
-
-프론트의 로그인 확인은 화면 이동용이다. 실제 본인 확인 및 수정 권한은 서버에서 검증해야 한다.
+현재 프론트 브랜치의 백엔드가 오래된 경우 내 정보/탈퇴/수정 API가 없을 수 있다. 해당 API가 포함된 백엔드를 실행해야 실제 연동이 동작한다. 이번 작업에서는 백엔드 브랜치를 병합하거나 서버를 재시작하지 않았다.

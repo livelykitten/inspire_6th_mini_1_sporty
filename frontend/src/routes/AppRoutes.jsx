@@ -22,8 +22,9 @@ export default function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       {/* [USR-01] 회원가입 화면. 가입 성공 시 기존 /login 경로로 이동한다. */}
       <Route path="/signup" element={<SignUpPage />} />
-      {/* API 준비 후 preview를 제거하고 loadMyPage/saveProfile 함수를 연결한다. */}
-      <Route path="/mypage" element={<MyPage preview />} />
+      {/* [USR-06 / PR-01] 본인 정보 조회 및 프로필 수정 API 연결. */}
+      <Route path="/mypage" element={<MyPage />} />
+      {process.env.NODE_ENV === 'development' && <Route path="/mypage/preview" element={<MyPage preview />} />}
 
       <Route path="/matches/new" element={<RequireMatchAuth><MatchCreatePage /></RequireMatchAuth>} />
       {process.env.NODE_ENV === 'development' && (
