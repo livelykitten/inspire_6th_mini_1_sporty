@@ -16,11 +16,11 @@ import lombok.Getter;
 @Builder
 public class ServiceResponseDto {
 
-    private String serviceId;
+    private Long serviceId;
     private String serviceName;
     private String serviceType;
     private String region;
-    private String placeName;
+    private String locationName;
     private String contact;
     private String status;
     private LocalTime startTime;
@@ -33,11 +33,11 @@ public class ServiceResponseDto {
         LocationEntity location = service.getLocation();
 
         return ServiceResponseDto.builder()
-                .serviceId(service.getServiceId())
+                .serviceId(service.getId())
                 .serviceName(service.getName())
                 .serviceType(location.getFacilityName())
                 .region(location.getRegion())
-                .placeName(location.getName())
+                .locationName(location.getName())
                 .contact(location.getContact())
                 .status(service.getStatus())
                 .startTime(service.getStartTime())
