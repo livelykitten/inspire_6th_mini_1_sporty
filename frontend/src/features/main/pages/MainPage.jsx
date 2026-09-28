@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AISearchBox from '../components/AISearchBox';
 import AIConditionSummary from '../components/AIConditionSummary';
@@ -21,6 +21,16 @@ import '../css/main.css';
  * 예시 제거 시 preview={false}만으로는 부족하다. matches={[]} conditions={[]}도 함께 전달한다.
  * 화면 스타일은 main/css/main.css, 예시 값은 main/data/previewData.js에서 수정한다.
  */
+// [AI-01] 비로그인 상태에서 AI 매치 생성을 누른 문장. 로그인 후 메인에 돌아오면 입력창에 다시 채운다.
+const AI_PROMPT_KEY = 'aiDraftPrompt';
+const readSavedPrompt = () => {
+  try {
+    return sessionStorage.getItem(AI_PROMPT_KEY) || '';
+  } catch {
+    return '';
+  }
+};
+
 const MainPage = ({
   matches = previewMatches,
   conditions = previewConditions,
@@ -43,6 +53,11 @@ const MainPage = ({
   const visibleConditions = searchResults?.conditions ?? conditions;
   const isPreview = preview && searchStatus === 'idle';
   const moveUrl = useNavigate();
+  // [AI-01] string: 로그인 전에 저장한 생성 문장. 처음 화면을 열 때 한 번만 읽는다.
+  const [savedPrompt] = useState(readSavedPrompt);
+  useEffect(() => {
+    try { sessionStorage.removeItem(AI_PROMPT_KEY); } catch { /* 저장소를 못 쓰면 복원 없이 진행 */ }
+  }, []);
 
   // [AI-02] AI 매치 검색
   // 검색할 때만 AI-02를 호출한다. 예시 3개 제한은 서버에서 받은 결과 개수에는 적용하지 않는다.
@@ -91,6 +106,13 @@ const MainPage = ({
   // 미연결 상태에서는 원문만 전달한다. 임시 정규식으로 자연어를 해석하거나 등록 API를 호출하지 않는다.
   const generateHandler = query => {
     if (searching.current) return;
+    // [AI-01] 비로그인 사용자는 AI를 호출하지 않고 문장만 저장한 뒤 로그인 화면으로 보낸다.
+    if (!localStorage.getItem('at')) {
+      try { sessionStorage.setItem(AI_PROMPT_KEY, query); } catch { /* 저장 실패 시 문장 없이 이동 */ }
+      window.alert('AI 매치 생성은 로그인 후 이용할 수 있습니다. 로그인 화면으로 이동합니다.');
+      moveUrl('/login?redirect=%2F', { state: { from: '/' } });
+      return;
+    }
     searching.current = true;
     setGenerating(true);
     return Promise.resolve().then(() => {
@@ -124,7 +146,7 @@ const MainPage = ({
             </section>
             {/* 최초에는 예시 3개를 표시하고, AI 검색 성공 후에는 서버 응답으로 교체한다. */}
             {isPreview && <p className="ms-preview-note">예시 매치 3개입니다. AI 검색을 누르면 실제 검색 결과로 바뀝니다.</p>}
-            <AISearchBox onSearch={searchHandler} onGenerate={generateHandler} pending={pending || generating || searchStatus === 'loading'} generating={generating} />
+            <AISearchBox onSearch={searchHandler} onGenerate={generateHandler} initialQuery={savedPrompt} pending={pending || generating || searchStatus === 'loading'} generating={generating} />
             {/* 조건과 매치 목록은 같은 응답으로 함께 갱신해 서로 다른 검색 결과가 섞이지 않게 한다. */}
             {searchStatus !== 'loading' && searchStatus !== 'error' && visibleConditions.length > 0 && <AIConditionSummary conditions={visibleConditions} onEdit={onEdit} />}
             {/* 메인에서는 추천 매치를 보여주고, 전체 매치 탐색은 아래 링크로 별도 페이지에 연결한다. */}
