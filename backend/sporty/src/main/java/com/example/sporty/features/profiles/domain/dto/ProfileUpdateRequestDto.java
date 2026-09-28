@@ -1,7 +1,7 @@
 package com.example.sporty.features.profiles.domain.dto;
 
 import com.example.sporty.features.commons.util.SportType;
-import com.example.sporty.features.commons.util.District;
+import com.example.sporty.features.profiles.domain.entity.District;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

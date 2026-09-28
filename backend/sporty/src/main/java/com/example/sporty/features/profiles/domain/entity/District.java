@@ -1,4 +1,4 @@
-package com.example.sporty.features.commons.util;
+package com.example.sporty.features.profiles.domain.entity;
 
 import lombok.Getter;
 
