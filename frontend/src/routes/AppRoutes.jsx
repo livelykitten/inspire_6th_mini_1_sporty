@@ -9,6 +9,7 @@ import MainPage from '../features/main/pages/MainPage';
 import MatchListPage from '../features/match/pages/MatchListPage';
 import MyPage from '../features/mypage/pages/MyPage';
 import FacilityListPage from '../features/facilities/pages/FacilityListPage';
+import FacilityDetailPage from '../features/facilities/pages/FacilityDetailPage';
 import { draftAiMatch } from '../features/main/api/aiMatchApi';
 
 export default function AppRoutes() {
@@ -38,7 +39,8 @@ export default function AppRoutes() {
 
       {/* [FC-01] 시설 검색 — Header의 query를 초기 검색어로 사용한다. */}
       <Route path="/facilities" element={<FacilityListPage />} />
-      <Route path="/facilities/:serviceId" element={<div>시설 상세</div>} />
+      {/* [FC-02] 시설 상세 — Path의 serviceId는 DB PK다. */}
+      <Route path="/facilities/:serviceId" element={<FacilityDetailPage />} />
 
       <Route path="/profiles/:userId" element={<div>프로필 상세</div>} />
 

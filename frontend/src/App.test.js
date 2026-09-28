@@ -7,6 +7,7 @@ import { fetchFacilities } from './features/facilities/api/facilityApi';
 jest.mock('./features/match/api/matchListApi', () => ({ fetchMatchList: jest.fn(), fetchRecommendedMatches: jest.fn() }));
 jest.mock('./features/facilities/api/facilityApi', () => ({
   fetchFacilities: jest.fn(),
+  fetchFacility: jest.fn(),
   facilityRequestError: () => '체육시설을 불러오지 못했습니다.',
 }));
 

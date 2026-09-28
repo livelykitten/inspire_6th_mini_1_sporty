@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import headerSearch from './assets/header-search.svg';
+import logo from '../../features/match/assets/logo.png';
 import './header.css';
 
 // [#54][FC-01] Router 내부에서 <Header />로 사용한다. main.css 없이도 독립적으로 표시된다.
@@ -42,9 +43,8 @@ export default function Header() {
   return (
         <header className="sporty-header">
             <div className="sporty-header-container sporty-header-inner">
-                <Link className="sporty-header-brand" to="/">
-                    <span>S</span>
-                    <strong>Sporty</strong>
+                <Link className="sporty-header-brand" to="/" aria-label="SPORTY 홈">
+                    <img src={logo} width="107" height="32" alt="SPORTY" />
                 </Link>
                 {/* 폼 제출을 사용해 검색 버튼 클릭과 Enter 입력이 같은 경로로 이동하도록 한다. */}
                 <form className="sporty-header-search" role="search" aria-label="체육시설 검색" onSubmit={facilitySearchHandler}>
