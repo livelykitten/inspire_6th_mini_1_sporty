@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,9 +20,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchOwnerCannotLeaveException;
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchParticipantNotFoundException;
 import com.example.sporty.features.commons.util.SportType;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchDetailResponseDto;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
@@ -193,6 +199,96 @@ class MatchServiceTest {
 
         assertThat(matchService.getMatchDetail(101L, null).getParticipants().get(0).getProfileId())
                 .isEqualTo(2147483648L);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1,RECRUITING", "-1,CLOSED"})
+    @DisplayName("[EM07-001, EM07-002] 시작 전후 모두 본인의 참가 정보만 삭제하고 매치는 유지한다")
+    void leaveMatchDeletesOnlyCurrentParticipant(int startOffsetHours, MatchStatus status) {
+        MatchEntity match = MatchEntity.builder().id(301L)
+                .startAt(LocalDateTime.now().plusHours(startOffsetHours))
+                .status(status).build();
+        MatchParticipantEntity participant = MatchParticipantEntity.builder()
+                .id(10L).match(match).user(UserEntity.builder().id(2L).build()).role(MatchParticipantRole.PARTICIPANT).build();
+        when(matchRepository.findByIdForUpdate(301L)).thenReturn(Optional.of(match));
+        when(matchParticipantRepository.findByMatch_IdAndUserId(301L, 2L))
+                .thenReturn(Optional.of(participant));
+
+        matchService.leaveMatch(301L, 2L);
+
+        verify(matchRepository).findByIdForUpdate(301L);
+        verify(matchParticipantRepository).findByMatch_IdAndUserId(301L, 2L);
+        verify(matchParticipantRepository).delete(participant);
+        verifyNoMoreInteractions(matchRepository, matchParticipantRepository);
+        verifyNoInteractions(profileRepository);
+        assertThat(match.getStatus()).isEqualTo(status);
+    }
+
+    @Test
+    @DisplayName("[EM07-003] OWNER 탈퇴 시 참가 정보와 매치를 삭제하지 않는다")
+    void leaveMatchRejectsOwner() {
+        when(matchRepository.findByIdForUpdate(303L)).thenReturn(Optional.of(MatchEntity.builder().id(303L).build()));
+        when(matchParticipantRepository.findByMatch_IdAndUserId(303L, 1L))
+                .thenReturn(Optional.of(participant(1L, MatchParticipantRole.OWNER)));
+
+        assertThrows(MatchOwnerCannotLeaveException.class, () -> matchService.leaveMatch(303L, 1L));
+
+        verify(matchRepository).findByIdForUpdate(303L);
+        verify(matchParticipantRepository).findByMatch_IdAndUserId(303L, 1L);
+        verifyNoMoreInteractions(matchRepository, matchParticipantRepository);
+        verifyNoInteractions(profileRepository);
+    }
+
+    @Test
+    @DisplayName("[EM07-004] 미참여자 탈퇴 시 기존 참가 정보와 매치를 변경하지 않는다")
+    void leaveMatchRejectsNonParticipant() {
+        when(matchRepository.findByIdForUpdate(304L)).thenReturn(Optional.of(MatchEntity.builder().id(304L).build()));
+        when(matchParticipantRepository.findByMatch_IdAndUserId(304L, 5L)).thenReturn(Optional.empty());
+
+        assertThrows(MatchParticipantNotFoundException.class, () -> matchService.leaveMatch(304L, 5L));
+
+        verify(matchRepository).findByIdForUpdate(304L);
+        verify(matchParticipantRepository).findByMatch_IdAndUserId(304L, 5L);
+        verifyNoMoreInteractions(matchRepository, matchParticipantRepository);
+        verifyNoInteractions(profileRepository);
+    }
+
+    @Test
+    @DisplayName("[EM07-005] 없는 매치 탈퇴 시 참가 정보에 접근하지 않는다")
+    void leaveMatchRejectsMissingMatch() {
+        when(matchRepository.findByIdForUpdate(99999L)).thenReturn(Optional.empty());
+
+        assertThrows(MatchNotFoundException.class, () -> matchService.leaveMatch(99999L, 2L));
+
+        verify(matchRepository).findByIdForUpdate(99999L);
+        verifyNoMoreInteractions(matchRepository);
+        verifyNoInteractions(matchParticipantRepository, profileRepository);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1,4,RECRUITING", "0,4,CLOSED", "-1,4,CLOSED", "1,5,CLOSED", "1,6,CLOSED"})
+    @DisplayName("마감된 매치는 시작 전이고 탈퇴 후 빈자리가 있을 때만 모집을 재개한다")
+    void leaveReopensOnlyBeforeStartWithVacancy(int startOffsetSeconds, long remainingCount,
+            MatchStatus expectedStatus) {
+        LocalDateTime now = LocalDateTime.of(2026, 9, 28, 19, 0);
+        MatchEntity match = MatchEntity.builder().id(301L).maxParticipant(5)
+                .startAt(now.plusSeconds(startOffsetSeconds)).status(MatchStatus.CLOSED).build();
+        when(matchRepository.findByIdForUpdate(301L)).thenReturn(Optional.of(match));
+        when(matchParticipantRepository.findByMatch_IdAndUserId(301L, 2L))
+                .thenReturn(Optional.of(participant(2L, MatchParticipantRole.PARTICIPANT)));
+        if (startOffsetSeconds > 0) {
+            when(matchParticipantRepository.countByMatch_Id(301L)).thenReturn(remainingCount);
+        }
+
+        try (MockedStatic<LocalDateTime> clock = mockStatic(LocalDateTime.class)) {
+            clock.when(LocalDateTime::now).thenReturn(now);
+            matchService.leaveMatch(301L, 2L);
+        }
+
+        assertThat(match.getStatus()).isEqualTo(expectedStatus);
+        if (startOffsetSeconds <= 0) {
+            verify(matchParticipantRepository, never()).countByMatch_Id(301L);
+        }
     }
 
     private MatchParticipantEntity participant(Long userId, MatchParticipantRole role) {

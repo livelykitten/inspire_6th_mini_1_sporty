@@ -138,13 +138,12 @@ public class MatchController {
         return ResponseEntity.status(HttpStatus.CREATED).body(matchService.joinMatch(matchId, userId));
     }
 
-    // EM-07: 운동 매치 탈퇴. 구현 후 204,
-    // 인증실패/매치 생성자 탈퇴 불가/매치 또는 참가정보 없음 일 때 401/403/404
+    // EM-07: 일반 참가자 탈퇴. 성공 204, 인증/OWNER/매치·참가 정보 오류는 401/403/404.
     @DeleteMapping("/{matchId}/participants/me")
-    public ResponseEntity<Void> leaveMatch(@PathVariable("matchId") Long matchId) {
-        // TODO: 인증된 사용자 정보 전달 및 Service 탈퇴 처리 연결.
-        // TODO: 인증 실패 401, 매치/참가 정보 없음 404 처리. 일반 참가자는 경기 시작 후에도 탈퇴 가능.
-
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    public ResponseEntity<Void> leaveMatch(
+            @PathVariable("matchId") Long matchId,
+            @AuthenticationPrincipal Long userId) {
+        matchService.leaveMatch(matchId, userId);
+        return ResponseEntity.noContent().build();
     }
 }

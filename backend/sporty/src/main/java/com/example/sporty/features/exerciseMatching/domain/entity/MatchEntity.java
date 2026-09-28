@@ -113,6 +113,11 @@ public class MatchEntity {
         this.status = MatchStatus.CLOSED;
     }
 
+    // Match의 Status를 RECRUITING 로 변경하는 메서드
+    public void reopenRecruitment() {
+        this.status = MatchStatus.RECRUITING;
+    }
+
     public void update(
             String title,
             String description,
