@@ -6,7 +6,7 @@ export default function MatchBrowseCard({ match, recommended = false, preview = 
     <div className="ml-card-tags"><span className="ml-tag">{match.sport || '종목 정보 없음'}</span><span className={`ml-status ${match.closed ? 'is-closed' : ''}`}>{match.status || '상태 정보 없음'}</span></div>
     <h3>{match.title}</h3>
     <p className="ml-location">⌖ {match.location || '장소 정보 없음'}</p>
-    <div className="ml-card-meta"><span>{match.level || '실력 정보 없음'} · {match.gender || '성별 정보 없음'}</span><span>{match.distance || '거리 정보 없음'}</span></div>
+    <div className="ml-card-meta"><span>{match.level || '실력 정보 없음'} · {match.gender || '성별 구성 정보 없음'}</span><span>{match.distance || '거리 정보 없음'}</span></div>
     <p className="ml-description">{match.description || '상세 안내가 없습니다.'}</p>
     <dl className="ml-card-facts"><div><dt>매치 일시</dt><dd>{match.schedule || '일정 정보 없음'}</dd></div><div><dt>취소 마감</dt><dd>{match.deadline || '정보 없음'}</dd></div></dl>
     <div className="ml-owner"><span><small>방장</small> {match.owner || '정보 없음'}</span><strong>{match.fee || '요금 정보 없음'}</strong></div>

@@ -25,7 +25,7 @@ const MatchCard = ({
                     <span className="ms-tag ms-tag-level">{match.level}</span>
                     {/* TODO: aiMatchApi.js의 toMatchCard에서 genderGroupLabel을 전달하세요. */}
                     <span className="ms-tag ms-tag-gender" aria-label={`성별 구성: ${match.genderGroupLabel || '정보 없음'}`}>
-                        {match.genderGroupLabel || '성별 정보 없음'}
+                        {match.genderGroupLabel || '성별 구성 정보 없음'}
                     </span>
                 </div>
                 {Number.isFinite(match.score) && <span className="ms-score">매칭 적합도 {match.score}%</span>}

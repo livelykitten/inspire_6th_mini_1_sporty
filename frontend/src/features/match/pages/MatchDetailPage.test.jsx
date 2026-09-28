@@ -63,8 +63,106 @@ test.each([
   expect(await screen.findByRole('button', { name: label })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: label }));
   expect(joinMatch).not.toHaveBeenCalled();
+  expect(screen.queryByRole('button', { name: '매치 삭제하기' })).not.toBeInTheDocument();
+  expect(deleteMatch).not.toHaveBeenCalled();
 });
 
+test.each(['RECRUITING', 'CLOSED'])('lets the owner cancel deletion even when recruitment is %s or full', async status => {
+  localStorage.setItem('at', 'token');
+  getMatchDetail.mockResolvedValue({ ...match, status, currentParticipantCount: 10, isOwner: true, isParticipant: true });
+  jest.spyOn(window, 'confirm').mockReturnValue(false);
+  showPage();
+  const button = await screen.findByRole('button', { name: '매치 삭제하기' });
+  expect(button).toBeEnabled();
+  fireEvent.click(button);
+  expect(window.confirm).toHaveBeenCalledTimes(1);
+  expect(deleteMatch).not.toHaveBeenCalled();
+  expect(button).toBeEnabled();
+});
+
+test('blocks repeated clicks while deleting and shows success before moving to the list', async () => {
+  localStorage.setItem('at', 'token');
+  getMatchDetail.mockResolvedValue({ ...match, isOwner: true, isParticipant: true });
+  jest.spyOn(window, 'confirm').mockReturnValue(true);
+  jest.spyOn(window, 'alert').mockImplementation(() => {
+    expect(screen.getByRole('heading', { name: match.title })).toBeInTheDocument();
+  });
+  let finishDelete;
+  deleteMatch.mockImplementation(() => new Promise(resolve => { finishDelete = resolve; }));
+  showPage();
+  const button = await screen.findByRole('button', { name: '매치 삭제하기' });
+  fireEvent.click(button);
+  expect(button).toBeDisabled();
+  expect(button).toHaveTextContent('삭제 중…');
+  fireEvent.click(button);
+  expect(deleteMatch).toHaveBeenCalledTimes(1);
+  expect(deleteMatch).toHaveBeenCalledWith(101);
+  expect(window.alert).not.toHaveBeenCalled();
+  await act(async () => finishDelete());
+  expect(window.alert).toHaveBeenCalledWith('매치가 삭제되었습니다.');
+  expect(await screen.findByText('홈 화면')).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: match.title })).not.toBeInTheDocument();
+});
+
+test.each([
+
+  [403, '이 작업을 수행할 권한이 없습니다.'],
+  [500, '삭제 결과를 확인하지 못했습니다. 새로고침 후 확인해주세요.'],
+  [null, '삭제 결과를 확인하지 못했습니다. 새로고침 후 확인해주세요.'],
+])('shows deletion error %s and allows another attempt', async (status, message) => {
+  localStorage.setItem('at', 'token');
+  getMatchDetail.mockResolvedValue({ ...match, isOwner: true });
+  deleteMatch.mockRejectedValue(status ? { response: { status } } : new Error('network'));
+  jest.spyOn(window, 'confirm').mockReturnValue(true);
+  jest.spyOn(window, 'alert').mockImplementation(() => {});
+  showPage();
+  fireEvent.click(await screen.findByRole('button', { name: '매치 삭제하기' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent(message);
+  expect(screen.getByRole('heading', { name: match.title })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '매치 삭제하기' })).toBeEnabled();
+});
+
+test('explains a missing match and returns to the list after a deletion 404', async () => {
+  localStorage.setItem('at', 'token');
+  getMatchDetail.mockResolvedValue({ ...match, isOwner: true });
+  deleteMatch.mockRejectedValue({ response: { status: 404 } });
+  jest.spyOn(window, 'confirm').mockReturnValue(true);
+  jest.spyOn(window, 'alert').mockImplementation(() => {});
+  showPage();
+  fireEvent.click(await screen.findByRole('button', { name: '매치 삭제하기' }));
+  expect(await screen.findByText('홈 화면')).toBeInTheDocument();
+  expect(window.alert).toHaveBeenCalledWith('매치를 찾을 수 없습니다.');
+});
+
+test('does not redirect a different match page when an earlier deletion finishes', async () => {
+  localStorage.setItem('at', 'token');
+  getMatchDetail.mockResolvedValueOnce({ ...match, isOwner: true })
+    .mockResolvedValueOnce({ ...match, matchId: 102, title: '다른 매치 제목' });
+  jest.spyOn(window, 'confirm').mockReturnValue(true);
+  jest.spyOn(window, 'alert').mockImplementation(() => {});
+  let finishDelete;
+  deleteMatch.mockImplementation(() => new Promise(resolve => { finishDelete = resolve; }));
+  showPage();
+  fireEvent.click(await screen.findByRole('button', { name: '매치 삭제하기' }));
+  fireEvent.click(screen.getByRole('link', { name: '다른 매치' }));
+  expect(await screen.findByRole('heading', { name: '다른 매치 제목' })).toBeInTheDocument();
+  await act(async () => finishDelete());
+  expect(window.alert).not.toHaveBeenCalled();
+  expect(screen.getByRole('heading', { name: '다른 매치 제목' })).toBeInTheDocument();
+});
+
+test('redirects an expired deletion session to login and clears the token', async () => {
+  localStorage.setItem('at', 'expired');
+  getMatchDetail.mockResolvedValue({ ...match, isOwner: true });
+  deleteMatch.mockRejectedValue({ response: { status: 401 } });
+  jest.spyOn(window, 'confirm').mockReturnValue(true);
+  showPage();
+  fireEvent.click(await screen.findByRole('button', { name: '매치 삭제하기' }));
+  expect(await screen.findByText('로그인 화면')).toBeInTheDocument();
+  expect(localStorage.getItem('at')).toBeNull();
+  expect(deleteMatch).toHaveBeenCalledWith(101);
+  expect(window.alert).toHaveBeenCalledWith('인증이 만료되었습니다. 다시 로그인해 주세요.');
+});
 test('shows a specific 404 message without inventing match data', async () => {
   getMatchDetail.mockRejectedValue({ response: { status: 404 } });
   showPage();

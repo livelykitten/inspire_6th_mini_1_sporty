@@ -27,6 +27,7 @@ export async function getMatchDetail(matchId, signal) {
   return data;
 }
 
+
 // [FC-01] 시설 검색 — 생성 폼에서 사용할 시설 응답 변환
 // Keep the facility response mapping here until the ServiceResponse contract is finalized.
 export function toFacilityOption(service) {
