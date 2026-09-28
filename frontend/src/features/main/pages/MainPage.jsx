@@ -58,7 +58,7 @@ const MainPage = ({
     // 수업 방식: 페이지의 핸들러에서 요청 → 응답 데이터 → 상태 변경 순서로 처리한다.
     // onSearch는 테스트/외부 연결용이며, 일반 화면에서는 아래 api.post가 실행된다.
     const request = onSearch ? Promise.resolve().then(() => onSearch(query)) : api.post('/api/ai/matches/search', {
-      query: query.trim()
+      prompt: query.trim()
     }).then(response => {
       const data = response.data;
       if (!Array.isArray(data?.matches)) throw new Error('매치 목록 응답 형식을 확인해주세요.');
@@ -99,8 +99,7 @@ const MainPage = ({
       if (onGenerate && result == null) throw new Error('매치 생성 조건 응답이 없습니다.');
       const aiDraft = prepareAiMatchDraft(query, result);
       // 다른 라우트에는 props를 직접 넘길 수 없어 state를 사용한다.
-      // [AI-03] 현재는 state.aiDraft 전달까지만 구현되어 있으며 생성 폼 자동 입력은 미연결이다.
-      // 생성 담당자가 MatchCreatePage에서 초안을 읽어 MatchForm의 initialValues/selectedFacility props로 연결해야 한다.
+      // MatchCreatePage가 state.aiDraft를 읽어 MatchForm의 initialValues/selectedFacility로 전달한다.
       moveUrl('/matches/new', {
         state: {
           aiDraft

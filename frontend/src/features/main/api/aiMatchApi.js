@@ -4,10 +4,11 @@
  * 흐름: AISearchBox → MainPage.searchHandler(api.post) → 이 파일의 변환 함수 → 조건 요약/카드.
  * 서버 주소·인증 헤더는 src/api/axios.js에서 공통 관리한다.
  * OpenAI 호출과 자연어 정제는 백엔드 책임이며 이 파일은 정제된 JSON만 받는다.
- * 현재 가정한 계약: 요청 { query }, 응답 { conditions, matches }.
+ * 계약: 요청 { prompt }, 응답 { conditions, matches }.
  * DTO 확정 후 MainPage.searchHandler의 요청 본문과 이 파일의 두 변환 함수를 수정한다.
  */
 
+import api from '../../../api/axios';
 import { formatMatchDate, formatMatchLocation } from '../utils/matchDisplay';
 
 const SKILL_LABELS = { BEGINNER: '초급', INTERMEDIATE: '중급', ADVANCED: '고급' };
@@ -56,11 +57,26 @@ export function toMatchCard(match) {
     isFree: typeof match.isFree === 'boolean' ? match.isFree : null,
     score: Number.isFinite(match.score) ? match.score : null,
     distance: Number.isFinite(match.distance) ? match.distance : null,
-    // [AI-02] 참여 인원: 현재 인원 필드명 확정 후 이 매핑을 수정한다.
+    // [AI-02] 참여 인원: 서버 MatchResponseDto는 numCurrentParticipant로 내려준다.
     // 숫자 표시와 진행률 계산은 MatchCard에서 함께 처리한다.
-    currentParticipant: match.currentParticipant,
+    currentParticipant: match.numCurrentParticipant,
     maxParticipant: match.maxParticipant,
     genderGroup: match.genderGroup,
-    genderGroupLabel: GENDER_LABELS[match.genderGroup] || '성별 구성 정보 없음 ',
+    // 모르는 값은 null로 두고, 표시 문구는 MatchCard 기본값을 사용한다.
+    genderGroupLabel: GENDER_LABELS[match.genderGroup] ?? null,
   };
+}
+
+// [AI-01] AI 매치 초안 생성
+// MainPage.generateHandler가 prepareAiMatchDraft로 넘길 응답 본문 { initialValues }를 반환한다.
+// 실패 메시지는 AISearchBox가 입력창 아래에 표시한다.
+export async function draftAiMatch(prompt) {
+  try {
+    const { data } = await api.post('/api/ai/matches', { prompt });
+    return data;
+  } catch (error) {
+    if (error.response?.status === 401) throw new Error('로그인 후 AI 매치 생성을 이용할 수 있습니다.');
+    const message = error.response?.data?.message;
+    throw new Error(message || '매치 초안을 만들지 못했습니다. 잠시 후 다시 시도해주세요.');
+  }
 }
