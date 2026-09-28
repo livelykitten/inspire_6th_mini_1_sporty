@@ -1,9 +1,13 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import MatchDetailPage from './MatchDetailPage';
+import MatchDetailPreviewPage from './MatchDetailPreviewPage';
+import LoginPage from '../../auth/pages/LoginPage';
+import api from '../../../api/axios';
 import { getMatchDetail, joinMatch, deleteMatch } from '../api/matchApi';
 
 jest.mock('../api/matchApi', () => ({ getMatchDetail: jest.fn(), joinMatch: jest.fn(), deleteMatch: jest.fn() }));
+jest.mock('../../../api/axios', () => ({ post: jest.fn(), get: jest.fn() }));
 
 const match = {
   matchId: 101, title: '주말 풋살 모집', description: '함께 운동해요.\n운동화를 준비해 주세요.',
@@ -17,6 +21,7 @@ const match = {
   isOwner: false, isParticipant: false,
 };
 
+beforeEach(() => jest.spyOn(window, 'alert').mockImplementation(() => {}));
 afterEach(() => { jest.resetAllMocks(); jest.restoreAllMocks(); localStorage.clear(); });
 
 function showPage(path = '/matches/101') {
@@ -48,14 +53,16 @@ test('loads publicly and renders API data, mandatory navigation and missing faci
 });
 
 test.each([
-  [{ isOwner: true, isParticipant: true }, '내가 개설한 매치'],
-  [{ isOwner: false, isParticipant: true }, '참가 취소하기'],
+  [{ isOwner: false, isParticipant: true }, '매치 탈퇴하기'],
+  [{ isOwner: false, isParticipant: true, status: 'CLOSED' }, '매치 탈퇴하기'],
   [{ status: 'CLOSED' }, '모집이 마감되었습니다'],
   [{ currentParticipantCount: 10 }, '모집 정원이 찼습니다'],
 ])('uses server membership and recruitment state without enabling pending actions', async (state, label) => {
   getMatchDetail.mockResolvedValue({ ...match, ...state });
   showPage();
   expect(await screen.findByRole('button', { name: label })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: label }));
+  expect(joinMatch).not.toHaveBeenCalled();
 });
 
 test('shows a specific 404 message without inventing match data', async () => {
@@ -148,12 +155,13 @@ test('redirects anonymous join attempts to login without posting', async () => {
   showPage();
   fireEvent.click(await screen.findByRole('button', { name: '참가 신청하기' }));
   expect(await screen.findByText('로그인 화면')).toBeInTheDocument();
+  expect(window.alert).toHaveBeenCalledWith('참가 신청을 하려면 로그인이 필요합니다.');
   expect(joinMatch).not.toHaveBeenCalled();
 });
 
 test('joins once while pending and refreshes membership on success', async () => {
   localStorage.setItem('at', 'token');
-  getMatchDetail.mockResolvedValueOnce(match).mockResolvedValueOnce({ ...match, isParticipant: true, currentParticipantCount: 3 });
+  getMatchDetail.mockResolvedValueOnce(match).mockResolvedValueOnce({ ...match, isParticipant: true, currentParticipantCount: 3, participants: [...match.participants, { profileId: 13, nickname: '새 참가자', role: 'PARTICIPANT' }] });
   let finish;
   joinMatch.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
   showPage();
@@ -163,11 +171,13 @@ test('joins once while pending and refreshes membership on success', async () =>
   expect(joinMatch).toHaveBeenCalledWith(101);
   expect(button).toBeDisabled();
   await act(async () => finish({ matchId: 101 }));
-  expect(await screen.findByRole('button', { name: '참가 취소하기' })).toBeDisabled();
+  expect(window.alert).toHaveBeenCalledWith('참가 신청이 완료되었습니다.');
+  expect(await screen.findByRole('button', { name: '매치 탈퇴하기' })).toBeDisabled();
   expect(screen.getByText('3명 참여 중')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '새 참가자' })).toBeInTheDocument();
 });
 
-test.each([[400, '모집이 마감'], [403, '권한'], [404, '매치를 찾을'], [409, '이미 참가'], [501, '준비 중']])('shows join failure %s', async (status, message) => {
+test.each([[403, '권한'], [501, '준비 중'], [500, '참가 결과'], [undefined, '참가 결과']])('shows join failure %s', async (status, message) => {
   localStorage.setItem('at', 'token');
   getMatchDetail.mockResolvedValue(match);
   joinMatch.mockRejectedValue({ response: { status } });
@@ -185,6 +195,7 @@ test('expired authentication redirects and clears the token', async () => {
   fireEvent.click(await screen.findByRole('button', { name: '참가 신청하기' }));
   expect(await screen.findByText('로그인 화면')).toBeInTheDocument();
   expect(localStorage.getItem('at')).toBeNull();
+  expect(window.alert).toHaveBeenCalledWith('인증이 만료되었습니다. 다시 로그인해 주세요.');
 });
 
 test('owner deletion requires confirmation and navigates home after success', async () => {
@@ -200,6 +211,8 @@ test('owner deletion requires confirmation and navigates home after success', as
   expect(await screen.findByText('홈 화면')).toBeInTheDocument();
   expect(confirm).toHaveBeenCalledTimes(2);
   expect(deleteMatch).toHaveBeenCalledWith(101);
+  expect(window.alert).toHaveBeenCalledWith('매치가 삭제되었습니다.');
+  expect(joinMatch).not.toHaveBeenCalled();
 });
 
 test('non-owners cannot see delete actions', async () => {
@@ -218,4 +231,130 @@ test('failed deletion keeps the detail page and reports the error', async () => 
   fireEvent.click(await screen.findByRole('button', { name: '매치 삭제하기' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('권한');
   expect(screen.getByRole('heading', { name: match.title })).toBeInTheDocument();
+});
+
+test.each(['RECRUITING', 'CLOSED'])('shows only the delete action for this match owner when %s', async status => {
+  getMatchDetail.mockResolvedValue({ ...match, isOwner: true, isParticipant: true, status, currentParticipantCount: 10 });
+  showPage();
+  expect(await screen.findByRole('button', { name: '매치 삭제하기' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: '참가 신청하기' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '매치 탈퇴하기' })).not.toBeInTheDocument();
+});
+
+test('returns to the same detail after login without automatically joining', async () => {
+  getMatchDetail.mockResolvedValue(match);
+  api.post.mockResolvedValue({ status: 200, data: { accessToken: 'test-at', refreshToken: 'test-rt', userId: 3, tokenType: 'Bearer' } });
+  render(
+    <MemoryRouter initialEntries={['/matches/101']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Routes>
+        <Route path="/matches/:matchId" element={<MatchDetailPage />} />
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+  fireEvent.click(await screen.findByRole('button', { name: '참가 신청하기' }));
+  expect(await screen.findByRole('heading', { name: '로그인' })).toBeInTheDocument();
+  fireEvent.change(screen.getByPlaceholderText('이메일 주소를 입력하세요'), { target: { value: 'test@example.com' } });
+  fireEvent.change(screen.getByPlaceholderText('비밀번호를 입력하세요'), { target: { value: 'test-password' } });
+  fireEvent.click(screen.getByRole('button', { name: '로그인' }));
+  expect(await screen.findByRole('heading', { name: match.title })).toBeInTheDocument();
+  expect(getMatchDetail).toHaveBeenLastCalledWith('101', expect.any(AbortSignal));
+  expect(joinMatch).not.toHaveBeenCalled();
+  expect(localStorage.getItem('at')).toBe('test-at');
+});
+
+test.each([
+  [400, 'MATCH_FULL', '모집 정원이 찼습니다.', { currentParticipantCount: 10 }, '모집 정원이 찼습니다'],
+  [400, 'MATCH_RECRUITMENT_CLOSED', '모집이 마감된 매치입니다.', { status: 'CLOSED' }, '모집이 마감되었습니다'],
+  [409, 'MATCH_ALREADY_JOINED', '이미 참가 중인 매치입니다.', { isParticipant: true }, '매치 탈퇴하기'],
+])('refreshes stale detail after join error %s / %s', async (status, code, message, state, label) => {
+  localStorage.setItem('at', 'token');
+  getMatchDetail.mockResolvedValueOnce(match).mockResolvedValueOnce({ ...match, ...state });
+  joinMatch.mockRejectedValue({ response: { status, data: { code } } });
+  showPage();
+  fireEvent.click(await screen.findByRole('button', { name: '참가 신청하기' }));
+  expect(await screen.findByRole('button', { name: label })).toBeDisabled();
+  expect(window.alert).toHaveBeenCalledWith(message);
+  expect(window.alert).not.toHaveBeenCalledWith('참가 신청이 완료되었습니다.');
+  expect(getMatchDetail).toHaveBeenCalledTimes(2);
+});
+
+test('shows the server start-time rejection instead of a capacity error', async () => {
+  localStorage.setItem('at', 'token');
+  getMatchDetail.mockResolvedValue(match);
+  joinMatch.mockRejectedValue({ response: { status: 400, data: { code: 'MATCH_ALREADY_STARTED' } } });
+  showPage();
+  fireEvent.click(await screen.findByRole('button', { name: '참가 신청하기' }));
+  await waitFor(() => expect(window.alert).toHaveBeenCalledWith('이미 시작된 매치에는 참가할 수 없습니다.'));
+  await waitFor(() => expect(getMatchDetail).toHaveBeenCalledTimes(2));
+});
+
+test('returns to the list if the match was deleted before joining', async () => {
+  localStorage.setItem('at', 'token');
+  getMatchDetail.mockResolvedValue(match);
+  joinMatch.mockRejectedValue({ response: { status: 404 } });
+  showPage();
+  fireEvent.click(await screen.findByRole('button', { name: '참가 신청하기' }));
+  expect(await screen.findByText('홈 화면')).toBeInTheDocument();
+  expect(window.alert).toHaveBeenCalledWith('매치를 찾을 수 없습니다.');
+});
+
+test('shows leave instead of recruitment closed after taking the last place', async () => {
+  localStorage.setItem('at', 'token');
+  getMatchDetail.mockResolvedValueOnce({ ...match, currentParticipantCount: 9 })
+    .mockResolvedValueOnce({ ...match, currentParticipantCount: 10, status: 'CLOSED', isParticipant: true });
+  joinMatch.mockResolvedValue({ matchId: 101 });
+  showPage();
+  fireEvent.click(await screen.findByRole('button', { name: '참가 신청하기' }));
+  expect(await screen.findByRole('button', { name: '매치 탈퇴하기' })).toBeDisabled();
+  expect(screen.getByText('10명 참여 중')).toBeInTheDocument();
+  expect(screen.getByText('모집이 마감된 매치입니다.')).toBeInTheDocument();
+});
+
+test('retries only detail loading if the refresh after successful joining fails', async () => {
+  localStorage.setItem('at', 'token');
+  getMatchDetail.mockResolvedValueOnce(match).mockRejectedValueOnce(new Error('network'))
+    .mockResolvedValueOnce({ ...match, isParticipant: true, currentParticipantCount: 3 });
+  joinMatch.mockResolvedValue({ matchId: 101 });
+  showPage();
+  fireEvent.click(await screen.findByRole('button', { name: '참가 신청하기' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('매치 정보를 불러오지 못했습니다');
+  expect(window.alert).toHaveBeenCalledWith('참가 신청이 완료되었습니다.');
+  expect(screen.queryByRole('button', { name: '참가 신청하기' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+  expect(await screen.findByRole('button', { name: '매치 탈퇴하기' })).toBeDisabled();
+  expect(joinMatch).toHaveBeenCalledTimes(1);
+});
+
+test.each([false, true])('ignores a join response after moving to another match (failure: %s)', async failed => {
+  localStorage.setItem('at', 'token');
+  getMatchDetail.mockResolvedValueOnce(match).mockResolvedValueOnce({ ...match, matchId: 102, title: '다른 매치 제목' });
+  let finish, fail;
+  joinMatch.mockImplementation(() => new Promise((resolve, reject) => { finish = resolve; fail = reject; }));
+  showPage();
+  fireEvent.click(await screen.findByRole('button', { name: '참가 신청하기' }));
+  fireEvent.click(screen.getByRole('link', { name: '다른 매치' }));
+  expect(await screen.findByRole('heading', { name: '다른 매치 제목' })).toBeInTheDocument();
+  await act(async () => { if (failed) fail({ response: { status: 401 } }); else finish({ matchId: 101 }); });
+  expect(window.alert).not.toHaveBeenCalled();
+  expect(getMatchDetail).toHaveBeenCalledTimes(2);
+  expect(screen.getByRole('button', { name: '참가 신청하기' })).toBeEnabled();
+});
+
+test.each([
+  ['', '참가 신청하기'], ['?role=participant', '매치 탈퇴하기'], ['?role=owner', '매치 삭제하기'],
+])('previews match roles without API requests: %s', async (query, label) => {
+  const previous = process.env.NODE_ENV;
+  process.env.NODE_ENV = 'development';
+  try {
+    render(<MemoryRouter initialEntries={[`/matches/preview${query}`]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><MatchDetailPreviewPage /></MemoryRouter>);
+    const button = await screen.findByRole('button', { name: label });
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(getMatchDetail).not.toHaveBeenCalled();
+    expect(joinMatch).not.toHaveBeenCalled();
+    expect(deleteMatch).not.toHaveBeenCalled();
+  } finally {
+    process.env.NODE_ENV = previous;
+  }
 });
