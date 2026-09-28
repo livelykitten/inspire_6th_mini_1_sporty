@@ -7,6 +7,8 @@ import com.example.sporty.features.commons.exception.auth.LoginFailException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchDeleteForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchModifyForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchOwnerCannotLeaveException;
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchParticipantNotFoundException;
 import com.example.sporty.features.commons.exception.profiles.ProfileNotFoundException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchAlreadyJoinedException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchAlreadyStartedException;
@@ -23,6 +25,25 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MatchParticipantNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMatchParticipantNotFound(MatchParticipantNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.builder()
+                        .code("MATCH_PARTICIPANT_NOT_FOUND")
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(MatchOwnerCannotLeaveException.class)
+    public ResponseEntity<ErrorResponse> handleMatchOwnerCannotLeave(MatchOwnerCannotLeaveException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.builder()
+                        .code("MATCH_OWNER_CANNOT_LEAVE")
+                        .message(e.getMessage())
+                        .build());
+    }
+
 
     @ExceptionHandler(MatchModifyForbiddenException.class)
     public ResponseEntity<ErrorResponse> handleMatchModifyForbiddenException(MatchModifyForbiddenException e) {

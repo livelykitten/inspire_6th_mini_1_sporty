@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchDeleteForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchModifyForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchOwnerCannotLeaveException;
+import com.example.sporty.features.commons.exception.exerciseMatching.MatchParticipantNotFoundException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchAlreadyJoinedException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchAlreadyStartedException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchFullException;
@@ -57,6 +59,28 @@ public class MatchService {
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final ServiceRepository serviceRepository;
+
+    /**
+     * EM-07: 인증된 일반 참가자의 참가 정보만 삭제한다. 경기 시작 후에도 탈퇴 가능하다.
+     * OWNER는 탈퇴 대신 매치 삭제 기능을 사용해야 한다.
+     */
+    @Transactional
+    public void leaveMatch(Long matchId, Long userId) {
+        matchRepository
+                .findByIdForUpdate(matchId)
+                .orElseThrow(MatchNotFoundException::new);
+
+        MatchParticipantEntity participant = matchParticipantRepository
+                .findByMatch_IdAndUserId(matchId, userId)
+                .orElseThrow(MatchParticipantNotFoundException::new);
+
+        // 매치 생성자는 탈퇴할 수 없다.
+        if (participant.getRole() == MatchParticipantRole.OWNER) {
+            throw new MatchOwnerCannotLeaveException();
+        }
+
+        matchParticipantRepository.delete(participant);
+    }
 
     // EM-06: 참가자 저장과 정원 도달 시 모집 마감을 하나의 트랜잭션으로 처리한다.
     @Transactional
