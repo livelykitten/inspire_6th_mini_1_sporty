@@ -1,6 +1,9 @@
 package com.example.sporty.features.commons.token;
 
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import com.example.sporty.features.commons.exception.auth.InvalidRefreshTokenException;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -28,6 +31,22 @@ public class JwtProvider {
 
     public String createRefreshToken(Long id) {
         return createToken(id, "REFRESH", REFRESH_TOKEN_EXP);
+    }
+
+    // [USR-05] 서명/만료/RT 타입을 검증한 뒤 회원 ID를 반환
+    public Long validateRefreshToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build()
+                    .parseClaimsJws(token).getBody();
+            if (!"REFRESH".equals(claims.get("tokenType", String.class)) || claims.getExpiration() == null) {
+                throw new InvalidRefreshTokenException();
+            }
+            Long userId = Long.valueOf(claims.getSubject());
+            if (userId <= 0) throw new InvalidRefreshTokenException();
+            return userId;
+        } catch (JwtException | IllegalArgumentException exception) {
+            throw new InvalidRefreshTokenException();
+        }
     }
 
     public long getAccessTokenExpirationSeconds() {
