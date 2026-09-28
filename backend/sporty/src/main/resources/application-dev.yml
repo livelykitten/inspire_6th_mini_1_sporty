@@ -8,7 +8,9 @@ spring:
     config:
         activate:
             on-profile: dev
-        import: "optional:file:./.env[.properties]"
+        import:
+        - "optional:file:./.env[.properties]"
+        - "optional:file:../.env[.properties]"
 
     datasource:
         driver-class-name: ${DB_DRIVER}   
@@ -18,7 +20,7 @@ spring:
 
     jpa:
         hibernate:
-            ddl-auto: create-drop
+            ddl-auto: update
 
         show-sql: true
 
@@ -52,3 +54,13 @@ openapi:
     serviceKey: ${OPENAPI_SERVICE_KEY}
     callBackUrl: ${OPENAPI_CALLBACKURL}
     dataType: ${OPENAPI_TYPE}
+
+facility:
+    openapi:
+        service-key: ${PUBLIC_DATA_API_KEY}
+        base-url: ${PUBLIC_DATA_API_URL:http://openapi.seoul.go.kr:8088}
+        service-name: ListPublicReservationSport
+        data-type: json
+    sync:
+        cron: "0 0 3 * * *"
+        zone: "Asia/Seoul"
