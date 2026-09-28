@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { getMatchDetail, joinMatch, deleteMatch } from '../api/matchApi';
+import { getMatchDetail, joinMatch, leaveMatch, deleteMatch } from '../api/matchApi';
 import ProfileModal from '../../profiles/components/ProfileModal';
 import logo from '../assets/logo.png';
 import '../css/match.css';
@@ -158,6 +158,55 @@ function MatchDetailContent({ match, preview, onRefresh }) {
     const from = location.pathname + location.search;
     navigate(`/login?redirect=${encodeURIComponent(from)}`, { state: { from } });
   };
+
+  async function handleLeave() {
+    if (preview || busy.current || match.isOwner === true || match.isParticipant !== true) return;
+    if (!localStorage.getItem('at')) {
+      window.alert('매치에서 탈퇴하려면 로그인이 필요합니다.');
+      login();
+      return;
+    }
+    busy.current = true;
+    setPending('leave');
+    setActionError('');
+    try {
+      await leaveMatch(match.matchId);
+      if (!active.current) return;
+      window.alert('매치에서 탈퇴했습니다.');
+      onRefresh();
+    } catch (error) {
+      if (!active.current) return;
+      const statusCode = error.response?.status;
+      const code = error.response?.data?.code;
+      if (statusCode === 401) {
+        localStorage.removeItem('at');
+        window.alert('인증이 만료되었습니다. 다시 로그인해 주세요.');
+        login();
+        return;
+      }
+      if (statusCode === 403) {
+        window.alert(code === 'MATCH_OWNER_CANNOT_LEAVE'
+          ? '매치 생성자는 탈퇴할 수 없습니다. 매치 삭제 기능을 이용해 주세요.'
+          : '이 매치에서 탈퇴할 권한이 없습니다.');
+        onRefresh();
+        return;
+      }
+      if (statusCode === 404) {
+        if (code === 'MATCH_NOT_FOUND') {
+          window.alert('이미 삭제되었거나 존재하지 않는 매치입니다.');
+          navigate('/', { replace: true });
+        } else {
+          window.alert('매치 참가 정보를 확인할 수 없습니다. 현재 상태를 다시 조회합니다.');
+          onRefresh();
+        }
+        return;
+      }
+      setActionError('탈퇴 결과를 확인하지 못했습니다. 새로고침 후 참가 상태를 확인해 주세요.');
+      busy.current = false;
+      setPending(null);
+    }
+  }
+
   async function performAction(action) {
     if (preview || busy.current) return;
     if (action === 'delete' ? match.isOwner !== true : match.isOwner === true || match.isParticipant === true || match.status !== 'RECRUITING' || remaining === 0) return;
@@ -219,7 +268,7 @@ function MatchDetailContent({ match, preview, onRefresh }) {
   const schedule = `${dateLabel(match.startAt)} ${timeLabel(match.startAt)} — ${match.startAt?.slice(0, 10) !== match.endAt?.slice(0, 10) ? `${dateLabel(match.endAt)} ` : ''}${timeLabel(match.endAt)}`;
   let actionLabel = '참가 신청하기';
   if (match.isOwner === true) actionLabel = pending === 'delete' ? '삭제 중…' : '매치 삭제하기';
-  else if (match.isParticipant === true) actionLabel = '매치 탈퇴하기';
+  else if (match.isParticipant === true) actionLabel = pending === 'leave' ? '탈퇴 중…' : '매치 탈퇴하기';
   else if (match.status === 'CLOSED') actionLabel = '모집이 마감되었습니다';
   else if (remaining === 0) actionLabel = '모집 정원이 찼습니다';
 
@@ -276,10 +325,10 @@ function MatchDetailContent({ match, preview, onRefresh }) {
             <div className="detail-capacity"><span>모집 인원 현황</span><strong>{current ?? '—'}<small> / {maximum ?? '—'}명</small></strong></div>
             {current !== null && maximum !== null && <progress value={progress} max="100" aria-label="모집 인원 비율" />}
             <p className="detail-recruitment-note">{match.status === 'CLOSED' ? '모집이 마감된 매치입니다.' : remaining === null ? '모집 인원을 확인할 수 없습니다.' : remaining === 0 ? '모집 정원이 찼습니다.' : `${remaining}명이 더 함께할 수 있어요.`}</p>
-            <button type="button" className="detail-primary-button" disabled={preview || pending !== null || (match.isOwner !== true && (match.isParticipant === true || match.status !== 'RECRUITING' || remaining === 0))} onClick={() => performAction(match.isOwner === true ? 'delete' : 'join')}>{pending === 'join' ? '참가 신청 중…' : actionLabel}</button>
+            <button type="button" className="detail-primary-button" disabled={preview || pending !== null || (match.isOwner !== true && match.isParticipant !== true && (match.status !== 'RECRUITING' || remaining === 0))} onClick={match.isOwner === true ? () => performAction('delete') : match.isParticipant === true ? handleLeave : () => performAction('join')}>{pending === 'join' ? '참가 신청 중…' : actionLabel}</button>
             {match.isOwner === true && !preview && pending === null && <Link className="match-edit-link" to={`/matches/${match.matchId}/edit`}>매치 수정하기</Link>}
             {actionError && <div role="alert"><p className="match-error">{actionError}</p><button type="button" disabled={pending !== null} onClick={onRefresh}>새로고침</button></div>}
-            <p className="detail-action-note">{match.isOwner === true ? '이 매치의 생성자입니다.' : match.isParticipant === true ? '현재 이 매치에 참여 중입니다. 매치 탈퇴 기능은 준비 중입니다.' : '매치 일정과 모집 조건을 확인 후 신청해주세요.'}</p>
+            <p className="detail-action-note">{match.isOwner === true ? '이 매치의 생성자입니다.' : match.isParticipant === true ? '현재 이 매치에 참여 중입니다.' : '매치 일정과 모집 조건을 확인 후 신청해주세요.'}</p>
           </section>
           <section className="match-section detail-guide"><h2><span aria-hidden="true">✓</span> 참여 전 확인해 주세요</h2><p>매치 일정과 실력 수준을 확인해 주세요.</p><p>준비물과 모임 안내는 매치 상세 내용을 참고해 주세요.</p><p>서로를 배려하며 즐겁게 운동해요.</p></section>
         </aside>

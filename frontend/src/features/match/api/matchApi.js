@@ -6,6 +6,11 @@ export async function joinMatch(matchId) {
   return response.data;
 }
 
+export async function leaveMatch(matchId) {
+  const response = await api.delete(`/api/matches/${matchId}/participants/me`);
+  if (response.status !== 204) throw new Error('탈퇴 결과를 확인할 수 없습니다. 새로고침해주세요.');
+}
+
 export async function deleteMatch(matchId) {
   const response = await api.delete(`/api/matches/${matchId}`);
   if (response.status !== 204) throw new Error('삭제 결과를 확인할 수 없습니다. 새로고침해주세요.');
