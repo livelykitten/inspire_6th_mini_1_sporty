@@ -48,7 +48,7 @@ export default function FacilityFilters({
           <input
             type="search"
             aria-label="시설 검색어"
-            placeholder="서비스명으로 검색"
+            placeholder="지역/종목 검색"
             value={serviceName}
             onChange={(event) => onServiceNameChange?.(event.target.value)}
           />
