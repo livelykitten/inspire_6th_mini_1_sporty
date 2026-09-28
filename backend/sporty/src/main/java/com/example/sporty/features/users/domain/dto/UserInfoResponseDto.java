@@ -1,7 +1,7 @@
 package com.example.sporty.features.users.domain.dto;
 
 import com.example.sporty.features.commons.util.SportType;
-import com.example.sporty.features.profiles.domain.entity.District;
+import com.example.sporty.features.commons.util.District;
 import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
 import com.example.sporty.features.users.domain.entity.Gender;
 import com.example.sporty.features.users.domain.entity.UserEntity;

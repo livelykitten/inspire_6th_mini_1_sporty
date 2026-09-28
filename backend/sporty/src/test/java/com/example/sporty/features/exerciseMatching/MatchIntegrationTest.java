@@ -31,7 +31,7 @@ import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.example.sporty.features.exerciseMatching.repository.MatchParticipantRepository;
 import com.example.sporty.features.exerciseMatching.service.MatchService;
-import com.example.sporty.features.profiles.domain.entity.District;
+import com.example.sporty.features.commons.util.District;
 import com.example.sporty.features.profiles.domain.entity.ProfileEntity;
 import com.example.sporty.features.profiles.repository.ProfileRepository;
 import com.example.sporty.features.users.domain.entity.Gender;

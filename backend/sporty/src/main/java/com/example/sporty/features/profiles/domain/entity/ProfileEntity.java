@@ -1,5 +1,6 @@
 package com.example.sporty.features.profiles.domain.entity;
 
+import com.example.sporty.features.commons.util.District;
 import com.example.sporty.features.sportpreference.domain.entity.SportPreferenceEntity;
 import com.example.sporty.features.users.domain.entity.UserEntity;
 import jakarta.persistence.*;
