@@ -1,5 +1,5 @@
 import api from '../../../api/axios';
-import { createMatch, searchMatchFacilities, getMatchDetail, modifyMatch } from './matchApi';
+import { createMatch, searchMatchFacilities, getMatchDetail, modifyMatch, joinMatch, deleteMatch } from './matchApi';
 
 jest.mock('../../../api/axios', () => ({ post: jest.fn(), get: jest.fn(), put: jest.fn(), delete: jest.fn() }));
 afterEach(() => jest.clearAllMocks());
