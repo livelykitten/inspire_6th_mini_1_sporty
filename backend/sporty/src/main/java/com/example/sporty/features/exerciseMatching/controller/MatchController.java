@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import com.example.sporty.features.exerciseMatching.domain.dto.MyMatchResponseDto;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +41,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 public class MatchController {
 
     private final MatchService matchService;
+
+    // [EM-08] 내 매치 목록 조회
+    @GetMapping("/me")
+    public ResponseEntity<List<MyMatchResponseDto>> getMyMatches(@AuthenticationPrincipal Long userId) {
+        return ResponseEntity.ok(matchService.getMyMatches(userId));
+    }
 
     @PostMapping
     public ResponseEntity<?> createMatch(

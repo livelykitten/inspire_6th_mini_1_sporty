@@ -1,7 +1,14 @@
 import api from '../../../api/axios';
-import { loadMyPage, saveProfile, withdrawUser } from './myPageApi';
+import { loadMyPage, loadMyMatches, saveProfile, withdrawUser } from './myPageApi';
 jest.mock('../../../api/axios', () => ({ get: jest.fn(), put: jest.fn(), delete: jest.fn() }));
 afterEach(() => jest.clearAllMocks());
+test('내 매치 조회는 userId 없이 인증된 사용자 목록을 요청한다', async () => {
+  const signal = new AbortController().signal;
+  const matches = [{ matchId: 7, role: 'OWNER', numCurrentParticipant: 3 }];
+  api.get.mockResolvedValue({ data: matches });
+  expect(await loadMyMatches({ signal })).toEqual(matches);
+  expect(api.get).toHaveBeenCalledWith('/api/matches/me', { signal });
+});
 test('조회는 /users/me의 응답을 회원정보와 폼으로 나눈다', async () => {
   api.get.mockResolvedValue({ data: { email: 'test@example.com', gender: 'MALE', nickname: '테스트', district: 'MAPO', preferenceSports: ['SOCCER'] } });
   const result = await loadMyPage({ signal: undefined });

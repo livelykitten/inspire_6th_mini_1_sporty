@@ -77,7 +77,10 @@
 .mypage-empty { padding: 48px 16px; text-align: center; background: #f8fafc; border-radius: 12px; color: #64748b; line-height: 1.7; }
 .mypage-list-description { color: #64748b; font-size: 14px; }
 .mypage-match-list { padding: 0; margin: 24px 0 0; list-style: none; display: grid; gap: 16px; }
-.mypage-match-list li { padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; }
+.mypage-match-list li { border: 1px solid #e2e8f0; border-radius: 12px; transition: border-color .15s, background-color .15s; }
+.mypage-match-list li:hover, .mypage-match-list li:focus-within { border-color: #2563eb; background: #f8fafc; }
+.mypage-match-link { display: block; padding: 20px; border-radius: 12px; }
+.mypage-match-detail { display: block; margin-top: 16px; color: #2563eb; font-size: 13px; font-weight: 600; }
 .mypage-match-list h2 { margin: 12px 0; padding: 0; border: 0; font-size: 18px; }
 .mypage-match-list a { color: #1e293b; text-decoration: none; }
 .mypage-match-list p { color: #64748b; font-size: 13px; }
