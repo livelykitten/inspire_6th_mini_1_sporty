@@ -16,6 +16,9 @@ public interface ServiceRepository
 
     Optional<ServiceEntity> findByServiceId(String serviceId);
 
+    @EntityGraph(attributePaths = "location")
+    Optional<ServiceEntity> findByIdAndActiveTrue(Long id);
+
     List<ServiceEntity> findAllByActiveTrue();
 
     @EntityGraph(attributePaths = "location")

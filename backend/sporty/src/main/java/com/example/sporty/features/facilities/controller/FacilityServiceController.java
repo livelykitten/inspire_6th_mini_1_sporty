@@ -1,14 +1,15 @@
 package com.example.sporty.features.facilities.controller;
 
-
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.sporty.features.facilities.domain.dto.ServiceDetailResponseDto;
 import com.example.sporty.features.facilities.domain.dto.ServiceRequestDto;
 import com.example.sporty.features.facilities.domain.dto.ServiceResponseDto;
 import com.example.sporty.features.facilities.service.FacilityQueryService;
@@ -32,6 +33,13 @@ public class FacilityServiceController {
         );
     }
 
-    
-    
+    // FC-02: 체육시설 상세 정보 조회. Path의 serviceId는 DB PK다.
+    @GetMapping("/{serviceId}")
+    public ResponseEntity<ServiceDetailResponseDto> getFacility(
+            @PathVariable Long serviceId
+    ) {
+        return ResponseEntity.ok(
+                facilityQueryService.getFacility(serviceId)
+        );
+    }
 }
