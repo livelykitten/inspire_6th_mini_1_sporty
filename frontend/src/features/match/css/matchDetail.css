@@ -32,8 +32,10 @@
 .detail-member-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
 .detail-person { display: flex; gap: 10px; align-items: center; padding: 12px; background: var(--match-field); border-radius: 9px; min-width: 0; }
 .detail-person > div { min-width: 0; flex: 1; }
-.detail-person a, .detail-person strong { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
-.detail-person a:hover { text-decoration: underline; color: var(--match-blue); }
+.detail-person a, .detail-person strong, .detail-profile-button { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
+.detail-profile-button { border: 0; padding: 0; background: transparent; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }
+.detail-person a:hover, .detail-profile-button:hover { text-decoration: underline; color: var(--match-blue); }
+.detail-profile-button:focus-visible { outline: 3px solid #60a5fa; outline-offset: 3px; }
 .detail-person-role { display: block; font-size: 11px; color: #646b80; margin-top: 4px; }
 .detail-avatar { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; overflow: hidden; border-radius: 50%; background: #dfe7ff; color: var(--match-blue); font-size: 14px; border: 1px solid #cad7ff; }
 .detail-avatar img { width: 100%; height: 100%; object-fit: cover; }

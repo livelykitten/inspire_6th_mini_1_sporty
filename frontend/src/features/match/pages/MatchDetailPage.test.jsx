@@ -41,7 +41,7 @@ test('loads publicly and renders API data, mandatory navigation and missing faci
   expect(screen.getByText('2시간')).toBeInTheDocument();
   expect(screen.getByText('등록된 장소 정보가 아직 없습니다.')).toBeInTheDocument();
   expect(screen.getByRole('link', { name: '시설 정보 →' })).toHaveAttribute('href', '/facilities/7');
-  expect(screen.getByRole('link', { name: '생성자' })).toHaveAttribute('href', '/profiles/11');
+  expect(screen.getByRole('button', { name: '생성자' })).toHaveAttribute('aria-haspopup', 'dialog');
   expect(screen.getByText('8명이 더 함께할 수 있어요.')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: '참가 신청하기' })).toBeDisabled();
   expect(getMatchDetail).toHaveBeenCalledWith('101', expect.any(AbortSignal));
