@@ -1,8 +1,33 @@
 import api from '../../../api/axios';
-import { createMatch, searchMatchFacilities, getMatchDetail } from './matchApi';
+import { createMatch, searchMatchFacilities, getMatchDetail, modifyMatch } from './matchApi';
 
-jest.mock('../../../api/axios', () => ({ post: jest.fn(), get: jest.fn() }));
+jest.mock('../../../api/axios', () => ({ post: jest.fn(), get: jest.fn(), put: jest.fn(), delete: jest.fn() }));
 afterEach(() => jest.clearAllMocks());
+
+test('posts participation and requires HTTP 201', async () => {
+  api.post.mockResolvedValue({ status: 201, data: { matchId: 101, role: 'PARTICIPANT' } });
+  await expect(joinMatch(101)).resolves.toEqual({ matchId: 101, role: 'PARTICIPANT' });
+  expect(api.post).toHaveBeenCalledWith('/api/matches/101/participants');
+  api.post.mockResolvedValue({ status: 200 });
+  await expect(joinMatch(101)).rejects.toThrow('참가 결과');
+});
+
+test('deletes the match and requires HTTP 204', async () => {
+  api.delete.mockResolvedValue({ status: 204 });
+  await expect(deleteMatch(101)).resolves.toBeUndefined();
+  expect(api.delete).toHaveBeenCalledWith('/api/matches/101');
+  api.delete.mockRejectedValue({ response: { status: 403 } });
+  await expect(deleteMatch(101)).rejects.toEqual({ response: { status: 403 } });
+  api.delete.mockResolvedValue({ status: 200 });
+  await expect(deleteMatch(101)).rejects.toThrow('삭제 결과');
+});
+
+test('updates through the shared authenticated client with only DTO fields', async () => {
+  const payload = { title: '수정', description: '', startAt: '2026-10-01T19:00', endAt: '2026-10-01T21:00', maxParticipant: 4, skillLevel: 'BEGINNER', genderGroup: 'MIXED' };
+  api.put.mockResolvedValue({ data: { matchId: 42, ...payload } });
+  await expect(modifyMatch('42', { ...payload, serviceId: 7, sportType: 'TENNIS' })).resolves.toEqual({ matchId: 42, ...payload });
+  expect(api.put).toHaveBeenCalledWith('/api/matches/42', payload);
+});
 
 test('loads the detail endpoint and forwards cancellation', async () => {
   const signal = new AbortController().signal;

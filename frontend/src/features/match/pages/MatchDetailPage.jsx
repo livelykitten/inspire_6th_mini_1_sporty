@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { getMatchDetail } from '../api/matchApi';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { getMatchDetail, joinMatch, deleteMatch } from '../api/matchApi';
 import ProfileModal from '../../profiles/components/ProfileModal';
 import logo from '../assets/logo.png';
 import '../css/match.css';
@@ -12,6 +12,7 @@ const SPORTS = {
   VOLLEYBALL: '배구', SWIMMING: '수영', RUNNING: '러닝',
 };
 const LEVELS = { BEGINNER: '입문 · 초보', INTERMEDIATE: '중급', ADVANCED: '상급' };
+const GENDERS = { MALE: '남성', FEMALE: '여성', MIXED: '혼성' };
 
 // 서버의 LocalDateTime을 시간대 변환 없이 그대로 표시한다.
 function dateLabel(value) {
@@ -72,7 +73,7 @@ export default function MatchDetailPage({ previewMatch }) {
       setResult({ match: previewMatch, loading: false, error: null });
       return;
     }
-    if (!/^\d+$/.test(matchId || '') || Number(matchId) < 1 || Number(matchId) > 2147483647) {
+    if (!/^[1-9]\d*$/.test(matchId || '') || !Number.isSafeInteger(Number(matchId))) {
       setResult({ match: null, loading: false, error: 'not-found' });
       return;
     }
@@ -128,7 +129,7 @@ export default function MatchDetailPage({ previewMatch }) {
             <Link className="detail-secondary-link" to="/">매치 찾기로 이동</Link>
           </div>
         </div>}
-        {!loading && !error && match && <MatchDetailContent match={match} preview={preview} />}
+        {!loading && !error && match && String(match.matchId) === String(preview ? match.matchId : matchId) && <MatchDetailContent key={match.matchId} match={match} preview={preview} onRefresh={() => setRetryCount(count => count + 1)} />}
       </main>
       <footer className="match-footer">
         <img src={logo} alt="SPORTY" width="80" height="24" /><strong>SPORTY</strong>
@@ -137,10 +138,43 @@ export default function MatchDetailPage({ previewMatch }) {
     </div>
   );
 }
-
-function MatchDetailContent({ match, preview }) {
   // [PR-02] 선택한 참가자의 프로필 ID. null이면 모달을 닫고, 로그인 안내/조회는 모달이 처리한다.
+function MatchDetailContent({ match, preview, onRefresh }) {
   const [selectedProfileId, setSelectedProfileId] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [pending, setPending] = useState(null);
+  const [actionError, setActionError] = useState('');
+  const busy = useRef(false);
+  const active = useRef(true);
+  useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
+  const login = () => {
+    const from = location.pathname + location.search;
+    navigate(`/login?redirect=${encodeURIComponent(from)}`, { state: { from } });
+  };
+  async function performAction(action) {
+    if (preview || busy.current) return;
+    if (action === 'delete' ? match.isOwner !== true : match.isOwner === true || match.isParticipant === true || match.status !== 'RECRUITING' || remaining === 0) return;
+    if (!localStorage.getItem('at')) { login(); return; }
+    if (action === 'delete' && !window.confirm('이 매치를 삭제하시겠습니까? 삭제한 매치는 복구할 수 없습니다.')) return;
+    busy.current = true; setPending(action); setActionError('');
+    try {
+      if (action === 'delete') await deleteMatch(match.matchId);
+      else await joinMatch(match.matchId);
+      if (!active.current) return;
+      if (action === 'delete') navigate('/', { replace: true });
+      else onRefresh();
+    } catch (error) {
+      if (!active.current) return;
+      const statusCode = error.response?.status;
+      if (statusCode === 401) { localStorage.removeItem('at'); login(); return; }
+      const messages = { 400: '모집이 마감되었거나 정원이 초과되었습니다.', 403: '이 작업을 수행할 권한이 없습니다.', 404: '매치를 찾을 수 없습니다.', 409: '이미 참가 중인 매치입니다.', 501: '현재 이 기능을 준비 중입니다.' };
+      setActionError(messages[statusCode] || (action === 'delete' ? '삭제 결과를 확인하지 못했습니다. 새로고침 후 확인해주세요.' : '참가 결과를 확인하지 못했습니다. 새로고침 후 확인해주세요.'));
+    } finally {
+      busy.current = false;
+      if (active.current) setPending(null);
+    }
+  }
   const participants = Array.isArray(match.participants) ? match.participants : null;
   const owners = participants?.filter(person => person.role === 'OWNER') || [];
   const members = participants?.filter(person => person.role !== 'OWNER') || [];
@@ -162,6 +196,7 @@ function MatchDetailContent({ match, preview }) {
         <div className="detail-tags">
           <span className="detail-tag">{SPORTS[match.sportType] || '종목 정보 없음'}</span>
           <span className="detail-tag detail-tag-neutral">{LEVELS[match.skillLevel] || '실력 정보 없음'}</span>
+          <span className="detail-tag detail-tag-neutral">{GENDERS[match.genderGroup] ?? '성별 구성 정보 없음'}</span>
           <span className={`detail-tag ${match.status === 'RECRUITING' ? 'detail-tag-open' : 'detail-tag-neutral'}`}>{status}</span>
         </div>
         <h1>{match.title || '제목 정보 없음'}</h1>
@@ -175,7 +210,7 @@ function MatchDetailContent({ match, preview }) {
               <div><dt>일시 & 시간</dt><dd>{dateLabel(match.startAt)}</dd><dd>{timeLabel(match.startAt)} — {timeLabel(match.endAt)}</dd><dd className="detail-fact-caption">{durationLabel(match.startAt, match.endAt)}</dd></div>
               <div><dt>운동 종목</dt><dd>{SPORTS[match.sportType] || '정보 없음'}</dd><dd className="detail-fact-caption">함께 즐기는 운동</dd></div>
               <div><dt>참가 레벨</dt><dd>{LEVELS[match.skillLevel] || '정보 없음'}</dd><dd className="detail-fact-caption">매치 실력 수준</dd></div>
-              <div><dt>모집 인원</dt><dd>{maximum === null ? '정보 없음' : `최대 ${maximum}명`}</dd><dd className="detail-fact-caption">생성자 포함</dd></div>
+              <div><dt>인원 구성</dt><dd>{current ?? '—'} / {maximum ?? '—'}명 참여</dd><dd>{GENDERS[match.genderGroup] ?? '성별 구성 정보 없음'}</dd><dd className="detail-fact-caption">현재 / 최대 인원 · 생성자 포함</dd></div>
             </dl>
           </section>
           <section className="match-section detail-section" aria-labelledby="detail-description-title">
@@ -187,9 +222,9 @@ function MatchDetailContent({ match, preview }) {
               {match.serviceId && !preview && <Link to={`/facilities/${match.serviceId}`}>시설 정보 →</Link>}
             </div>
             <dl className="detail-place-facts">
-              <div><dt>체육시설</dt><dd>{match.serviceName || '정보 없음'}</dd></div>
-              <div><dt>장소</dt><dd>{match.locationName || '정보 없음'}</dd></div>
-              <div><dt>지역</dt><dd>{match.region || '정보 없음'}</dd></div>
+              <div><dt>체육시설</dt><dd>{match.serviceName ?? '시설명 정보 없음'}</dd></div>
+              <div><dt>장소</dt><dd>{match.locationName ?? '장소 정보 없음'}</dd></div>
+              <div><dt>지역</dt><dd>{match.region ?? '지역 정보 없음'}</dd></div>
             </dl>
             {!match.serviceName && !match.locationName && !match.region && <p className="detail-place-note">등록된 장소 정보가 아직 없습니다.</p>}
           </section>
@@ -208,8 +243,13 @@ function MatchDetailContent({ match, preview }) {
             <div className="detail-capacity"><span>모집 인원 현황</span><strong>{current ?? '—'}<small> / {maximum ?? '—'}명</small></strong></div>
             {current !== null && maximum !== null && <progress value={progress} max="100" aria-label="모집 인원 비율" />}
             <p className="detail-recruitment-note">{match.status === 'CLOSED' ? '모집이 마감된 매치입니다.' : remaining === null ? '모집 인원을 확인할 수 없습니다.' : remaining === 0 ? '모집 정원이 찼습니다.' : `${remaining}명이 더 함께할 수 있어요.`}</p>
-            <button className="detail-primary-button" disabled>{actionLabel}</button>
-            <p className="detail-action-note">{match.isOwner === true ? '이 매치의 생성자입니다.' : match.isParticipant === true ? '현재 이 매치에 참여 중입니다. 참가 취소 기능은 준비 중입니다.' : '참가 신청 기능은 준비 중입니다.'}</p>
+            <button className="detail-primary-button" disabled={preview || pending !== null || match.isOwner === true || match.isParticipant === true || match.status !== 'RECRUITING' || remaining === 0} onClick={() => performAction('join')}>{pending === 'join' ? '참가 신청 중…' : actionLabel}</button>
+            {match.isOwner === true && !preview && <>
+              {pending === null && <Link className="match-edit-link" to={`/matches/${match.matchId}/edit`}>매치 수정하기</Link>}
+              <button type="button" className="detail-delete-button" disabled={pending !== null} onClick={() => performAction('delete')}>{pending === 'delete' ? '삭제 중…' : '매치 삭제하기'}</button>
+            </>}
+            {actionError && <div role="alert"><p className="match-error">{actionError}</p><button type="button" disabled={pending !== null} onClick={onRefresh}>새로고침</button></div>}
+            <p className="detail-action-note">{match.isOwner === true ? '이 매치의 생성자입니다.' : match.isParticipant === true ? '현재 이 매치에 참여 중입니다. 참가 취소 기능은 준비 중입니다.' : '매치 일정과 모집 조건을 확인 후 신청해주세요.'}</p>
           </section>
           <section className="match-section detail-guide"><h2><span aria-hidden="true">✓</span> 참여 전 확인해 주세요</h2><p>매치 일정과 실력 수준을 확인해 주세요.</p><p>준비물과 모임 안내는 매치 상세 내용을 참고해 주세요.</p><p>서로를 배려하며 즐겁게 운동해요.</p></section>
         </aside>

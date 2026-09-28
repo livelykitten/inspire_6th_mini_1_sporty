@@ -1,5 +1,24 @@
 import api from '../../../api/axios';
 
+export async function joinMatch(matchId) {
+  const response = await api.post(`/api/matches/${matchId}/participants`);
+  if (response.status !== 201) throw new Error('참가 결과를 확인할 수 없습니다. 새로고침해주세요.');
+  return response.data;
+}
+
+export async function deleteMatch(matchId) {
+  const response = await api.delete(`/api/matches/${matchId}`);
+  if (response.status !== 204) throw new Error('삭제 결과를 확인할 수 없습니다. 새로고침해주세요.');
+}
+
+// MatchModifyRequestDto에서 지원하는 필드만 전송한다.
+export async function modifyMatch(matchId, { title, description, startAt, endAt, maxParticipant, skillLevel, genderGroup }) {
+  const { data } = await api.put(`/api/matches/${matchId}`, {
+    title, description, startAt, endAt, maxParticipant, skillLevel, genderGroup,
+  });
+  return data;
+}
+
 export async function getMatchDetail(matchId, signal) {
   const { data } = await api.get(`/api/matches/${matchId}`, { signal });
   if (!data || data.matchId !== Number(matchId)) {
