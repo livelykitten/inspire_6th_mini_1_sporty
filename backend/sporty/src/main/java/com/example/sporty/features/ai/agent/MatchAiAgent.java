@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.example.sporty.features.ai.domain.dto.AiSearchConditionDto;
@@ -15,10 +16,8 @@ import com.example.sporty.features.exerciseMatching.service.MatchService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.RequiredArgsConstructor;
 
 @Service 
-@RequiredArgsConstructor 
 public class MatchAiAgent {
     
     private static final String NO_CONDITION_MESSAGE =
@@ -27,6 +26,12 @@ public class MatchAiAgent {
     private final ChatClient matchChatClient;
     private final MatchService matchService;
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+
+    // ChatClient 빈이 2개라 이름으로 지정한다 (AiAgentConfig의 @Bean 메서드명)
+    public MatchAiAgent(@Qualifier("matchChatClient") ChatClient matchChatClient, MatchService matchService) {
+        this.matchChatClient = matchChatClient;
+        this.matchService = matchService;
+    }
 
     public AiSearchResponseDto search(String prompt) {
         AiSearchConditionDto condition = extractCondition(prompt);

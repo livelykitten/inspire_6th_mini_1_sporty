@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.example.sporty.features.ai.domain.dto.AiDraftDto;
@@ -14,10 +15,8 @@ import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.RequiredArgsConstructor;
 
 @Service 
-@RequiredArgsConstructor 
 public class MatchDraftAiAgent {
 
     private static final int DEFAULT_MATCH_HOURS = 2;
@@ -28,6 +27,11 @@ public class MatchDraftAiAgent {
 
     private final ChatClient matchDraftChatClient;
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+
+    // ChatClient 빈이 2개라 이름으로 지정한다 (AiAgentConfig의 @Bean 메서드명)
+    public MatchDraftAiAgent(@Qualifier("matchDraftChatClient") ChatClient matchDraftChatClient) {
+        this.matchDraftChatClient = matchDraftChatClient;
+    }
 
     public AiDraftResponseDto draft(String prompt) {
         System.out.println("debug >>>> match draft ai agent draft : " + prompt);

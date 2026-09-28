@@ -10,13 +10,13 @@ import com.example.sporty.features.ai.tools.MatchDraftAiTool;
 @Configuration 
 public class AiAgentConfig {
     
-    // MatchAiAgent의 ChatClient 변수명과 같아야 함
+    // 메서드명이 Bean 이름 - MatchAiAgent의 @Qualifier 값과 같아야 함
     @Bean
     public ChatClient matchChatClient(ChatClient.Builder builder, MatchAiTool matchAITool) {
         return builder.defaultTools(matchAITool).build();
     }
 
-    // MatchDraftAiAgent의 ChatClient 변수명과 같아야 함
+    // 메서드명이 Bean 이름 - MatchDraftAiAgent의 @Qualifier 값과 같아야 함
     @Bean
     public ChatClient matchDraftChatClient(ChatClient.Builder builder, MatchDraftAiTool matchDraftAiTool) {
         return builder.defaultTools(matchDraftAiTool).build();
