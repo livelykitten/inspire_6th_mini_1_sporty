@@ -16,6 +16,7 @@ public final class PublicEndpoints {
     public static final RequestMatcher MATCHER = new OrRequestMatcher(
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/users"),
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/auth/login"),
+            PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/auth/refresh"),
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/ai/matches/search"),
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/matches"),
             MATCH_DETAIL,

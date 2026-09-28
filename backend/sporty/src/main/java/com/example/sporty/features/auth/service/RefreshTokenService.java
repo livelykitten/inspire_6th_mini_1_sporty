@@ -21,4 +21,9 @@ public class RefreshTokenService {
     public void delete(Long userId) {
         redisTemplate.delete("refresh:" + userId);
     }
+
+    // [USR-05] 만료/로그아웃/탈퇴로 삭제된 RT는 null을 반환
+    public String findByUserId(Long userId) {
+        return redisTemplate.opsForValue().get("refresh:" + userId);
+    }
 }

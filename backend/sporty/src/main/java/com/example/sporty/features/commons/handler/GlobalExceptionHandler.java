@@ -4,6 +4,7 @@ import com.example.sporty.features.commons.exception.matches.MatchUserNotFoundEx
 import com.example.sporty.features.commons.exception.matches.WithdrawnUserFoundException;
 import com.example.sporty.features.commons.exception.matches.ServiceNotFoundException;
 import com.example.sporty.features.commons.exception.auth.LoginFailException;
+import com.example.sporty.features.commons.exception.auth.InvalidRefreshTokenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchDeleteForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchModifyForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
@@ -233,4 +234,15 @@ public class GlobalExceptionHandler {
         // code : BAD_REQUEST(400)
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handlerInvalidRefreshToken (
+            InvalidRefreshTokenException e
+    ) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.builder()
+                        .code("INVALID_REFRESH_TOKEN")
+                        .message(e.getMessage())
+                        .build());
+    }
+
 }
