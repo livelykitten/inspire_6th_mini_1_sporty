@@ -4,10 +4,15 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchParticipantEntity;
 
 public interface MatchParticipantRepository extends JpaRepository<MatchParticipantEntity, Long> {
+
+    // [EM-08] 내 매치 목록: 생성/참여 모두 조회하며 최근 시작 일정부터 표시한다.
+    @EntityGraph(attributePaths = {"match", "match.service", "match.service.location"})
+    List<MatchParticipantEntity> findAllByUser_IdOrderByMatch_StartAtDescMatch_IdDesc(Long userId);
 
     List<MatchParticipantEntity> findAllByMatch_IdOrderByIdAsc(Long matchId);
 

@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import MatchDetailPage from './MatchDetailPage';
 
 // 개발 서버의 /matches/preview에서만 사용하는 화면 확인용 데이터다.
@@ -26,6 +27,12 @@ const previewMatch = {
   isParticipant: false,
 };
 
+const ownerPreviewMatch = { ...previewMatch, isOwner: true, isParticipant: true };
+const participantPreviewMatch = { ...previewMatch, isOwner: false, isParticipant: true };
+
 export default function MatchDetailPreviewPage() {
-  return <MatchDetailPage previewMatch={previewMatch} />;
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get('role');
+  const match = role === 'owner' ? ownerPreviewMatch : role === 'participant' ? participantPreviewMatch : previewMatch;
+  return <MatchDetailPage previewMatch={match} />;
 }

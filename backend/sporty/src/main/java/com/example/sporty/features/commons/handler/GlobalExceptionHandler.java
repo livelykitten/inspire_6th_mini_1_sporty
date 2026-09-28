@@ -4,6 +4,7 @@ import com.example.sporty.features.commons.exception.matches.MatchUserNotFoundEx
 import com.example.sporty.features.commons.exception.matches.WithdrawnUserFoundException;
 import com.example.sporty.features.commons.exception.matches.ServiceNotFoundException;
 import com.example.sporty.features.commons.exception.auth.LoginFailException;
+import com.example.sporty.features.commons.exception.auth.InvalidRefreshTokenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchDeleteForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchModifyForbiddenException;
 import com.example.sporty.features.commons.exception.exerciseMatching.MatchNotFoundException;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.example.sporty.features.commons.exception.ai.AiDraftException;
+import com.example.sporty.features.commons.exception.ai.AiRecommendException;
 import com.example.sporty.features.commons.exception.ai.AiSearchException;
 
 @RestControllerAdvice
@@ -233,4 +235,29 @@ public class GlobalExceptionHandler {
         // code : BAD_REQUEST(400)
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    // AI 추천 결과를 만들지 못함 → 500
+    @ExceptionHandler(AiRecommendException.class)
+    public ResponseEntity<?> handlerAiRecommend(AiRecommendException e) {
+        System.out.println("debug >>>> GlobalExceptionHandler handlerAiRecommend");
+        System.out.println("debug >>>> e.message " + e.getMessage());
+
+        ErrorResponse error = ErrorResponse.builder()
+                .message(e.getMessage())
+                .build();
+
+        // code : INTERNAL_SERVER_ERROR(500)
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handlerInvalidRefreshToken (
+            InvalidRefreshTokenException e
+    ) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.builder()
+                        .code("INVALID_REFRESH_TOKEN")
+                        .message(e.getMessage())
+                        .build());
+    }
+
 }

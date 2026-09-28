@@ -6,7 +6,7 @@ import { districts, sports } from '../../auth/data/signUpOptions';
 import { previewData } from '../data/previewData';
 import profileIcon from '../assets/profile.svg';
 import accountIcon from '../assets/account.svg';
-import { loadMyPage as fetchMyPage, saveProfile as updateProfile } from '../api/myPageApi';
+import { loadMyPage as fetchMyPage, saveProfile as updateProfile, loadMyMatches as fetchMyMatches } from '../api/myPageApi';
 import WithdrawalButton from '../components/WithdrawalButton';
 import MyMatches from '../components/MyMatches';
 import infoIcon from '../assets/info.svg';
@@ -16,7 +16,7 @@ const sportEmoji = ['⚽', '🥅', '🏀', '⚾', '🎾', '🏸', '🏓', '🏐'
 const copyProfile = profile => ({ ...profile, preferenceSports: [...profile.preferenceSports] });
 
 // [USR-06 / PR-01]
-export default function MyPage({ preview = false, loadMyPage = fetchMyPage, saveProfile = updateProfile, loadMyMatches }) {
+export default function MyPage({ preview = false, loadMyPage = fetchMyPage, saveProfile = updateProfile, loadMyMatches = fetchMyMatches }) {
   const location = useLocation();
   // [마이페이지] 왼쪽 메뉴 선택값. 탭 전환 시 수정 중인 폼은 유지한다.
   const [activeTab, setActiveTab] = useState('info');
@@ -120,7 +120,7 @@ export default function MyPage({ preview = false, loadMyPage = fetchMyPage, save
             <div className="mypage-sidebar-note"><strong>나의 운동 취향을 알려주세요</strong><p>함께 운동하는 파트너에게 보여줄 프로필을 관리할 수 있어요.</p></div>
           </aside>
           <div className="mypage-content">
-            {activeTab === 'matches' ? <MyMatches loadMyMatches={loadMyMatches} onUnauthorized={requireLogin} /> : <>
+            {activeTab === 'matches' ? <MyMatches loadMyMatches={preview ? undefined : loadMyMatches} onUnauthorized={requireLogin} /> : <>
             <section className="mypage-panel mypage-intro"><h1>회원정보 &amp; 프로필 수정</h1><p>내 정보를 확인하고, 나에게 맞는 스포츠 프로필을 완성해보세요.</p></section>
             <form onSubmit={saveHandler} noValidate aria-busy={pending}>
               <section className="mypage-panel mypage-section" aria-labelledby="profile-heading">

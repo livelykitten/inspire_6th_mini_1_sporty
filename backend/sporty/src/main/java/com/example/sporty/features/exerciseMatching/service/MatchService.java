@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.sporty.features.commons.exception.users.UserNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import com.example.sporty.features.facilities.repository.ServiceRepository;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchCreateRequestDto;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchResponseDto;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchSearchRequestDto;
+import com.example.sporty.features.exerciseMatching.domain.dto.MyMatchResponseDto;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchEntity;
 import com.example.sporty.features.exerciseMatching.domain.entity.MatchParticipantEntity;
 import com.example.sporty.features.exerciseMatching.domain.enums.MatchParticipantRole;
@@ -59,6 +61,35 @@ public class MatchService {
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final ServiceRepository serviceRepository;
+
+    // [EM-08] 내 매치 목록 조회
+    public List<MyMatchResponseDto> getMyMatches(Long userId) {
+        // 1. 로그인 회원 확인
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new WithdrawnUserFoundException();
+        }
+
+        // 2. 본인이 생성하거나 참여한 매치 조회
+        List<MatchParticipantEntity> participants = matchParticipantRepository
+                .findAllByUser_IdOrderByMatch_StartAtDescMatch_IdDesc(userId);
+        if (participants.isEmpty()) {
+            return List.of();
+        }
+
+        // 3. 기존 전체 목록 조회와 동일하게 참가 인원을 한 번에 집계
+        List<Long> matchIds = participants.stream().map(participant -> participant.getMatch().getId()).toList();
+        Map<Long, Long> countsByMatchId = matchRepository.countByMatchIds(matchIds).stream()
+                .collect(Collectors.toMap(row -> row.getMatchId(), row -> row.getParticipantCount()));
+
+        // 4. 생성자/일반 참가자 역할을 포함한 목록 반환
+        return participants.stream()
+                .map(participant -> MyMatchResponseDto.toResponseDto(participant,
+                        countsByMatchId.getOrDefault(participant.getMatch().getId(), 0L)))
+                .toList();
+    }
 
     /**
      * EM-07: 인증된 일반 참가자의 참가 정보만 삭제한다. 경기 시작 후에도 탈퇴 가능하다.
