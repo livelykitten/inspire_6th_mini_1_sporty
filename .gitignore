@@ -3,6 +3,7 @@
 .env
 .env.*
 !.env.example
+backend/sporty/src/main/resources/application-dev.yml
 
 ## macOS ##
 .DS_Store
