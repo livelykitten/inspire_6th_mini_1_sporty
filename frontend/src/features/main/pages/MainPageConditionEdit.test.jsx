@@ -64,6 +64,31 @@ test('[AI-02] AI 검색 전에도 빈 조건으로 직접 수정해 검색하고
   expect(screen.queryByText(/예시 매치 3개입니다/)).not.toBeInTheDocument();
 });
 
+test('[AI-02] AI가 추출한 모집 상태도 요약과 폼에 보이고, 미지정으로 바꾸면 재검색에서 뺀다', async () => {
+  api.post.mockResolvedValue({ data: {
+    ...SEARCH_RESPONSE,
+    conditions: [...SEARCH_RESPONSE.conditions, { label: '모집 상태', value: '모집중' }],
+    criteria: { ...SEARCH_RESPONSE.criteria, status: 'RECRUITING' },
+  } });
+  api.get.mockResolvedValue({ data: [] });
+  render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><MainPage /></MemoryRouter>);
+  fireEvent.change(screen.getByLabelText(INPUT_LABEL), { target: { value: '송파구 초보 풋살 모집중' } });
+  fireEvent.click(screen.getByRole('button', { name: 'AI 매치 검색' }));
+
+  const before = within(await screen.findByRole('region', { name: 'AI가 분석한 나의 맞춤 조건' }));
+  expect(before.getByText('모집중')).toBeInTheDocument();
+  fireEvent.click(before.getByRole('button', { name: /조건 직접 수정/ }));
+  const form = within(screen.getByRole('form', { name: '맞춤 조건 직접 수정' }));
+  expect(form.getByLabelText('모집 상태')).toHaveValue('RECRUITING');
+
+  fireEvent.change(form.getByLabelText('모집 상태'), { target: { value: '' } });
+  fireEvent.click(form.getByRole('button', { name: '이 조건으로 다시 찾기' }));
+
+  const after = within(await screen.findByRole('region', { name: 'AI가 분석한 나의 맞춤 조건' }));
+  expect(api.get).toHaveBeenCalledWith('/api/matches', { params: { sportType: 'FUTSAL', region: '송파구', skillLevel: 'BEGINNER' } });
+  expect(after.queryByText('모집중')).not.toBeInTheDocument();
+});
+
 test('[AI-02] 재검색에 실패하면 폼 안에 오류를 보여주고 폼을 유지한다', async () => {
   const form = within(await searchAndOpenEditor());
   api.get.mockRejectedValue(new Error('network'));

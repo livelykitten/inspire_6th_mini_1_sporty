@@ -27,6 +27,7 @@ import com.example.sporty.features.commons.exception.ai.AiDraftException;
 import com.example.sporty.features.commons.exception.ai.AiSearchException;
 import com.example.sporty.features.commons.handler.GlobalExceptionHandler;
 import com.example.sporty.features.commons.util.SportType;
+import com.example.sporty.features.exerciseMatching.domain.enums.MatchStatus;
 import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 
 /*
@@ -95,10 +96,11 @@ class AiControllerTest {
     }
 
     @Test
-    @DisplayName("[AI-02] 검색 응답에 조건 직접 수정용 원래 조건(criteria)을 함께 반환한다")
+    @DisplayName("[AI-02] 검색 응답에 조건 직접 수정용 원래 조건(criteria)과 모집 상태 요약을 함께 반환한다")
     void returnsCriteriaWithSearchResult() throws Exception {
         AiSearchConditionDto criteria = AiSearchConditionDto.builder()
-                .sportType(SportType.FUTSAL).region("송파구").skillLevel(SkillLevel.BEGINNER).build();
+                .sportType(SportType.FUTSAL).region("송파구").skillLevel(SkillLevel.BEGINNER)
+                .status(MatchStatus.RECRUITING).build();
         when(matchAiAgent.search("송파구 초보 풋살"))
                 .thenReturn(AiSearchResponseDto.builder()
                         .conditions(criteria.toConditions()).matches(List.of()).criteria(criteria).build());
@@ -109,7 +111,10 @@ class AiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.criteria.sportType").value("FUTSAL"))
                 .andExpect(jsonPath("$.criteria.region").value("송파구"))
-                .andExpect(jsonPath("$.criteria.skillLevel").value("BEGINNER"));
+                .andExpect(jsonPath("$.criteria.skillLevel").value("BEGINNER"))
+                .andExpect(jsonPath("$.criteria.status").value("RECRUITING"))
+                .andExpect(jsonPath("$.conditions[3].label").value("모집 상태"))
+                .andExpect(jsonPath("$.conditions[3].value").value("모집중"));
     }
 
     @Test
