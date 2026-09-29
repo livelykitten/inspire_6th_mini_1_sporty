@@ -112,6 +112,16 @@
 
 ## 7. 다른 AI에게 전달할 요청문
 
+공통 구현 위치:
+
+- 페이지 헤더·회원 메뉴: `src/components/layout/Header.jsx`, `header.css`
+- 페이지 푸터: `src/components/layout/Footer.jsx`, `footer.css`
+- 자치구 드롭다운: `src/components/common/DistrictSelect.jsx`, `districtSelect.css`
+- 서울 25개 자치구: `src/constants/districts.js`
+- 헤더·푸터 브랜드 표기는 `Sporty`, 짙은 슬레이트(#1E293B), 굵기 700으로 통일한다.
+- 자치구 API 값은 기존 계약을 유지한다. 회원·프로필은 코드(`GANGNAM`), 시설·매치는 이름(`강남구`)이다.
+- 공통 요소를 바꿀 때는 기존 페이지별 복사본 대신 위 파일을 수정한다. 페이지 본문의 배치·미디어 쿼리는 해당 CSS에서 유지한다.
+
 ```text
 SPORTY의 COLOR GUID2.MD에 맞춰 최초 색상 디자인을 적용해줘.
 흰색 헤더·카드·푸터와 단색 연회색 페이지 배경(#F8FAFC)을 사용하고,

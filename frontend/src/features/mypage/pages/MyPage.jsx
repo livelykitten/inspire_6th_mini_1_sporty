@@ -1,3 +1,5 @@
+import DistrictSelect from '../../../components/common/DistrictSelect';
+import Footer from '../../../components/layout/Footer';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import Header from '../../../components/layout/Header';
@@ -129,7 +131,7 @@ export default function MyPage({ preview = false, loadMyPage = fetchMyPage, save
                   <legend className="mypage-sr-only">프로필 입력 정보</legend>
                   <div className="mypage-field"><label htmlFor="mypage-nickname">활동 닉네임 <small>1~50자</small></label><input id="mypage-nickname" name="nickname" value={form.nickname} onChange={keyHandler} maxLength={50} autoComplete="nickname" /><p className="mypage-hint"><img src={infoIcon} alt="" />매칭 파트너들에게 표시되는 닉네임입니다.</p></div>
                   <fieldset className="mypage-sports"><legend>선호 운동 종목 <small>복수 선택 가능</small></legend><div>{sports.map(([value, label], index) => <label key={value} className={form.preferenceSports.includes(value) ? 'is-selected' : ''}><input type="checkbox" value={value} checked={form.preferenceSports.includes(value)} onChange={sportHandler} /><span aria-hidden="true">{sportEmoji[index]}</span>{label}</label>)}</div></fieldset>
-                  <div className="mypage-field"><label htmlFor="mypage-district">주 활동 자치구</label><div className="mypage-region"><input aria-label="시/도" value="서울특별시" readOnly /><select id="mypage-district" name="district" value={form.district} onChange={keyHandler}><option value="">자치구 선택</option>{districts.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div></div>
+                  <div className="mypage-field"><label htmlFor="mypage-district">주 활동 자치구</label><div className="mypage-region"><input aria-label="시/도" value="서울특별시" readOnly /><DistrictSelect id="mypage-district" name="district" value={form.district} onChange={keyHandler} /></div></div>
                 </fieldset>
               </section>
               <section className="mypage-panel mypage-section" aria-labelledby="account-heading"><h2 id="account-heading"><img src={accountIcon} alt="" />회원 정보 <small>읽기 전용</small></h2>
@@ -146,6 +148,6 @@ export default function MyPage({ preview = false, loadMyPage = fetchMyPage, save
           </div>
         </div>}
     </main>
-    <footer className="mypage-footer"><strong>Sporty</strong><span>함께하는 운동, 더 즐거운 일상.</span></footer>
+    <Footer />
   </div>;
 }

@@ -1,9 +1,8 @@
-import { Link } from 'react-router-dom';
+import Footer from '../../../components/layout/Footer';
+import Header from '../../../components/layout/Header';
 import MatchListFilters from '../components/MatchListFilters';
 import MatchBrowseCard from '../components/MatchBrowseCard';
 import { previewMatches, previewProfile, previewRecommendations } from '../data/matchListPreview';
-import logo from '../assets/logo.png';
-import searchIcon from '../../../components/layout/assets/header-search.svg';
 import '../css/match.css';
 import '../css/matchList.css';
 import useMatchList from '../hooks/useMatchList';
@@ -17,10 +16,10 @@ export default function MatchListPage() {
 }
 
 export function MatchListView({
-  preview = false, matches = [], recommendations = [], profile, totalCount,
+  preview = false, matches = [], recommendations = [], profile, profileStatus = 'idle', totalCount,
   filters = {}, sort = 'default', recommendationSort = 'default', status = 'idle', recommendationStatus = 'idle',
   hasMore = false, listError = '', recommendationError = '', joinMessage = '', joiningId = null,
-  onFilterChange, onApply, onReset, onSort, onRecommendationSort,
+  onSportChange, onFilterChange, onApply, onReset, onSort, onRecommendationSort,
   onJoin, onLoadMore, onRetry, onRecommendationRetry, onFacilitySearch,
 }) {
   const visibleMatches = preview ? previewMatches : matches;
@@ -28,16 +27,10 @@ export function MatchListView({
   const visibleProfile = preview ? previewProfile : profile;
 
   return <div className="ml-page">
-    <header className="ml-header"><div className="ml-shell">
-      <div className="ml-header-top"><Link to="/" aria-label="SPORTY 홈"><img src={logo} width="107" height="32" alt="SPORTY" /></Link>
-        {/* FC-01: 검색어 → /facilities?query=... 이동 콜백. 실제 검색 처리는 시설 화면에서 구현. */}
-        <div className="ml-global-search"><img src={searchIcon} width="16" height="16" alt="" /><input aria-label="체육시설 검색" placeholder="지역명, 체육시설, 서비스명 통합 검색..." disabled={!onFacilitySearch} onKeyDown={event => { if (event.key === 'Enter') onFacilitySearch?.(event.currentTarget.value); }} /><span>시설 검색</span></div>
-        <Link className="ml-account" to="/mypage">{visibleProfile?.avatar && <img className="ml-avatar" src={visibleProfile.avatar} alt="" />}<span><strong>{visibleProfile?.nickname || '마이페이지'}</strong><small>{visibleProfile?.region || '내 프로필 확인'}</small></span></Link>
-      </div>
-      <nav className="ml-nav" aria-label="운동 종목">{SPORTS.map(([value, label]) => <button key={value} type="button" aria-pressed={(filters.sportType || '') === value} disabled={!onFilterChange} onClick={() => onFilterChange?.('sportType', value)}>{label}</button>)}<span>{visibleProfile?.region || '지역을 선택해주세요'}</span></nav>
-    </div></header>
+    <Header onFacilitySearch={onFacilitySearch} />
+    <div className="ml-shell"><nav className="ml-nav" aria-label="운동 종목">{SPORTS.map(([value, label]) => <button key={value} type="button" aria-pressed={(filters.sportType || '') === value} disabled={!onSportChange} onClick={() => onSportChange?.(value)}>{label}</button>)}<span>{visibleProfile?.region || '지역을 선택해주세요'}</span></nav></div>
     <main className="ml-shell ml-layout">
-      <MatchListFilters profile={visibleProfile} filters={filters} onFilterChange={onFilterChange} onApply={onApply} onReset={onReset} />
+      <MatchListFilters profile={visibleProfile} profileStatus={profileStatus} filters={filters} onFilterChange={onFilterChange} onApply={onApply} onReset={onReset} />
       <div className="ml-content">
         {joinMessage && <p role="status">{joinMessage}</p>}
         {preview && <p className="ml-preview" role="note">화면 미리보기용 예시입니다. 실제 모집 정보가 아니며 참가 신청은 제공하지 않습니다.</p>}
@@ -54,6 +47,6 @@ export function MatchListView({
         </section>
       </div>
     </main>
-    <footer className="ml-footer"><div className="ml-shell"><div><img src={logo} width="80" height="24" alt="SPORTY" /><span>© 2026 SPORTY. 함께 즐기는 생활체육 매칭 플랫폼</span></div><div><span>이용약관</span><span>개인정보처리방침</span><span>공공체육시설 API 연동 안내</span></div></div></footer>
+    <Footer />
   </div>;
 }

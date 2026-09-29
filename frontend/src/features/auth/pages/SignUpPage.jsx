@@ -1,8 +1,10 @@
+import DistrictSelect from '../../../components/common/DistrictSelect';
+import Footer from '../../../components/layout/Footer';
+import Header from '../../../components/layout/Header';
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../../api/axios';
-import { districts, sports } from '../data/signUpOptions';
-import home from '../assets/home.svg';
+import { sports } from '../data/signUpOptions';
 import ball from '../assets/ball.svg';
 import email from '../assets/email.svg';
 import lock from '../assets/lock.svg';
@@ -94,16 +96,13 @@ const SignUpPage = () => {
 
   return (
     <div className="signup-page">
-      <header className="signup-header"><div className="signup-shell">
-        <Link to="/" className="signup-brand">SPORTY</Link>
-        <Link to="/" className="signup-home"><img src={home} alt="" />홈으로 가기</Link>
-      </div></header>
+      <Header />
       <main className="signup-main">
         {/* Figma의 WIREFRAME/DB 컬럼 설명은 개발용 주석이므로 실제 화면에 노출하지 않는다. */}
         <section className="signup-card" aria-labelledby="signup-title">
           <div className="signup-intro">
             <span className="signup-symbol"><img src={ball} alt="" /></span>
-            <h1 id="signup-title">SPORTY 회원가입</h1>
+            <h1 id="signup-title">Sporty 회원가입</h1>
             <p>기본 계정 정보와 스포츠 활동 프로필을 입력해 계정을 생성하세요.</p>
           </div>
           <form onSubmit={signUpHandler} noValidate aria-busy={pending}>
@@ -135,7 +134,7 @@ const SignUpPage = () => {
                 <label htmlFor="signup-district">주 활동 자치구 <span className="signup-required" aria-hidden="true">*</span></label>
                 <div className="signup-region">
                   <div className="signup-select-wrap"><select aria-label="시/도" value="SEOUL" disabled><option value="SEOUL">서울특별시</option></select><img src={chevron} alt="" /></div>
-                  <div className="signup-select-wrap"><select id="signup-district" name="district" value={form.district} onChange={keyHandler} required aria-invalid={Boolean(errors.district)} aria-describedby={errors.district ? 'signup-district-error' : undefined}><option value="">자치구 선택</option>{districts.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><img src={chevron} alt="" /></div>
+                  <div className="signup-select-wrap"><DistrictSelect id="signup-district" name="district" value={form.district} onChange={keyHandler} required aria-invalid={Boolean(errors.district)} aria-describedby={errors.district ? 'signup-district-error' : undefined} /><img src={chevron} alt="" /></div>
                 </div>
                 {errors.district && <p id="signup-district-error" className="signup-error" role="alert">{errors.district}</p>}
                 <p className="signup-help">주로 운동하는 서울시 자치구를 선택해주세요.</p>
@@ -148,7 +147,7 @@ const SignUpPage = () => {
         </section>
       </main>
       {/* 약관/고객지원 라우트 확정 후 담당자가 아래 문구를 Link로 교체한다. */}
-      <footer className="signup-footer"><div className="signup-shell"><div className="signup-footer-labels"><span>이용약관</span><span>개인정보처리방침</span><span>고객지원</span></div><small>© {new Date().getFullYear()} SPORTY. All rights reserved.</small></div></footer>
+      <Footer />
     </div>
   );
 };

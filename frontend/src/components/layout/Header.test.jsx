@@ -30,6 +30,6 @@ test('헤더가 마운트된 채 경로가 바뀌어도 로그인 상태를 갱�
   fireEvent.click(screen.getByRole('link', { name: '다른 화면' }));
   expect(screen.getByRole('link', { name: '마이페이지' })).toBeInTheDocument();
   localStorage.removeItem('at');
-  fireEvent.click(screen.getByRole('link', { name: 'S Sporty' }));
+  fireEvent.click(screen.getByRole('link', { name: 'Sporty 홈' }));
   expect(screen.getByRole('link', { name: '로그인' })).toBeInTheDocument();
 });

@@ -42,7 +42,7 @@ public class AiSearchConditionDto {
                 .build();
     }
 
-    // 프론트 조건 요약용. 순서: 종목 → 성별 → 날짜 → 자치구 → 실력 수준, 값이 없는 항목은 넣지 않음
+    // 프론트 조건 요약용. 순서: 종목 → 성별 → 날짜 → 자치구 → 실력 수준 → 모집 상태, 값이 없는 항목은 넣지 않음
     public List<AiConditionDto> toConditions() {
         List<AiConditionDto> conditions = new ArrayList<>();
         if (sportType != null) {
@@ -60,6 +60,9 @@ public class AiSearchConditionDto {
         }
         if (skillLevel != null) {
             conditions.add(new AiConditionDto("실력 수준", toSkillText(skillLevel)));
+        }
+        if (status != null) {
+            conditions.add(new AiConditionDto("모집 상태", toStatusText(status)));
         }
         return conditions;
     }
@@ -83,6 +86,13 @@ public class AiSearchConditionDto {
             case BEGINNER -> "초급";
             case INTERMEDIATE -> "중급";
             case ADVANCED -> "고급";
+        };
+    }
+
+    private static String toStatusText(MatchStatus status) {
+        return switch (status) {
+            case RECRUITING -> "모집중";
+            case CLOSED -> "마감";
         };
     }
 }

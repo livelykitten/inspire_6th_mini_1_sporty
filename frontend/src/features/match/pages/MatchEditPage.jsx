@@ -1,8 +1,9 @@
+import Footer from '../../../components/layout/Footer';
+import Header from '../../../components/layout/Header';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import MatchForm from '../components/MatchForm';
 import { getMatchDetail, modifyMatch } from '../api/matchApi';
-import logo from '../assets/logo.png';
 import '../css/match.css';
 
 export default function MatchEditPage() {
@@ -56,10 +57,7 @@ export default function MatchEditPage() {
   const match = current?.match;
 
   return <div className="match-page">
-    <header className="match-header"><div className="match-header-inner">
-      <Link to="/" className="match-brand" aria-label="SPORTY 홈"><img src={logo} alt="" width="107" height="32" /><span><strong>SPORTY</strong><small>ATHLETIC MATCH PLATFORM</small></span></Link>
-      <Link to="/mypage" className="match-my-link">내 매치</Link>
-    </div></header>
+    <Header />
     <main className="match-main">
       <nav className="match-breadcrumb" aria-label="현재 위치"><Link to="/">홈</Link><span>/</span><Link to={`/matches/${matchId}`}>매치 상세</Link><span>/</span><span aria-current="page">매치 수정</span></nav>
       <h1>운동 매치 수정하기</h1>
@@ -70,6 +68,6 @@ export default function MatchEditPage() {
         selectedFacility={{ serviceId: match.serviceId, name: match.serviceName, region: match.region, locationName: match.locationName }}
         onSubmit={handleSubmit} submitLabel="매치 수정 완료하기" />}
     </main>
-    <footer className="match-footer"><img src={logo} alt="SPORTY" width="80" height="24" /><strong>SPORTY</strong><span>© {new Date().getFullYear()} SPORTY. All rights reserved.</span></footer>
+    <Footer />
   </div>;
 }

@@ -55,9 +55,7 @@
 .mypage-profile-actions { align-items: center; gap: 10px; padding-top: 4px; }
 .mypage-profile-actions button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; border: 1px solid transparent; border-radius: 12px; font-size: 14px; font-weight: 600; line-height: 20px; transition: background-color .15s, border-color .15s, box-shadow .15s; }
 .mypage-profile-actions .mypage-cancel { min-width: 88px; padding: 12px 24px; color: #64748b; background: #fff; border-color: #e2e8f0; }
-.mypage-profile-actions .mypage-cancel:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
-.mypage-profile-actions .mypage-save { min-width: 168px; padding: 12px 28px; box-shadow: 0 2px 4px #2563eb1a; }
-.mypage-profile-actions .mypage-save:hover:not(:disabled) { background: #1d4ed8; border-color: #1d4ed8; box-shadow: 0 3px 8px #2563eb26; }
+.mypage-profile-actions .mypage-save { min-width: 168px; padding: 12px 28px; box-shadow: 0 1px 2px #0000000d; }
 .mypage-profile-actions button:disabled { box-shadow: none; }
 @media (max-width: 480px) {
   .mypage-profile-actions { display: grid; grid-template-columns: 1fr 2fr; }
@@ -78,7 +76,6 @@
 .mypage-list-description { color: #64748b; font-size: 14px; }
 .mypage-match-list { padding: 0; margin: 24px 0 0; list-style: none; display: grid; gap: 16px; }
 .mypage-match-list li { border: 1px solid #e2e8f0; border-radius: 12px; transition: border-color .15s, background-color .15s; }
-.mypage-match-list li:hover, .mypage-match-list li:focus-within { border-color: #2563eb; background: #f8fafc; }
 .mypage-match-link { display: block; padding: 20px; border-radius: 12px; }
 .mypage-match-detail { display: block; margin-top: 16px; color: #2563eb; font-size: 13px; font-weight: 600; }
 .mypage-match-list h2 { margin: 12px 0; padding: 0; border: 0; font-size: 18px; }

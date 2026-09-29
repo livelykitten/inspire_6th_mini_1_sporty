@@ -3,6 +3,7 @@ package com.example.sporty.features.facilities.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -22,7 +23,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.sporty.features.commons.config.SecurityConfig;
+import com.example.sporty.features.commons.exception.matches.ServiceNotFoundException;
 import com.example.sporty.features.commons.filter.JwtAuthenticationFilter;
+import com.example.sporty.features.facilities.domain.dto.ServiceDetailResponseDto;
 import com.example.sporty.features.facilities.domain.dto.ServiceRequestDto;
 import com.example.sporty.features.facilities.domain.dto.ServiceResponseDto;
 import com.example.sporty.features.facilities.service.FacilityQueryService;
@@ -86,5 +89,70 @@ class FacilityServiceControllerTest {
                                 )
                 )
         );
+    }
+    @Test
+    @DisplayName("FC-01: 시간 형식이 잘못되면 400과 안내 메시지를 반환한다")
+    void getServicesWithInvalidTime() throws Exception {
+        mvc.perform(get("/api/services")
+                        .param("startTime", "25:99"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_SEARCH_CONDITION"))
+                .andExpect(jsonPath("$.message")
+                        .value("검색 조건 형식이 올바르지 않습니다. 시간은 HH:mm 형식으로 입력해주세요."));
+
+        verifyNoInteractions(facilityQueryService);
+    }
+
+    @Test
+    @DisplayName("FC-02: DB 서비스 ID로 상세 정보를 조회한다")
+    void getServiceDetail() throws Exception {
+        ServiceDetailResponseDto response = ServiceDetailResponseDto.builder()
+                .id(1L)
+                .serviceId("S251121100349891778")
+                .status("접수중")
+                .serviceName("응봉공원 테니스장")
+                .paymentMethod("유료")
+                .locationName("응봉공원")
+                .serviceType("테니스장")
+                .region("성동구")
+                .build();
+
+        when(facilityQueryService.getFacility(1L)).thenReturn(response);
+
+        mvc.perform(get("/api/services/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.serviceId")
+                        .value("S251121100349891778"))
+                .andExpect(jsonPath("$.status").value("접수중"))
+                .andExpect(jsonPath("$.serviceName")
+                        .value("응봉공원 테니스장"))
+                .andExpect(jsonPath("$.paymentMethod").value("유료"))
+                .andExpect(jsonPath("$.locationName").value("응봉공원"));
+
+        verify(facilityQueryService).getFacility(1L);
+    }
+
+    @Test
+    @DisplayName("FC-02: 요청 ID가 숫자가 아니면 400을 반환한다")
+    void getServiceDetailWithInvalidId() throws Exception {
+        mvc.perform(get("/api/services/abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_SERVICE_ID"));
+
+        verifyNoInteractions(facilityQueryService);
+    }
+
+    @Test
+    @DisplayName("FC-02: 존재하지 않는 서비스이면 404를 반환한다")
+    void getMissingServiceDetail() throws Exception {
+        when(facilityQueryService.getFacility(999999L))
+                .thenThrow(new ServiceNotFoundException());
+
+        mvc.perform(get("/api/services/999999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("SERVICE_NOT_FOUND"))
+                .andExpect(jsonPath("$.message")
+                        .value("체육서비스를 찾을 수 없습니다."));
     }
 }

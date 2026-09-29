@@ -122,6 +122,27 @@ public class MatchService {
         }
     }
 
+    /** [USR-04] 회원탈퇴: 생성한 매치는 전체 삭제, 다른 매치에서는 본인 참가 기록만 삭제한다. */
+    @Transactional
+    public void removeMatchesForWithdrawal(Long userId) {
+        List<Long> matchIds = matchParticipantRepository
+                .findAllByUser_IdOrderByMatch_StartAtDescMatch_IdDesc(userId).stream()
+                .map(participant -> participant.getMatch().getId())
+                .distinct().sorted().toList();
+
+        // 참가/탈퇴 API와 같은 매치 잠금을 사용하고, 여러 매치는 ID 순으로 잠근다.
+        for (Long matchId : matchIds) {
+            if (matchRepository.findByIdForUpdate(matchId).isEmpty()) continue;
+            var participation = matchParticipantRepository.findByMatch_IdAndUserId(matchId, userId);
+            if (participation.isEmpty()) continue;
+            if (participation.get().getRole() == MatchParticipantRole.OWNER) {
+                deleteMatch(matchId, userId);
+            } else {
+                leaveMatch(matchId, userId);
+            }
+        }
+    }
+
     // EM-06: 참가자 저장과 정원 도달 시 모집 마감을 하나의 트랜잭션으로 처리한다.
     @Transactional
     public MatchParticipantResponseDto joinMatch(Long matchId, Long userId) {

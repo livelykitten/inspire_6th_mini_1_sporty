@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.example.sporty.features.ai.domain.dto.AiDraftDto;
 import com.example.sporty.features.ai.domain.dto.AiDraftResponseDto;
 import com.example.sporty.features.ai.util.PromptDateTable;
+import com.example.sporty.features.ai.util.SupportedSports;
 import com.example.sporty.features.commons.exception.ai.AiDraftException;
 import com.example.sporty.features.exerciseMatching.domain.enums.GenderGroup;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -56,11 +57,17 @@ public class MatchDraftAiAgent {
                 %s
                 """.formatted(PromptDateTable.of(PromptDateTable.today()));
 
-        String result = matchDraftChatClient.prompt()
-                .system(systemPrompt)
-                .user(prompt)
-                .call()
-                .content();
+        String result;
+        try {
+            result = matchDraftChatClient.prompt()
+                    .system(systemPrompt)
+                    .user(prompt)
+                    .call()
+                    .content();
+        } catch (IllegalArgumentException e) {
+            // AI가 enum에 없는 값(예: SQUASH)을 넘기면 도구 인자 변환 단계에서 실패한다.
+            throw new AiDraftException(SupportedSports.unsupportedMessage());
+        }
 
         System.out.println("debug >>>> match draft ai agent result : " + result);
 

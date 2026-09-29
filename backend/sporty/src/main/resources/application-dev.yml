@@ -65,9 +65,9 @@ openapi:
 facility:
     openapi:
         service-key: ${PUBLIC_DATA_API_KEY}
-        base-url: ${PUBLIC_DATA_API_URL:http://openapi.seoul.go.kr:8088}
+        base-url: ${PUBLIC_DATA_API_URL}
         service-name: ListPublicReservationSport
         data-type: json
     sync:
-        cron: "0 6 16 * * *"
+        cron: "0 0 3 * * *"
         zone: "Asia/Seoul"

@@ -4,7 +4,7 @@ import headerSearch from './assets/header-search.svg';
 import './header.css';
 
 // [#54][FC-01] Router 내부에서 <Header />로 사용한다. main.css 없이도 독립적으로 표시된다.
-export default function Header() {
+export default function Header({ children, onFacilitySearch }) {
   const moveUrl = useNavigate();
   const location = useLocation();
   // [#54][USR-02] 상단 메뉴 표시용 로그인 상태. 로그인 페이지가 저장하는 at 유무를 사용한다.
@@ -34,6 +34,7 @@ export default function Header() {
   const facilitySearchHandler = event => {
     event.preventDefault();
     const query = facilityQuery.trim();
+    if (onFacilitySearch) { onFacilitySearch(query); return; }
     moveUrl(query ? `/facilities?${new URLSearchParams({
       query
     })}` : '/facilities');
@@ -42,9 +43,8 @@ export default function Header() {
   return (
         <header className="sporty-header">
             <div className="sporty-header-container sporty-header-inner">
-                <Link className="sporty-header-brand" to="/">
-                    <span>S</span>
-                    <strong>Sporty</strong>
+                <Link className="sporty-header-brand" to="/" aria-label="Sporty 홈">
+                    <span>Sporty</span>
                 </Link>
                 {/* 폼 제출을 사용해 검색 버튼 클릭과 Enter 입력이 같은 경로로 이동하도록 한다. */}
                 <form className="sporty-header-search" role="search" aria-label="체육시설 검색" onSubmit={facilitySearchHandler}>
@@ -62,6 +62,7 @@ export default function Header() {
                     </>}
                 </nav>
             </div>
+            {children && <div className="sporty-header-container">{children}</div>}
         </header>
   );
 }
