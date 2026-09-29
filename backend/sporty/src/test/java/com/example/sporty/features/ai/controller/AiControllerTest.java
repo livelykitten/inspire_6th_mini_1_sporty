@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,9 +21,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.example.sporty.features.ai.agent.MatchAiAgent;
 import com.example.sporty.features.ai.agent.MatchDraftAiAgent;
 import com.example.sporty.features.ai.agent.MatchRecommendAiAgent;
+import com.example.sporty.features.ai.domain.dto.AiSearchConditionDto;
+import com.example.sporty.features.ai.domain.dto.AiSearchResponseDto;
 import com.example.sporty.features.commons.exception.ai.AiDraftException;
 import com.example.sporty.features.commons.exception.ai.AiSearchException;
 import com.example.sporty.features.commons.handler.GlobalExceptionHandler;
+import com.example.sporty.features.commons.util.SportType;
+import com.example.sporty.features.exerciseMatching.domain.enums.SkillLevel;
 
 /*
 - AI-01, AI-02 요청 입력값 검증 테스트
@@ -86,6 +92,24 @@ class AiControllerTest {
                         .content("{\"prompt\": \"같이 운동할 사람 있나요\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("검색 조건을 찾지 못했습니다."));
+    }
+
+    @Test
+    @DisplayName("[AI-02] 검색 응답에 조건 직접 수정용 원래 조건(criteria)을 함께 반환한다")
+    void returnsCriteriaWithSearchResult() throws Exception {
+        AiSearchConditionDto criteria = AiSearchConditionDto.builder()
+                .sportType(SportType.FUTSAL).region("송파구").skillLevel(SkillLevel.BEGINNER).build();
+        when(matchAiAgent.search("송파구 초보 풋살"))
+                .thenReturn(AiSearchResponseDto.builder()
+                        .conditions(criteria.toConditions()).matches(List.of()).criteria(criteria).build());
+
+        mockMvc.perform(post("/api/ai/matches/search")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"prompt\": \"송파구 초보 풋살\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.criteria.sportType").value("FUTSAL"))
+                .andExpect(jsonPath("$.criteria.region").value("송파구"))
+                .andExpect(jsonPath("$.criteria.skillLevel").value("BEGINNER"));
     }
 
     @Test
