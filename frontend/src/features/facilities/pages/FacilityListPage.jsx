@@ -1,3 +1,4 @@
+import Footer from '../../../components/layout/Footer';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Header from '../../../components/layout/Header';
@@ -116,6 +117,7 @@ export default function FacilityListPage() {
           </nav>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

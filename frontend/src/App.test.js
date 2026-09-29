@@ -41,7 +41,7 @@ test('opens facility search without a query when submitted with Enter', async ()
 
 test('opens the match search page from the floating link', async () => {
   render(<App />);
-  userEvent.click(screen.getByRole('link', { name: '전체 3건 매치 목록 보러가기' }));
+  userEvent.click(screen.getByRole('link', { name: '전체 매치 목록 보러가기' }));
   expect(screen.getByRole('heading', { name: '회원 맞춤 추천 매치' })).toBeInTheDocument();
   expect(window.location.pathname).toBe('/matches/search');
   expect(await screen.findByText(/조건에 맞는 매치가 없습니다/)).toBeInTheDocument();

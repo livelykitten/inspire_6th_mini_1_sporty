@@ -1,4 +1,4 @@
-import { districts } from '../../auth/data/signUpOptions';
+import DistrictSelect from '../../../components/common/DistrictSelect';
 import verified from '../assets/list/imgContainer.svg';
 import sport from '../assets/list/imgContainer1.svg';
 import pin from '../assets/list/imgContainer2.svg';
@@ -25,7 +25,7 @@ export default function MatchListFilters({ profile, profileStatus = 'idle', filt
       <fieldset><legend>매치 상태</legend><div className="ml-segments">{[['', '전체'], ['RECRUITING', '모집중'], ['CLOSED', '마감']].map(([value, label]) => <button key={value} type="button" aria-pressed={(filters.status || '') === value} disabled={!onFilterChange} onClick={() => onFilterChange?.('status', value)}>{label}</button>)}</div></fieldset>
       <fieldset><legend><img src={region} alt="" /> 지역</legend><div className="ml-region-selects">
         <label><span className="match-sr-only">시·도</span><select disabled defaultValue="서울특별시"><option>서울특별시</option></select><img src={chevron} alt="" /></label>
-        <label><span className="match-sr-only">자치구</span><select value={filters.region || ''} disabled={!onFilterChange} onChange={event => onFilterChange?.('region', event.target.value)}><option value="">전체 지역</option>{districts.map(([, name]) => <option key={name} value={name}>{name}</option>)}</select><img src={chevron} alt="" /></label>
+        <label><span className="match-sr-only">자치구</span><DistrictSelect aria-label="자치구" valueType="name" placeholder="전체 지역" value={filters.region || ''} disabled={!onFilterChange} onChange={event => onFilterChange?.('region', event.target.value)} /><img src={chevron} alt="" /></label>
       </div></fieldset>
       <fieldset><legend>체육서비스 요금</legend><div className="ml-segments ml-fees">{[['', '전체'], ['Y', '무료'], ['N', '유료 대관']].map(([value, label]) => <button type="button" key={value} aria-pressed={(filters.isFree || '') === value} disabled={!onFilterChange} onClick={() => onFilterChange?.('isFree', value)}>{label}</button>)}</div></fieldset>
       <label className="ml-preference"><span>내 선호 종목만 보기<small>{profile ? '등록한 선호 종목으로 검색' : '프로필을 불러온 후 사용할 수 있습니다'}</small></span><input type="checkbox" role="switch" checked={!!filters.preferredOnly} disabled={!profile || !onFilterChange} onChange={event => onFilterChange?.('preferredOnly', event.target.checked)} /></label>

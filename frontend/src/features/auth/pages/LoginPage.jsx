@@ -1,7 +1,8 @@
+import Footer from '../../../components/layout/Footer';
+import Header from '../../../components/layout/Header';
 import { useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../../../api/axios';
-import home from '../assets/login/home.svg';
 import ball from '../assets/login/ball.svg';
 import emailIcon from '../assets/login/email.svg';
 import info from '../assets/login/info.svg';
@@ -103,15 +104,12 @@ const LoginPage = () => {
 
   return (
     <div className="login-page">
-      <header className="login-header"><div className="login-shell">
-        <Link to="/" className="login-home"><img src={home} alt="" />홈으로 가기</Link>
-        <Link to="/" className="login-brand">SPORTY</Link>
-      </div></header>
+      <Header />
       <main className="login-main">
         {/* Figma 카드 구조를 유지하고 DB 컬럼/해시 설명은 사용자 화면에서 제외한다. */}
         <section className="login-card" aria-labelledby="login-title">
           <div className="login-body">
-            <div className="login-intro"><span className="login-symbol"><img src={ball} alt="" /></span><strong>SPORTY</strong><h1 id="login-title">로그인</h1><p>생활체육 매칭 플랫폼 SPORTY에 오신 것을 환영합니다.</p></div>
+            <div className="login-intro"><span className="login-symbol"><img src={ball} alt="" /></span><strong>Sporty</strong><h1 id="login-title">로그인</h1><p>생활체육 매칭 플랫폼 Sporty에 오신 것을 환영합니다.</p></div>
             {/* [USR-01 → USR-02] 회원가입 페이지가 전달하는 완료 상태를 안내한다. */}
             {location.state?.signUpComplete && <p className="login-success" role="status">회원가입이 완료되었습니다. 로그인해주세요.</p>}
             <form onSubmit={loginHandler} noValidate aria-busy={pending}>
@@ -138,7 +136,7 @@ const LoginPage = () => {
         </section>
       </main>
       {/* 약관/고객센터 담당자가 실제 라우트 확정 후 Link로 연결한다. */}
-      <footer className="login-footer"><div className="login-shell"><small>© {new Date().getFullYear()} SPORTY. All rights reserved.</small><div><span>이용약관</span><span>개인정보처리방침</span><span>고객센터</span></div></div></footer>
+      <Footer />
     </div>
   );
 };

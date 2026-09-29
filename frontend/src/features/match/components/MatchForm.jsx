@@ -1,3 +1,4 @@
+import DistrictSelect from '../../../components/common/DistrictSelect';
 import { useRef, useState } from 'react';
 import { initialMatchValues, SKILL_LEVELS, toMatchPayload, validateMatch } from '../utils/matchValidation';
 import futsal from '../assets/futsal.svg';
@@ -138,7 +139,7 @@ export default function MatchForm({ initialValues, selectedFacility, searchFacil
       <Section number="2" title="체육시설 및 구장 선택" description={isEdit ? '시설은 변경할 수 없습니다.' : undefined}>
         {isEdit ? <div className="match-facility"><div><strong>{facility?.name || '시설명 정보 없음'}</strong><span className="match-facility-tag">기존 시설</span><p>{[facility?.region, facility?.locationName].filter(Boolean).join(' · ') || '등록된 장소 정보가 아직 없습니다.'}</p></div></div> : <>
         <label className="match-sr-only" htmlFor="facility-region">지역</label>
-        <input id="facility-region" className="match-region" value={region} onChange={event => setRegion(event.target.value)} placeholder="지역 (선택, 예: 서초구)" onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); search(); } }} />
+        <DistrictSelect id="facility-region" className="match-region" valueType="name" placeholder="전체 자치구" value={region} onChange={event => setRegion(event.target.value)} />
         <label className="match-sr-only" htmlFor="facility-search">시설명</label>
         <div className="match-search"><input id="facility-search" value={query} placeholder="시설명으로 검색" onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); search(); } }} aria-invalid={!!errors.serviceId} aria-describedby={errors.serviceId ? 'error-serviceId' : undefined} />
           <button type="button" className="match-small-button" onClick={search} disabled={searching}>{searching ? '검색 중…' : '시설 검색'}</button></div>

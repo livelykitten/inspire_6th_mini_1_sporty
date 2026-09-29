@@ -45,11 +45,11 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  color: #434656;
+  color: #475569;
 }
 
 .fl-tag.is-soft {
-  background: #eef2ff;
+  background: #eff6ff;
   color: var(--fl-blue);
 }
 
@@ -102,8 +102,8 @@
   min-height: 92px;
   padding: 12px 8px;
   border-radius: 12px;
-  background: #f1f3ff;
-  color: #141b2b;
+  background: #f1f5f9;
+  color: #1e293b;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -133,20 +133,20 @@
 }
 
 .fd-day.is-closed:not(.is-selected) {
-  background: #eef0f6;
-  color: #737688;
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 .fd-slot {
   align-items: center;
   padding: 16px;
-  background: #f7f8ff;
+  background: #f8fafc;
   border-radius: 14px;
 }
 
 .fd-slot p {
   margin: 0 0 4px;
-  color: #434656;
+  color: #475569;
   font-size: 13px;
 }
 
@@ -156,7 +156,7 @@
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 8px !important;
-  color: #141b2b !important;
+  color: #1e293b !important;
   font-size: 16px !important;
   font-weight: 600;
 }
