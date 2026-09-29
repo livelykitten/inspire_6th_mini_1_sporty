@@ -14,11 +14,13 @@ const AISearchBox = ({
   onGenerate,
   keywords = DEFAULT_KEYWORDS,
   pending = false,
-  generating = false
+  generating = false,
+  initialQuery = ''
 }) => {
   const id = useId();
   // [AI-02][AI-03] string: 사용자가 입력한 자연어 원문. actionHandler가 선택한 검색/생성 콜백으로 전달한다.
-  const [query, setQuery] = useState('');
+  // initialQuery는 로그인 후 복원한 생성 문장(AI-01)이다.
+  const [query, setQuery] = useState(initialQuery);
   // [AI-02][AI-03] string: 검색/생성 Promise가 실패했을 때 표시할 안내 문구. 새 요청 시 초기화한다.
   const [error, setError] = useState('');
   const actionHandler = action => {
