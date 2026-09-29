@@ -81,8 +81,7 @@
 .ml-card-facts > div { display: flex; justify-content: space-between; gap: 4px; }
 .ml-card-facts dt { color: var(--ml-muted); flex-shrink: 0; }
 .ml-card-facts dd { margin: 0; text-align: right; }
-.ml-owner { border-top: 1px solid #f1f5f9; padding-top: 9px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px; font-size: 11px; }
-.ml-owner small { background: #1e293b; color: white; border-radius: 3px; padding: 2px 4px; font-size: 9px; }
+.ml-card-fee { border-top: 1px solid #f1f5f9; padding-top: 9px; text-align: right; font-size: 11px; }
 .ml-card-bottom { margin-top: auto; padding-top: 8px; }
 .ml-card progress { display: block; width: 100%; height: 6px; appearance: none; border: 0; border-radius: 6px; overflow: hidden; margin: 8px 0 10px; background: #f1f5f9; }
 .ml-card progress::-webkit-progress-bar { background: #f1f5f9; }

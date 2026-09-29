@@ -39,6 +39,14 @@ test('unknown and closed statuses cannot be joined', () => {
   expect(toMatchListItem({ ...dto, status: null }).closed).toBe(true);
 });
 
+test.each([[0, true, '무료', 0], [7, false, '유료', 7 / 12 * 100], [13, false, '유료', 100]])(
+  '서버의 실제 장소·요금·참여 인원을 카드로 전달한다 (%s명)', (count, isFree, fee, occupancy) => {
+    const result = toMatchListItem({ ...dto, region: '성동구', isFree, numCurrentParticipant: count });
+    expect(result).toMatchObject({ location: '성동구', fee, participants: `${count}/12명`, occupancy,
+      remaining: `잔여 ${Math.max(0, 12 - count)}명` });
+  }
+);
+
 test('requires confirmed creation of participation', async () => {
   api.post.mockResolvedValue({ status: 201, data: { matchId: 1 } });
   await expect(requestMatchParticipation(1)).resolves.toEqual({ matchId: 1 });
