@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.example.sporty.features.ai.domain.dto.AiSearchConditionDto;
 import com.example.sporty.features.ai.domain.dto.AiSearchResponseDto;
 import com.example.sporty.features.ai.util.PromptDateTable;
+import com.example.sporty.features.ai.util.SupportedSports;
 import com.example.sporty.features.commons.exception.ai.AiSearchException;
 import com.example.sporty.features.exerciseMatching.domain.dto.MatchResponseDto;
 import com.example.sporty.features.exerciseMatching.service.MatchService;
@@ -66,11 +67,17 @@ public class MatchAiAgent {
                 %s
                 """.formatted(PromptDateTable.of(today));
 
-        String result = matchChatClient.prompt()
-                .system(systemPrompt)
-                .user(prompt)
-                .call()
-                .content();
+        String result;
+        try {
+            result = matchChatClient.prompt()
+                    .system(systemPrompt)
+                    .user(prompt)
+                    .call()
+                    .content();
+        } catch (IllegalArgumentException e) {
+            // AI가 enum에 없는 값(예: SQUASH)을 넘기면 도구 인자 변환 단계에서 실패한다.
+            throw new AiSearchException(SupportedSports.unsupportedMessage());
+        }
 
         System.out.println("debug >>>> match ai agent search result : " + result);
         
