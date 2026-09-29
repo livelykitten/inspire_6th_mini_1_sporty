@@ -4,7 +4,7 @@ import { formatMatchDate } from '../../main/utils/matchDisplay';
 const SPORTS = { SOCCER: '축구', FUTSAL: '풋살', TENNIS: '테니스', BADMINTON: '배드민턴', BASKETBALL: '농구', RUNNING: '러닝', BASEBALL: '야구', TABLE_TENNIS: '탁구', VOLLEYBALL: '배구', SWIMMING: '수영' };
 const LEVELS = { BEGINNER: '누구나', INTERMEDIATE: '중급', ADVANCED: '상급' };
 const GENDERS = { MALE: '남성', FEMALE: '여성', MIXED: '혼성' };
-const SEARCH_FIELDS = ['serviceId', 'titleKeyword', 'descriptionKeyword', 'startAt', 'endAt', 'maxParticipant', 'skillLevel', 'sportType'];
+const SEARCH_FIELDS = ['serviceId', 'titleKeyword', 'descriptionKeyword', 'startAt', 'endAt', 'maxParticipant', 'skillLevel', 'sportType', 'region', 'status', 'isFree'];
 
 function readList(data) {
   if (!Array.isArray(data)) throw new Error('매치 목록 응답 형식이 올바르지 않습니다.');
@@ -12,6 +12,9 @@ function readList(data) {
 }
 export async function fetchMatchList(filters = {}, signal) {
   const params = Object.fromEntries(SEARCH_FIELDS.filter(key => filters[key] != null && filters[key] !== '').map(key => [key, filters[key]]));
+  // 검색 DTO는 Boolean을 받는다. 선택하지 않은 요금은 파라미터에서 제외한다.
+  if (params.isFree === 'Y') params.isFree = true;
+  if (params.isFree === 'N') params.isFree = false;
   const { data } = await api.get('/api/matches', { params, signal, timeout: 15000 });
   return readList(data);
 }

@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { fetchMatchList, fetchRecommendedMatches, requestMatchParticipation, matchRequestError } from '../api/matchListApi';
+import { loadMyPage } from '../../mypage/api/myPageApi';
+import { districts, sports } from '../../auth/data/signUpOptions';
 
-const EMPTY_FILTERS = { sportType: '', status: '' };
+const EMPTY_FILTERS = { sportType: '', status: '', region: '', isFree: '', preferredOnly: false };
 
 export default function useMatchList() {
+  const [profile, setProfile] = useState(null);
+  const [profileStatus, setProfileStatus] = useState(() => localStorage.getItem('at') ? 'loading' : 'idle');
   const navigate = useNavigate();
   const location = useLocation();
   const [filters, setFilters] = useState(EMPTY_FILTERS);
@@ -26,6 +30,27 @@ export default function useMatchList() {
   const mounted = useRef(true);
   const appliedRef = useRef(applied);
   appliedRef.current = applied;
+
+  useEffect(() => {
+    if (!localStorage.getItem('at')) return;
+    const request = new AbortController();
+    setProfileStatus('loading');
+    loadMyPage({ signal: request.signal }).then(({ profile: member }) => {
+      if (request.signal.aborted) return;
+      setProfile({
+        nickname: member.nickname,
+        region: districts.find(([code]) => code === member.district)?.[1] || member.district,
+        sports: sports.filter(([code]) => member.preferenceSports.includes(code)).map(([, label]) => label).join(' · '),
+        preferenceSports: member.preferenceSports,
+      });
+      setProfileStatus('success');
+    }).catch(error => {
+      if (request.signal.aborted) return;
+      setProfile(null);
+      setProfileStatus(error.response?.status === 401 ? 'unauthorized' : 'error');
+    });
+    return () => request.abort();
+  }, []);
 
   const loadList = useCallback(async conditions => {
     listRequest.current?.abort();
@@ -69,7 +94,10 @@ export default function useMatchList() {
   }, [loadRecommendations]);
   useEffect(() => { loadList(applied); }, [applied, loadList]);
 
-  const ordered = useMemo(() => sortMatches(matches.filter(match => !applied.status || match.statusCode === applied.status), sort), [matches, applied.status, sort]);
+  const ordered = useMemo(() => sortMatches(matches.filter(match =>
+    (!applied.status || match.statusCode === applied.status)
+    && (!applied.preferredOnly || profile?.preferenceSports.includes(match.sportType))
+  ), sort), [matches, applied.status, applied.preferredOnly, profile, sort]);
 
   const onJoin = async matchId => {
     if (joining.current) return;
@@ -99,10 +127,15 @@ export default function useMatchList() {
   };
 
   return {
-    preview: false, matches: ordered.slice(0, limit), totalCount: ordered.length,
+    preview: false, profile, profileStatus, matches: ordered.slice(0, limit), totalCount: ordered.length,
     recommendations: sortMatches(recommendations, recommendationSort),
     filters, sort, recommendationSort, status, recommendationStatus, listError, recommendationError,
     joiningId, joinMessage, hasMore: limit < ordered.length,
+    onSportChange: sportType => {
+      setFilters(previous => ({ ...previous, sportType }));
+      setApplied(previous => ({ ...previous, sportType }));
+      setLimit(6);
+    },
     onFilterChange: (name, value) => setFilters(previous => ({ ...previous, [name]: value })),
     onApply: () => { setLimit(6); setApplied({ ...filters }); },
     onReset: () => { setFilters(EMPTY_FILTERS); setApplied({ ...EMPTY_FILTERS }); setSort('default'); setLimit(6); },
