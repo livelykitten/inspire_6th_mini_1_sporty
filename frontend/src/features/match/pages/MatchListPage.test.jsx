@@ -6,6 +6,26 @@ function renderPage(props = {}) {
   return render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><MatchListPage {...props} /></MemoryRouter>);
 }
 
+test('sports apply directly and region and fee controls are enabled', () => {
+  const onSportChange = jest.fn();
+  const onFilterChange = jest.fn();
+  renderPage({ onSportChange, onFilterChange, profileStatus: 'loading' });
+  expect(screen.getByText('프로필 불러오는 중')).toBeInTheDocument();
+  expect(screen.queryByText('로그인 후 확인해주세요')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /테니스/ }));
+  expect(onSportChange).toHaveBeenCalledWith('TENNIS');
+  expect(onFilterChange).not.toHaveBeenCalled();
+  const district = screen.getByRole('combobox', { name: '자치구' });
+  expect(district).toBeEnabled();
+  expect(within(district).getAllByRole('option')).toHaveLength(26);
+  fireEvent.change(district, { target: { value: '마포구' } });
+  expect(onFilterChange).toHaveBeenCalledWith('region', '마포구');
+  const fee = screen.getByRole('button', { name: '유료 대관' });
+  expect(fee).toBeEnabled();
+  fireEvent.click(fee);
+  expect(onFilterChange).toHaveBeenCalledWith('isFree', 'N');
+});
+
 test('preview data cannot trigger participation or navigate to fictional match IDs', () => {
   const onJoin = jest.fn();
   renderPage({ preview: true, onJoin });

@@ -1,6 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import useMatchList from './useMatchList';
+import { loadMyPage } from '../../mypage/api/myPageApi';
+jest.mock('../../mypage/api/myPageApi', () => ({ loadMyPage: jest.fn() }));
 import { fetchMatchList, fetchRecommendedMatches, requestMatchParticipation } from '../api/matchListApi';
 
 jest.mock('../api/matchListApi', () => ({
@@ -11,6 +13,44 @@ function wrapper({ children }) { return <MemoryRouter future={{ v7_startTransiti
 beforeEach(() => {
   jest.clearAllMocks(); localStorage.clear();
   fetchMatchList.mockResolvedValue([]); fetchRecommendedMatches.mockResolvedValue([]);
+  loadMyPage.mockResolvedValue({ profile: { nickname: '회원', district: 'MAPO', preferenceSports: ['TENNIS'] } });
+});
+
+test('loads the signed-in profile and applies preferred sports', async () => {
+  localStorage.setItem('at', 'test-token');
+  fetchMatchList.mockResolvedValue([{ id: 1, sportType: 'TENNIS' }, { id: 2, sportType: 'SOCCER' }]);
+  const { result } = renderHook(useMatchList, { wrapper });
+  await waitFor(() => expect(result.current.profileStatus).toBe('success'));
+  expect(result.current.profile).toMatchObject({ nickname: '회원', region: '마포구', sports: '테니스' });
+  act(() => result.current.onFilterChange('preferredOnly', true));
+  act(() => result.current.onApply());
+  await waitFor(() => expect(result.current.status).toBe('success'));
+  expect(result.current.matches.map(match => match.id)).toEqual([1]);
+});
+
+test('profile failures are distinct from signed-out state', async () => {
+  localStorage.setItem('at', 'test-token');
+  loadMyPage.mockRejectedValue(new Error('network'));
+  const { result } = renderHook(useMatchList, { wrapper });
+  await waitFor(() => expect(result.current.profileStatus).toBe('error'));
+  expect(result.current.profile).toBeNull();
+});
+
+test('sport selection applies immediately while preserving unapplied sidebar edits', async () => {
+  const { result } = renderHook(useMatchList, { wrapper });
+  await waitFor(() => expect(result.current.status).toBe('success'));
+  act(() => result.current.onFilterChange('region', '마포구'));
+  act(() => result.current.onFilterChange('isFree', 'N'));
+  act(() => result.current.onSportChange('TENNIS'));
+  await waitFor(() => expect(result.current.status).toBe('success'));
+  expect(fetchMatchList.mock.calls.at(-1)[0]).toMatchObject({ sportType: 'TENNIS', region: '', isFree: '' });
+  expect(result.current.filters.region).toBe('마포구');
+  act(() => result.current.onApply());
+  await waitFor(() => expect(result.current.status).toBe('success'));
+  expect(fetchMatchList.mock.calls.at(-1)[0]).toMatchObject({ sportType: 'TENNIS', region: '마포구', isFree: 'N' });
+  act(() => result.current.onReset());
+  await waitFor(() => expect(result.current.status).toBe('success'));
+  expect(result.current.filters).toMatchObject({ sportType: '', region: '', isFree: '', preferredOnly: false });
 });
 
 test('filters only after apply, sorts and paginates results without extra server pagination', async () => {

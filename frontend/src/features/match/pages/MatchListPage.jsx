@@ -17,10 +17,10 @@ export default function MatchListPage() {
 }
 
 export function MatchListView({
-  preview = false, matches = [], recommendations = [], profile, totalCount,
+  preview = false, matches = [], recommendations = [], profile, profileStatus = 'idle', totalCount,
   filters = {}, sort = 'default', recommendationSort = 'default', status = 'idle', recommendationStatus = 'idle',
   hasMore = false, listError = '', recommendationError = '', joinMessage = '', joiningId = null,
-  onFilterChange, onApply, onReset, onSort, onRecommendationSort,
+  onSportChange, onFilterChange, onApply, onReset, onSort, onRecommendationSort,
   onJoin, onLoadMore, onRetry, onRecommendationRetry, onFacilitySearch,
 }) {
   const visibleMatches = preview ? previewMatches : matches;
@@ -34,10 +34,10 @@ export function MatchListView({
         <div className="ml-global-search"><img src={searchIcon} width="16" height="16" alt="" /><input aria-label="체육시설 검색" placeholder="지역명, 체육시설, 서비스명 통합 검색..." disabled={!onFacilitySearch} onKeyDown={event => { if (event.key === 'Enter') onFacilitySearch?.(event.currentTarget.value); }} /><span>시설 검색</span></div>
         <Link className="ml-account" to="/mypage">{visibleProfile?.avatar && <img className="ml-avatar" src={visibleProfile.avatar} alt="" />}<span><strong>{visibleProfile?.nickname || '마이페이지'}</strong><small>{visibleProfile?.region || '내 프로필 확인'}</small></span></Link>
       </div>
-      <nav className="ml-nav" aria-label="운동 종목">{SPORTS.map(([value, label]) => <button key={value} type="button" aria-pressed={(filters.sportType || '') === value} disabled={!onFilterChange} onClick={() => onFilterChange?.('sportType', value)}>{label}</button>)}<span>{visibleProfile?.region || '지역을 선택해주세요'}</span></nav>
+      <nav className="ml-nav" aria-label="운동 종목">{SPORTS.map(([value, label]) => <button key={value} type="button" aria-pressed={(filters.sportType || '') === value} disabled={!onSportChange} onClick={() => onSportChange?.(value)}>{label}</button>)}<span>{visibleProfile?.region || '지역을 선택해주세요'}</span></nav>
     </div></header>
     <main className="ml-shell ml-layout">
-      <MatchListFilters profile={visibleProfile} filters={filters} onFilterChange={onFilterChange} onApply={onApply} onReset={onReset} />
+      <MatchListFilters profile={visibleProfile} profileStatus={profileStatus} filters={filters} onFilterChange={onFilterChange} onApply={onApply} onReset={onReset} />
       <div className="ml-content">
         {joinMessage && <p role="status">{joinMessage}</p>}
         {preview && <p className="ml-preview" role="note">화면 미리보기용 예시입니다. 실제 모집 정보가 아니며 참가 신청은 제공하지 않습니다.</p>}
