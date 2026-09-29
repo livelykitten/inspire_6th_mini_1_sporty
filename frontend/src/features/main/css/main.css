@@ -117,3 +117,11 @@
   .ms-footer { padding-bottom: 110px; }
   .ms-floating { bottom: max(20px, env(safe-area-inset-bottom)); font-size: 12px; padding-inline: 22px; }
 }
+
+/* [AI-02] 조건 직접 수정 폼 */
+.ms-editor .ms-conditions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ms-editor .ms-condition { display: flex; flex-direction: column; gap: 6px; min-height: 0; color: #94a3b8; font-size: 11px; }
+.ms-editor select, .ms-editor input { padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font-size: 14px; }
+.ms-editor-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.ms-editor [role="alert"] { margin: 12px 0 0; color: #dc2626; font-size: 12px; }
+@media (max-width: 640px) { .ms-editor .ms-conditions { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

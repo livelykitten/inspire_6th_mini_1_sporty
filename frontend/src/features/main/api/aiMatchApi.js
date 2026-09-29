@@ -67,6 +67,44 @@ export function toMatchCard(match) {
   };
 }
 
+// [AI-02] 조건 직접 수정 — 서버 criteria를 편집 폼 값으로 변환한다. 폼은 날짜만 다루므로 일시는 YYYY-MM-DD로 자른다.
+export function toCriteria(criteria) {
+  return {
+    sportType: criteria?.sportType || '',
+    genderGroup: criteria?.genderGroup || '',
+    region: criteria?.region || '',
+    startDate: criteria?.startAt?.slice(0, 10) || '',
+    endDate: criteria?.endAt?.slice(0, 10) || '',
+    skillLevel: criteria?.skillLevel || '',
+    status: criteria?.status || '',
+  };
+}
+
+// 편집한 조건 → 조건 요약. 백엔드 toConditions()와 같은 라벨·날짜 형식을 쓰고, 비운 항목은 '미지정'으로 둔다.
+export function criteriaToConditions({ sportType, genderGroup, region, startDate, endDate, skillLevel }) {
+  const date = !startDate && !endDate ? '' : !startDate ? `~ ${endDate}`
+    : !endDate || startDate === endDate ? startDate : `${startDate} ~ ${endDate}`;
+  return [
+    ['종목', SPORT_LABELS[sportType]], ['성별', GENDER_LABELS[genderGroup]], ['날짜', date],
+    ['자치구', region], ['실력 수준', SKILL_LABELS[skillLevel]],
+  ].map(([label, value]) => ({ label, value: value || '미지정' }));
+}
+
+// 편집한 조건으로 일반 매치 검색(EM-02 GET /api/matches)을 다시 호출한다. AI는 부르지 않는다.
+// 날짜는 시작일 00:00 ~ 종료일 23:59:59로 보낸다. 모집 상태는 AI가 추출한 값을 그대로 유지한다.
+export async function searchMatchesByCriteria({ sportType, genderGroup, region, startDate, endDate, skillLevel, status }) {
+  const params = {
+    sportType, genderGroup, region, skillLevel, status,
+    startAt: startDate && `${startDate}T00:00:00`,
+    endAt: endDate && `${endDate}T23:59:59`,
+  };
+  const { data } = await api.get('/api/matches', {
+    params: Object.fromEntries(Object.entries(params).filter(([, value]) => value)),
+  });
+  if (!Array.isArray(data)) throw new Error('매치 목록 응답 형식을 확인해주세요.');
+  return data.map(toMatchCard);
+}
+
 // [AI-01] AI 매치 초안 생성
 // MainPage.generateHandler가 prepareAiMatchDraft로 넘길 응답 본문 { initialValues }를 반환한다.
 // 실패 메시지는 AISearchBox가 입력창 아래에 표시한다.
