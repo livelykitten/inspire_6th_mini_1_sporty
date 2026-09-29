@@ -90,6 +90,18 @@ class FacilityServiceControllerTest {
                 )
         );
     }
+    @Test
+    @DisplayName("FC-01: 시간 형식이 잘못되면 400과 안내 메시지를 반환한다")
+    void getServicesWithInvalidTime() throws Exception {
+        mvc.perform(get("/api/services")
+                        .param("startTime", "25:99"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_SEARCH_CONDITION"))
+                .andExpect(jsonPath("$.message")
+                        .value("검색 조건 형식이 올바르지 않습니다. 시간은 HH:mm 형식으로 입력해주세요."));
+
+        verifyNoInteractions(facilityQueryService);
+    }
 
     @Test
     @DisplayName("FC-02: DB 서비스 ID로 상세 정보를 조회한다")
@@ -125,7 +137,8 @@ class FacilityServiceControllerTest {
     @DisplayName("FC-02: 요청 ID가 숫자가 아니면 400을 반환한다")
     void getServiceDetailWithInvalidId() throws Exception {
         mvc.perform(get("/api/services/abc"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_SERVICE_ID"));
 
         verifyNoInteractions(facilityQueryService);
     }
