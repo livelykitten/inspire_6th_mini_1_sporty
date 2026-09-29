@@ -8,6 +8,7 @@ import SignUpPage from '../features/auth/pages/SignUpPage';
 import MainPage from '../features/main/pages/MainPage';
 import MatchListPage from '../features/match/pages/MatchListPage';
 import MyPage from '../features/mypage/pages/MyPage';
+import FacilityListPage from '../features/facilities/pages/FacilityListPage';
 import { draftAiMatch } from '../features/main/api/aiMatchApi';
 
 export default function AppRoutes() {
@@ -35,8 +36,8 @@ export default function AppRoutes() {
       {/* [EM-02] 목록 UI skeleton. MatchListPage에서 조회 로직 연결 후 preview=false 설정. */}
       <Route path="/matches/search" element={<MatchListPage />} />
 
-      {/* [FC-01] 시설 검색 — 실제 시설 검색 페이지로 교체하고 URL의 query를 초기 검색어로 사용한다. */}
-      <Route path="/facilities" element={<div>시설 검색</div>} />
+      {/* [FC-01] 시설 검색 — Header의 query를 초기 검색어로 사용한다. */}
+      <Route path="/facilities" element={<FacilityListPage />} />
       <Route path="/facilities/:serviceId" element={<div>시설 상세</div>} />
 
       <Route path="/profiles/:userId" element={<div>프로필 상세</div>} />

@@ -1,0 +1,229 @@
+.fl-page {
+  --fl-blue: #0041c8;
+  --fl-line: #e1e8fd;
+  --fl-muted: #737688;
+  min-height: 100vh;
+  background: #f9f9ff;
+  color: #141b2b;
+  font-size: 14px;
+}
+
+.fl-page * { box-sizing: border-box; }
+.fl-page a { color: inherit; text-decoration: none; }
+.fl-page button, .fl-page input, .fl-page select { font: inherit; }
+.fl-page button { cursor: pointer; border: 0; }
+.fl-page button:disabled { cursor: not-allowed; opacity: 0.5; }
+.fl-page :focus-visible { outline: 3px solid #0055ff; outline-offset: 2px; }
+
+.fl-shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+.fl-kicker {
+  margin: 0 0 8px;
+  color: var(--fl-blue);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  font-weight: 700;
+}
+
+.fl-page h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.fl-lead {
+  margin: 0 0 20px;
+  color: #434656;
+  line-height: 1.6;
+}
+
+.fl-filters {
+  padding: 16px;
+  background: white;
+  border: 1px solid var(--fl-line);
+  border-radius: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.fl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fl-chips button {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #f1f3ff;
+  color: #434656;
+}
+
+.fl-chips button[aria-pressed='true'] {
+  background: var(--fl-blue);
+  color: white;
+}
+
+.fl-search-row {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.fl-field {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--fl-muted);
+}
+
+.fl-field input,
+.fl-field select {
+  width: 100%;
+  border: 1px solid var(--fl-line);
+  background: #f7f8ff;
+  border-radius: 10px;
+  padding: 11px 12px;
+  color: #141b2b;
+}
+
+.fl-search-button {
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 10px;
+  background: var(--fl-blue);
+  color: white;
+  white-space: nowrap;
+}
+
+.fl-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 12px;
+  color: #434656;
+}
+
+.fl-summary p { margin: 0; }
+.fl-home { color: var(--fl-blue); font-size: 13px; }
+
+.fl-empty {
+  padding: 24px;
+  background: white;
+  border: 1px solid var(--fl-line);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.fl-empty button {
+  margin-left: 8px;
+  background: var(--fl-blue);
+  color: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.fl-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  background: white;
+  border: 1px solid var(--fl-line);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+}
+
+.fl-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.fl-tag,
+.fl-status,
+.fl-fee {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.fl-tag { background: var(--fl-blue); color: white; }
+.fl-status { background: #d8ffe6; color: #007232; }
+.fl-status.is-closed { background: #e9edff; color: #737688; }
+.fl-fee { background: #fff4d6; color: #8a5a00; }
+
+.fl-card h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.fl-card-meta {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #434656;
+}
+
+.fl-card-meta div { display: flex; gap: 8px; }
+.fl-card-meta dt {
+  width: 52px;
+  color: var(--fl-muted);
+}
+
+.fl-card-meta dd { margin: 0; }
+
+.fl-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 92px;
+}
+
+.fl-detail,
+.fl-create,
+.fl-closed {
+  text-align: center;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.fl-detail { color: var(--fl-blue); background: #eef2ff; }
+.fl-create { background: var(--fl-blue); color: white; }
+.fl-closed { background: #e9edff; color: #737688; }
+
+.fl-pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.fl-pager button {
+  background: white;
+  border: 1px solid var(--fl-line);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+@media (max-width: 800px) {
+  .fl-search-row,
+  .fl-card {
+    grid-template-columns: 1fr;
+  }
+
+  .fl-card-actions { flex-direction: row; }
+}
