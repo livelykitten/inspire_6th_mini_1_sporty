@@ -14,14 +14,16 @@ import { formatMatchDate, formatMatchLocation } from '../utils/matchDisplay';
 const SKILL_LABELS = { BEGINNER: '초급', INTERMEDIATE: '중급', ADVANCED: '고급' };
 const SPORT_LABELS = { SOCCER: '축구', FUTSAL: '풋살', BASKETBALL: '농구', BASEBALL: '야구', TENNIS: '테니스', BADMINTON: '배드민턴', TABLE_TENNIS: '탁구', VOLLEYBALL: '배구', SWIMMING: '수영', RUNNING: '러닝' };
 const GENDER_LABELS = { MALE: '남성', FEMALE: '여성', MIXED: '혼성'};
+const STATUS_LABELS = { RECRUITING: '모집중', CLOSED: '마감' };
 
 // [AI-02] AI 매치 검색 — 맞춤 조건 응답 변환
 // 프론트에서 자연어를 재해석하지 않고 백엔드가 정제한 조건만 표시한다.
 // conditions 항목 계약: { label, value }. 최종 DTO가 달라지면 이 변환부를 수정한다.
-// 표시 순서는 종목 → 성별 → 날짜 → 자치구 → 실력 수준이며, 그 외 조건과 detail은 표시하지 않는다.
+// 표시 순서는 종목 → 성별 → 날짜 → 자치구 → 실력 수준 → 모집 상태이며, 그 외 조건과 detail은 표시하지 않는다.
+// 모집 상태도 검색에 적용되는 조건이므로 요약과 직접 수정 폼에 함께 보여준다.
 // 자치구 값은 성동구/중구 등의 구 이름으로 내려받는다. 주소 문자열에서 프론트가 임의 추출하지 않는다.
 // 응답 자체가 비었으면 요약을 숨기고, 일부 조건만 왔다면 나머지는 '미지정'으로 표시한다.
-const CONDITION_LABELS = ['종목', '성별', '날짜', '자치구', '실력 수준'];
+const CONDITION_LABELS = ['종목', '성별', '날짜', '자치구', '실력 수준', '모집 상태'];
 const CONDITION_ALIASES = { 일정: '날짜', 지역: '자치구', 실력: '실력 수준' };
 
 export function toConditionSummary(conditions = []) {
@@ -81,17 +83,17 @@ export function toCriteria(criteria) {
 }
 
 // 편집한 조건 → 조건 요약. 백엔드 toConditions()와 같은 라벨·날짜 형식을 쓰고, 비운 항목은 '미지정'으로 둔다.
-export function criteriaToConditions({ sportType, genderGroup, region, startDate, endDate, skillLevel }) {
+export function criteriaToConditions({ sportType, genderGroup, region, startDate, endDate, skillLevel, status }) {
   const date = !startDate && !endDate ? '' : !startDate ? `~ ${endDate}`
     : !endDate || startDate === endDate ? startDate : `${startDate} ~ ${endDate}`;
   return [
     ['종목', SPORT_LABELS[sportType]], ['성별', GENDER_LABELS[genderGroup]], ['날짜', date],
-    ['자치구', region], ['실력 수준', SKILL_LABELS[skillLevel]],
+    ['자치구', region], ['실력 수준', SKILL_LABELS[skillLevel]], ['모집 상태', STATUS_LABELS[status]],
   ].map(([label, value]) => ({ label, value: value || '미지정' }));
 }
 
 // 편집한 조건으로 일반 매치 검색(EM-02 GET /api/matches)을 다시 호출한다. AI는 부르지 않는다.
-// 날짜는 시작일 00:00 ~ 종료일 23:59:59로 보낸다. 모집 상태는 AI가 추출한 값을 그대로 유지한다.
+// 날짜는 시작일 00:00 ~ 종료일 23:59:59로 보낸다.
 export async function searchMatchesByCriteria({ sportType, genderGroup, region, startDate, endDate, skillLevel, status }) {
   const params = {
     sportType, genderGroup, region, skillLevel, status,
