@@ -8,8 +8,8 @@
 .sporty-header { background: white; border-bottom: 1px solid var(--header-border); }
 .sporty-header-inner { min-height: 64px; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
 .sporty-header-brand, .sporty-header-global-search { display: flex; align-items: center; gap: 8px; }
-.sporty-header-brand { font-size: 18px; white-space: nowrap; }
-.sporty-header-brand > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; background: var(--header-blue); color: white; font-weight: 700; box-shadow: 0 1px 2px #0000000d; }
+.sporty-header-brand { white-space: nowrap; }
+.sporty-header-brand img { width: 107px; height: 32px; }
 /* 검색 입력과 제출 버튼을 묶어 작은 화면에서도 버튼이 입력창 옆에 남도록 한다. */
 .sporty-header-search { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 520px; min-width: 0; }
 .sporty-header-global-search { flex: 1; min-width: 0; min-height: 36px; border: 1px solid var(--header-border); border-radius: 99px; padding: 8px 16px; background: #f1f5f9; font-size: 12px; }
