@@ -63,6 +63,7 @@ public class UserEntity {
     // [USR-04] 회원탈퇴
     public void withdraw() {
         this.status = UserStatus.WITHDRAWN;
+        this.withdrawnAt = new Date();
     }
 
 }
