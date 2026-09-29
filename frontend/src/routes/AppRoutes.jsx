@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import PageMessage from '../components/layout/PageMessage';
 import MatchCreatePage, { RequireMatchAuth } from '../features/match/pages/MatchCreatePage';
 import LoginPage from '../features/auth/pages/LoginPage';
 import MatchEditPage from '../features/match/pages/MatchEditPage';
@@ -42,9 +43,9 @@ export default function AppRoutes() {
       {/* [FC-02] 시설 상세 — Path의 serviceId는 DB PK다. */}
       <Route path="/facilities/:serviceId" element={<FacilityDetailPage />} />
 
-      <Route path="/profiles/:userId" element={<div>프로필 상세</div>} />
+      <Route path="/profiles/:userId" element={<PageMessage>프로필 상세</PageMessage>} />
 
-      <Route path="*" element={<div>페이지를 찾을 수 없습니다.</div>} />
+      <Route path="*" element={<PageMessage>페이지를 찾을 수 없습니다.</PageMessage>} />
     </Routes>
   );
 }

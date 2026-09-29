@@ -11,8 +11,8 @@ export default function MatchBrowseCard({ match, recommended = false, preview = 
     <dl className="ml-card-facts"><div><dt>매치 일시</dt><dd>{match.schedule || '일정 정보 없음'}</dd></div><div><dt>취소 마감</dt><dd>{match.deadline || '정보 없음'}</dd></div></dl>
     <div className="ml-owner"><span><small>방장</small> {match.owner || '정보 없음'}</span><strong>{match.fee || '요금 정보 없음'}</strong></div>
     <div className="ml-card-bottom"><div className="ml-card-meta"><span>참가자 {match.participants || '정보 없음'}</span><span>{match.remaining}</span></div>
-      {match.occupancy != null && <progress max="100" value={match.occupancy} aria-label="참가 인원 모집률" />}
-      <div className="ml-card-actions"><button type="button" disabled={preview || match.closed || !onJoin || joiningId !== null} onClick={() => onJoin?.(match.id)}>{joiningId === match.id ? '참가 신청 중…' : match.closed ? '모집 마감' : '참가 신청하기'}</button>
+      {match.occupancy != null && <progress style={{ '--capacity-color': match.occupancy < 25 ? '#2563eb' : match.occupancy <= 75 ? '#16a34a' : '#dc2626' }} max="100" value={match.occupancy} aria-label="참가 인원 모집률" />}
+      <div className="ml-card-actions"><button type="button" className="ml-join" disabled={preview || match.closed || !onJoin || joiningId !== null} onClick={() => onJoin?.(match.id)}>{joiningId === match.id ? '참가 신청 중…' : match.closed ? '모집 마감' : '참가 신청하기'}</button>
         {!preview && <Link to={`/matches/${match.id}`} aria-label={`${match.title} 상세 보기`}>↗</Link>}
       </div>
     </div>

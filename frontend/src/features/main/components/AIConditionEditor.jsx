@@ -1,5 +1,6 @@
+import DistrictSelect from '../../../components/common/DistrictSelect';
 import { useState } from 'react';
-import { districts, sports } from '../../auth/data/signUpOptions';
+import { sports } from '../../auth/data/signUpOptions';
 import '../css/main.css';
 
 // [AI-02] AI 매치 검색 — 맞춤 조건 직접 수정
@@ -46,7 +47,7 @@ const AIConditionEditor = ({ initialCriteria, onApply, onCancel, pending = false
           <input type="date" name="startDate" aria-label="시작일" value={criteria.startDate} onChange={change} />
           <input type="date" name="endDate" aria-label="종료일" value={criteria.endDate} onChange={change} />
         </div>
-        {select('region', '자치구', districts.map(([, name]) => [name, name]))}
+        <div className="ms-condition"><label htmlFor="ms-edit-region">자치구</label><DistrictSelect id="ms-edit-region" name="region" valueType="name" placeholder="미지정" value={criteria.region} onChange={change} /></div>
         {select('skillLevel', '실력 수준', SKILLS)}
         {select('status', '모집 상태', STATUSES)}
       </div>

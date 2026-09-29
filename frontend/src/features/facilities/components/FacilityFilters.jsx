@@ -1,4 +1,4 @@
-import { districts } from '../../auth/data/signUpOptions';
+import DistrictSelect from '../../../components/common/DistrictSelect';
 
 export const FACILITY_TYPES = [
   ['', '전체 종목 ALL'],
@@ -36,12 +36,7 @@ export default function FacilityFilters({
       <div className="fl-search-row">
         <label className="fl-field">
           <span>지역 선택 (region)</span>
-          <select aria-label="지역 선택" value={region} onChange={(event) => onRegionChange?.(event.target.value)}>
-            <option value="">전체 지역</option>
-            {districts.map(([, name]) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
+          <DistrictSelect aria-label="지역 선택" valueType="name" placeholder="전체 지역" value={region} onChange={(event) => onRegionChange?.(event.target.value)} />
         </label>
         <label className="fl-field fl-field-grow">
           <span>통합 검색어 (name / facility_name)</span>

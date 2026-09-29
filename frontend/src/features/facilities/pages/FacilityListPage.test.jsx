@@ -56,7 +56,7 @@ test('헤더 query를 서비스명 검색 조건으로 사용한다', async () =
     serviceType: '',
   });
   expect(screen.getByRole('button', { name: '시설 검색' })).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'SPORTY 홈' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Sporty 홈' })).toBeInTheDocument();
 });
 
 test('검색 결과를 카드로 보여주고 상세 링크로 연결한다', async () => {

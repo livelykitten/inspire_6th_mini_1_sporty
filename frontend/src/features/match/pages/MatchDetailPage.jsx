@@ -1,8 +1,9 @@
+import Footer from '../../../components/layout/Footer';
+import Header from '../../../components/layout/Header';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getMatchDetail, joinMatch, leaveMatch, deleteMatch } from '../api/matchApi';
 import ProfileModal from '../../profiles/components/ProfileModal';
-import logo from '../assets/logo.png';
 import '../css/match.css';
 import '../css/matchDetail.css';
 
@@ -104,20 +105,11 @@ export default function MatchDetailPage({ previewMatch }) {
   const { match, loading, error } = result;
   return (
     <div className="match-page detail-page">
-      <header className="match-header">
-        <div className="match-header-inner detail-header-inner">
-          <Link to="/" className="match-brand" aria-label="SPORTY 홈">
-            <img src={logo} alt="" width="107" height="32" />
-            <span><strong>SPORTY</strong><small>ATHLETIC MATCH PLATFORM</small></span>
-          </Link>
-          <nav className="detail-nav" aria-label="주 메뉴">
+      <Header><div className="sporty-page-navigation"><nav className="detail-nav" aria-label="주 메뉴">
             <Link to="/" className="detail-nav-active">매치 찾기</Link>
             <Link to="/facilities">시설 예약</Link>
             <Link to="/mypage">내 매치 내역</Link>
-          </nav>
-          <Link to="/matches/new" className="detail-create-link">＋ 매치 개설</Link>
-        </div>
-      </header>
+          </nav><Link to="/matches/new" className="detail-create-link">＋ 매치 개설</Link></div></Header>
       <main className="match-main detail-main">
         <nav className="match-breadcrumb" aria-label="현재 위치">
           <Link to="/">홈</Link><span>/</span><Link to="/">매치 찾기</Link><span>/</span>
@@ -136,10 +128,7 @@ export default function MatchDetailPage({ previewMatch }) {
         </div>}
         {!loading && !error && match && String(match.matchId) === String(preview ? match.matchId : matchId) && <MatchDetailContent key={`${match.matchId}-${retryCount}`} match={match} preview={preview} onRefresh={refreshMatch} />}
       </main>
-      <footer className="match-footer">
-        <img src={logo} alt="SPORTY" width="80" height="24" /><strong>SPORTY</strong>
-        <span>© {new Date().getFullYear()} SPORTY. All rights reserved.</span>
-      </footer>
+      <Footer />
     </div>
   );
 }
@@ -323,9 +312,9 @@ function MatchDetailContent({ match, preview, onRefresh }) {
           <section className="match-section detail-recruitment">
             <span className="detail-eyebrow">함께 뛰는 즐거움</span><h2>함께할 메이트를 만나요</h2>
             <div className="detail-capacity"><span>모집 인원 현황</span><strong>{current ?? '—'}<small> / {maximum ?? '—'}명</small></strong></div>
-            {current !== null && maximum !== null && <progress value={progress} max="100" aria-label="모집 인원 비율" />}
+            {current !== null && maximum !== null && <progress style={{ '--capacity-color': progress < 25 ? '#2563eb' : progress <= 75 ? '#16a34a' : '#dc2626' }} value={progress} max="100" aria-label="모집 인원 비율" />}
             <p className="detail-recruitment-note">{match.status === 'CLOSED' ? '모집이 마감된 매치입니다.' : remaining === null ? '모집 인원을 확인할 수 없습니다.' : remaining === 0 ? '모집 정원이 찼습니다.' : `${remaining}명이 더 함께할 수 있어요.`}</p>
-            <button type="button" className="detail-primary-button" disabled={preview || pending !== null || (match.isOwner !== true && match.isParticipant !== true && (match.status !== 'RECRUITING' || remaining === 0))} onClick={match.isOwner === true ? () => performAction('delete') : match.isParticipant === true ? handleLeave : () => performAction('join')}>{pending === 'join' ? '참가 신청 중…' : actionLabel}</button>
+            <button type="button" className={`detail-primary-button ${match.isOwner || match.isParticipant ? 'is-danger' : 'is-join'}`} disabled={preview || pending !== null || (match.isOwner !== true && match.isParticipant !== true && (match.status !== 'RECRUITING' || remaining === 0))} onClick={match.isOwner === true ? () => performAction('delete') : match.isParticipant === true ? handleLeave : () => performAction('join')}>{pending === 'join' ? '참가 신청 중…' : actionLabel}</button>
             {match.isOwner === true && !preview && pending === null && <Link className="match-edit-link" to={`/matches/${match.matchId}/edit`}>매치 수정하기</Link>}
             {actionError && <div role="alert"><p className="match-error">{actionError}</p><button type="button" disabled={pending !== null} onClick={onRefresh}>새로고침</button></div>}
             <p className="detail-action-note">{match.isOwner === true ? '이 매치의 생성자입니다.' : match.isParticipant === true ? '현재 이 매치에 참여 중입니다.' : '매치 일정과 모집 조건을 확인 후 신청해주세요.'}</p>

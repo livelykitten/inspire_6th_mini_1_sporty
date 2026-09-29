@@ -25,3 +25,10 @@
   .sporty-header-inner { gap: 12px; flex-wrap: wrap; padding-block: 12px; }
   .sporty-header-search { flex-basis: 100%; max-width: none; order: 1; }
 }
+
+/* 페이지 CSS의 링크/버튼 기본 규칙보다 공통 헤더 스타일을 우선한다. */
+.sporty-header .sporty-header-brand { color: #1e293b; font-size: 24px; font-weight: 700; letter-spacing: -.6px; }
+.sporty-header .sporty-header-auth-menu .sporty-header-auth-primary { background: #2563eb; color: #fff; border: 1px solid #2563eb; }
+.sporty-header .sporty-header-auth-menu .sporty-header-auth-login { color: #1e293b; border: 1px solid #e2e8f0; }
+.sporty-header .sporty-header-search-button { background: #2563eb; color: #fff; }
+.sporty-page-navigation { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; flex-wrap: wrap; }

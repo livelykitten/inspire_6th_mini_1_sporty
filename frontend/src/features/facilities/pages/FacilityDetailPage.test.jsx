@@ -59,7 +59,7 @@ test('상세 화면은 예약에 필요한 정보와 날짜를 보여준다', as
 
   renderPage('/facilities/12');
   expect(await screen.findByRole('heading', { name: '응봉공원 테니스장' })).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'SPORTY 홈' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Sporty 홈' })).toBeInTheDocument();
   expect(screen.getByText('테니스장')).toBeInTheDocument();
   expect(screen.getByText('접수중')).toBeInTheDocument();
   expect(screen.getByText('유료')).toBeInTheDocument();
