@@ -46,7 +46,7 @@
 .ms-summary h2 { font-size: 14px; font-weight: 500; line-height: 20px; margin: 0; }
 .ms-summary-title p { margin: 0; font-size: 11px; color: #94a3b8; }
 .ms-edit { border: 0; background: transparent; padding: 0; color: var(--ms-blue); font-size: 12px !important; flex-shrink: 0; }
-.ms-conditions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 20px 0 0; }
+.ms-conditions { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin: 20px 0 0; }
 .ms-condition { min-height: 86px; padding: 11px 12px 12px; border: 1px solid #f1f5f9; border-radius: 12px; background: #f8fafc; }
 .ms-condition dt { color: #94a3b8; font-size: 11px; }
 .ms-condition dd { margin: 3px 0 0; font-size: 14px; }
@@ -111,9 +111,14 @@
   .ms-spark { display: none; }
   .ms-summary-heading { flex-wrap: wrap; }
   .ms-conditions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ms-condition:last-child { grid-column: 1 / -1; }
   .ms-card-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .ms-results h2 { font-size: 16px; }
   .ms-footer { padding-bottom: 110px; }
   .ms-floating { bottom: max(20px, env(safe-area-inset-bottom)); font-size: 12px; padding-inline: 22px; }
 }
+
+/* [AI-02] 조건 직접 수정 폼 */
+.ms-editor .ms-condition { display: flex; flex-direction: column; gap: 6px; min-height: 0; color: #94a3b8; font-size: 11px; }
+.ms-editor select, .ms-editor input { padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font-size: 14px; }
+.ms-editor-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.ms-editor [role="alert"] { margin: 12px 0 0; color: #dc2626; font-size: 12px; }

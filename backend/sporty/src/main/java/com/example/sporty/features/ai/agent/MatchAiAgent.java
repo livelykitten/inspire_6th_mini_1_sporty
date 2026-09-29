@@ -43,6 +43,7 @@ public class MatchAiAgent {
         return AiSearchResponseDto.builder()
                 .conditions(condition.toConditions())
                 .matches(matches)
+                .criteria(condition)
                 .build();
     }
 
